@@ -80,9 +80,15 @@
       "extends": ["plugin:jest/recommended", "plugin:jest/style"],
       "rules": {
         "jest/prefer-todo": "warn",
-        "jest/consistent-test-it": "error",
+        "jest/consistent-test-it": ["error", { "fn": "test" }],
         "@typescript-eslint/no-unsafe-assignment": "off",
         "@typescript-eslint/no-non-null-assertion": "off"
+      },
+      "parserOptions": {
+        "ecmaFeatures": {},
+        "project": ["./tsconfig.test.json"],
+        "sourceType": "module",
+        "tsconfigRootDir": "."
       }
     }
   ],
@@ -235,7 +241,9 @@
       }
     ],
     // jsdoc
-    "jsdoc/no-types": "error",
+    "jsdoc/no-types": "off",
+    "jsdoc/require-param-type": "off",
+    "jsdoc/require-returns-type": "off",
     // Imports
     "import/named": "off",
     "import/namespace": "off",

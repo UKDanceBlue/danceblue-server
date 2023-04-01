@@ -2,7 +2,7 @@
   "compilerOptions": {
     "incremental": true,
     "lib": ["ES2022"],
-    "target": "ES2022",
+    "target": "ESNext",
     "module": "NodeNext",
     "moduleResolution": "nodenext",
     "outDir": "./dist",
@@ -22,5 +22,5 @@
     "useUnknownInCatchVariables": true,
     "skipLibCheck": true
   },
-  "include": ["src/**/*"]
+  "include": ["src/**/*.ts"]
 }

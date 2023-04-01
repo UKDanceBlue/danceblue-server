@@ -1,23 +1,19 @@
 import "reflect-metadata";
-import * as dotenv from "dotenv"; // see https://github.com/motdotla/dotenv#how-do-i-use-dotenv-with-import
+import * as dotenv from "dotenv";
 import { DataSource } from "typeorm";
 
 import { CustomNamingStrategy } from "./NamingStrategy.js";
 import { Client } from "./entity/Client.js";
+import { Configuration } from "./entity/Configuration.js";
 import { Event } from "./entity/Event.js";
 import { Image } from "./entity/Image.js";
 import { Notification } from "./entity/Notification.js";
-import { User } from "./entity/User.js";
+import { Person } from "./entity/Person.js";
+import { PointEntry } from "./entity/PointEntry.js";
+import { PointOpportunity } from "./entity/PointOpportunity.js";
+import { Team } from "./entity/Team.js";
 
 dotenv.config();
-
-console.log(
-  process.env.DB_HOST,
-  process.env.DB_PORT,
-  process.env.DB_UNAME,
-  process.env.DB_PWD,
-  process.env.DB_NAME
-);
 
 export const AppDataSource = new DataSource({
   type: "postgres",
@@ -30,11 +26,15 @@ export const AppDataSource = new DataSource({
   synchronize: true,
   logging: false,
   entities: [
+    Client,
+    Configuration,
     Event,
-    User,
     Image,
     Notification,
-    Client
+    Person,
+    PointEntry,
+    PointOpportunity,
+    Team
   ],
   migrations: [],
   subscribers: [],

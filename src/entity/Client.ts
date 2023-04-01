@@ -1,6 +1,6 @@
 import { Check, Column, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
 
-import { User } from "./User.js";
+import { Person } from "./Person.js";
 
 @Entity()
 export class Client {
@@ -14,6 +14,6 @@ export class Client {
   @Column("text")
     expoPushToken!: string;
 
-  @ManyToOne(() => User)
-    lastUser!: User;
+  @ManyToOne(() => Person)
+    lastUser!: Person;
 }

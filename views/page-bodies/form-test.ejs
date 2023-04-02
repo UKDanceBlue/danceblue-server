@@ -1,25 +1,32 @@
-<form action="/printer">
+<form action="/printer" is="xhr-form">
   <h2>GET Test</h2>
   <input type="text" name="name" placeholder="Name">
   <input type="number" name="age" placeholder="Age">
   <input type="submit" value="Submit">
 </form>
 
-<form action="/printer" method="post" id="post-form">
+<form action="/printer" method="post">
   <h2>POST Test</h2>
   <input type="text" name="name" placeholder="Name">
   <input type="number" name="age" placeholder="Age">
   <input type="submit" value="Submit">
 </form>
 
-<xhr-form action="/printer" method="post">
-  <h2>POST Test</h2>
+<form action="/printer" method="post" id="xhr-form" is="xhr-form">
+  <h2>XHR POST Test</h2>
   <input type="text" name="name" placeholder="Name">
   <input type="number" name="age" placeholder="Age">
   <input type="submit" value="Submit">
-</xhr-form>
+</form>
 
-<script defer>
-  console.log(globalThis)
-  globalThis.addPostFormEventListener(document.querySelector('#post-form'));
+<script>
+  const xhrForm = document.getElementById('xhr-form');
+
+  xhrForm.addEventListener('xhr-form-success', (event) => {
+    console.log('XHR Form Success', event.detail);
+  });
+
+  xhrForm.addEventListener('xhr-form-failure', (event) => {
+    console.log('XHR Form Failure', event.detail);
+  });
 </script>

@@ -1,6 +1,6 @@
 import "reflect-metadata";
 import * as dotenv from "dotenv";
-import { DataSource } from "typeorm";
+import { DataSource, DataSourceOptions, EntitySchema, MixedList } from "typeorm";
 
 import { CustomNamingStrategy } from "./NamingStrategy.js";
 import { Client } from "./entity/Client.js";
@@ -19,7 +19,7 @@ if (!process.env.DB_HOST || !process.env.DB_PORT || !process.env.DB_UNAME || !pr
   throw new Error("Missing database connection information");
 }
 
-export const AppDataSource = new DataSource({
+export const appDataSource = new DataSource({
   type: "postgres",
   schema: "danceblue",
   host: process.env.DB_HOST,
@@ -30,15 +30,15 @@ export const AppDataSource = new DataSource({
   synchronize: true,
   logging: false,
   entities: [
-    Client,
-    Configuration,
-    Event,
-    Image,
-    Notification,
-    Person,
-    PointEntry,
-    PointOpportunity,
-    Team
+    () => Client,
+    () => Configuration,
+    () => Event,
+    () => Image,
+    () => Notification,
+    () => Person,
+    () => PointEntry,
+    () => PointOpportunity,
+    () => Team
   ],
   migrations: [],
   subscribers: [],

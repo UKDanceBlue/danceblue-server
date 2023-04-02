@@ -12,8 +12,14 @@ export class Person {
     @PrimaryGeneratedColumn("identity")
       id!: number;
 
-    @Column("uuid", { generated: "uuid", unique: true, nullable: false })
+    @Column("uuid", { generated: "uuid", unique: true })
       userId!: string;
+
+    /**
+     * This is usually either a random uuid, or the oid claim from the OIDC id_token
+     */
+    @Column("uuid", { unique: true, nullable: true })
+      authId!: string | null;
 
     @Column("text")
       firstName!: string;

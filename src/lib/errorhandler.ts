@@ -17,6 +17,10 @@ export const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
     httpError = createHttpError(500, "Unknown error");
   }
 
+  if (!httpError.expose && httpError.statusCode >= 500) {
+    console.error(err);
+  }
+
   // Configure response
   res.status(httpError.statusCode);
   if (httpError.headers) {

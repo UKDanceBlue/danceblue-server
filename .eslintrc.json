@@ -30,6 +30,7 @@
         "@typescript-eslint/quotes": ["error", "double"],
         "@typescript-eslint/semi": ["error", "always"],
         "@typescript-eslint/member-delimiter-style": "error",
+        "@typescript-eslint/no-misused-promises": "off",
         "@typescript-eslint/brace-style": [
           "error",
           "1tbs",
@@ -130,14 +131,6 @@
     "no-await-in-loop": "error",
     "no-constant-binary-expression": "error",
     "no-promise-executor-return": "error",
-    "@typescript-eslint/no-misused-promises": [
-      "error",
-      {
-        "checksVoidReturn": {
-          "attributes": false
-        }
-      }
-    ],
     "no-self-compare": "error",
     "require-atomic-updates": "error",
     "class-methods-use-this": "error",

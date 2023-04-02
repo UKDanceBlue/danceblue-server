@@ -34,7 +34,18 @@ app.use(express.json());
 app.set("view engine", "ejs");
 app.set("views", resolve("views/pages"));
 
-// This can act as a default renderer for ejs files, it will pas
+app.get("/test", (req, res) => {
+  res.send("Hello World!");
+});
+
+/*
+Default handler for pages in the views/pages directory
+
+If the slug is not already handled by another route, it will be automatically
+handled by this route
+
+This route will render the page with only res.locals.pageData
+*/
 app.use(templateRouter);
 
 const port = parseInt(process.env.API_PORT ?? "", 10);

@@ -1,0 +1,25 @@
+<form action="/printer">
+  <h2>GET Test</h2>
+  <input type="text" name="name" placeholder="Name">
+  <input type="number" name="age" placeholder="Age">
+  <input type="submit" value="Submit">
+</form>
+
+<form action="/printer" method="post" id="post-form">
+  <h2>POST Test</h2>
+  <input type="text" name="name" placeholder="Name">
+  <input type="number" name="age" placeholder="Age">
+  <input type="submit" value="Submit">
+</form>
+
+<xhr-form action="/printer" method="post">
+  <h2>POST Test</h2>
+  <input type="text" name="name" placeholder="Name">
+  <input type="number" name="age" placeholder="Age">
+  <input type="submit" value="Submit">
+</xhr-form>
+
+<script defer>
+  console.log(globalThis)
+  globalThis.addPostFormEventListener(document.querySelector('#post-form'));
+</script>

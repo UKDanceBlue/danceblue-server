@@ -1,4 +1,4 @@
-import { resolve } from "path";
+import { join, resolve } from "path";
 
 import dree from "dree";
 import express from "express";
@@ -15,7 +15,7 @@ const pageDataGetters: { [slug: string]: (req: express.Request, res: express.Res
 interface PathInfo {
   slug: string;
   renderPath: string;
-  type: "html" | "ejs" | "unknown";
+  type: "html" | "ejs" | "ejs-body" | "unknown";
 }
 
 const paths: PathInfo[] = [];
@@ -36,6 +36,28 @@ dree.scan(baseDir, { extensions: [ "ejs", "html" ] }, (file) => {
   paths.push({ slug, renderPath, type });
 });
 
+const bodyDir = resolve("views/page-bodies");
+dree.scan(bodyDir, { extensions: [ "ejs", "html" ] }, (file) => {
+  const pathFromBase = file.path.replace(bodyDir, "");
+  const path = pathFromBase.replace(/\\/g, "/");
+  const renderPath = path.replace(/^\//, "").replace(/\.ejs/g, "");
+  const slug = path.replace(/index/, "").replace(/\.[A-Za-z\d]+$/, "");
+  if (file.extension !== "ejs") {
+    return;
+  }
+  paths.push({ slug, renderPath, type: "ejs-body" });
+});
+
+// Check for conflicting paths (same slug)
+const pathSlugs = paths.map((path) => path.slug);
+const pathSlugsSet = new Set(pathSlugs);
+if (pathSlugs.length !== pathSlugsSet.size) {
+  console.error("Conflicting paths detected!");
+  console.error("Paths:");
+  console.table(paths);
+  process.exit(1);
+}
+
 for (const path of paths) {
   templateRouter.get(path.slug, (req, res) => {
     if (path.type === "html") {
@@ -49,6 +71,18 @@ for (const path of paths) {
         };
       }
       res.render(path.renderPath, res.locals.pageData);
+      return;
+    } else if (path.type === "ejs-body") {
+      if (pageDataGetters[path.slug]) {
+        res.locals.pageData = {
+          ...res.locals.pageData,
+          ...(pageDataGetters[path.slug]?.(req, res) ?? {})
+        };
+      }
+      res.render(resolve(baseDir, "../framework.ejs"), {
+        ...res.locals.pageData,
+        pageBodyPath: join(bodyDir, path.renderPath),
+      });
       return;
     } else {
       res.status(500);

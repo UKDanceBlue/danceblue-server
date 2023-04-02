@@ -9,6 +9,7 @@
    },
    "scripts": {
       "build": "tsc",
+      "build-public": "tsc -p ./tsconfig.public.json",
       "start": "node .",
       "lint": "eslint . --ext .ts",
       "test": "jest",

@@ -11,7 +11,7 @@ import createHttpError from "http-errors";
  */
 export function requireEnv<const T extends keyof NodeJS.ProcessEnv>(variable: string | undefined, name: T, next: NextFunction): [T, string] | null {
   if (!variable) {
-    return next(createHttpError.InternalServerError(`Required environment variable not set: ${name}`));
+    next(createHttpError.InternalServerError(`Required environment variable not set: ${name}`));
     return null;
   } else {
     return [ name, variable ];

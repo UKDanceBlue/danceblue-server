@@ -92,6 +92,16 @@ app.use((req, res, next) => {
   return next();
 });
 
+app.all("/printer", (req, res) => {
+  console.log("Request:");
+  console.log(req.method);
+  console.log(req.query);
+  console.log(req.params);
+  console.log(req.url);
+  console.log(req.body);
+  res.status(200).send();
+});
+
 app.use("/api", apiRouter);
 
 /*

@@ -1,6 +1,6 @@
 import "reflect-metadata";
 import * as dotenv from "dotenv";
-import { DataSource, DataSourceOptions, EntitySchema, MixedList } from "typeorm";
+import { DataSource } from "typeorm";
 
 import { CustomNamingStrategy } from "./NamingStrategy.js";
 import { Client } from "./entity/Client.js";
@@ -30,15 +30,15 @@ export const appDataSource = new DataSource({
   synchronize: true,
   logging: false,
   entities: [
-    () => Client,
-    () => Configuration,
-    () => Event,
-    () => Image,
-    () => Notification,
-    () => Person,
-    () => PointEntry,
-    () => PointOpportunity,
-    () => Team
+    Client,
+    Configuration,
+    Event,
+    Image,
+    Notification,
+    Person,
+    PointEntry,
+    PointOpportunity,
+    Team
   ],
   migrations: [],
   subscribers: [],

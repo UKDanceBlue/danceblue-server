@@ -1,27 +1,55 @@
+import { randomUUID } from "crypto";
+
 import express from "express";
+import session, { SessionOptions } from "express-session";
 import createHttpError from "http-errors";
+import jsonwebtoken from "jsonwebtoken";
 import { Issuer, generators } from "openid-client";
-import { DataSource } from "typeorm";
 
 import { appDataSource } from "../../../data-source.js";
 import { Person } from "../../../entity/Person.js";
+import { AuthSource, findPersonForLogin, makeUserJwt } from "../../../lib/auth.js";
+import { requireEnvs } from "../../../lib/envutils.js";
 import { NYI } from "../../../lib/nyi.js";
+import { saveSessionAsync } from "../../../lib/session.js";
+
 const authApiRouter = express.Router();
+
+if (!process.env.COOKIE_SECRET) {
+  console.error("Missing COOKIE_SECRET environment variable");
+  process.exit(1);
+}
+
+const sessionConfig: SessionOptions = {
+  secret: process.env.COOKIE_SECRET, // https://github.com/expressjs/session#secret
+  cookie: { path: "/api/auth", secure: true },
+  genid: () => randomUUID(),
+};
+
+authApiRouter.use(session(sessionConfig));
 
 authApiRouter.use(async (req, res, next) => {
   try {
     if (!res.locals.oidcClient) {
-      if (!process.env.MS_OIDC_URL) {
-        return next(createHttpError.InternalServerError("Missing environment variable MS_OIDC_URL"));
+      const envs = requireEnvs({
+        MS_OIDC_URL: process.env.MS_OIDC_URL,
+        MS_CLIENT_ID: process.env.MS_CLIENT_ID,
+        MS_CLIENT_SECRET: process.env.MS_CLIENT_SECRET,
+      }, next);
+
+      if (!envs) {
+        return;
       }
-      if (!process.env.MS_CLIENT_ID) {
-        return next(createHttpError.InternalServerError("Missing environment variable MS_CLIENT_ID"));
-      }
-      const microsoftGateway = await Issuer.discover(process.env.MS_OIDC_URL);
+      const {
+        MS_CLIENT_ID, MS_CLIENT_SECRET, MS_OIDC_URL
+      } = envs;
+
+      const microsoftGateway = await Issuer.discover(MS_OIDC_URL);
       res.locals.oidcClient = new microsoftGateway.Client({
-        client_id: process.env.MS_CLIENT_ID,
+        client_id: MS_CLIENT_ID,
+        client_secret: MS_CLIENT_SECRET,
         redirect_uris: [new URL("/api/auth/oidc-callback", res.locals.applicationUrl).toString()],
-        response_types: ["id_token"],
+        response_types: ["code"],
       });
     }
     return next();
@@ -34,74 +62,112 @@ authApiRouter.post("/logout", NYI);
 
 authApiRouter.post("/oidc-callback", async (req, res, next) => {
   try {
-    console.log(req.session);
-    console.log(req.body);
     if (!res.locals.oidcClient) {
       return next(createHttpError.InternalServerError("Missing OIDC client"));
     }
-    if (!req.session.oidcNonce) {
-      return next(createHttpError.InternalServerError("Missing nonce"));
+    console.log(req.session);
+    if (!req.session.codeVerifier) {
+      return next(createHttpError.InternalServerError("Missing codeVerifier"));
     }
 
     // Perform OIDC validation
     const params = res.locals.oidcClient.callbackParams(req);
-    const tokenSet = await res.locals.oidcClient.callback(new URL("/api/auth/oidc-callback", res.locals.applicationUrl).toString(), params, { nonce: req.session.oidcNonce });
+    const tokenSet = await res.locals.oidcClient.callback(new URL("/api/auth/oidc-callback", res.locals.applicationUrl).toString(), params, { code_verifier: req.session.codeVerifier });
     
-    // Clear the nonce and then load the auth info
-    delete req.session.oidcNonce;
-    req.session.save(async (err) => {
-      if (err) {
-        return next(err);
-      }
+    // Clear the codeVerifier and then load the auth info
+    delete req.session.codeVerifier;
+    await saveSessionAsync(req);
 
-      res.write("Loading...");
+    if (!tokenSet.access_token) {
+      return next(createHttpError.InternalServerError("Missing access token"));
+    }
 
-      const {
-        oid: objectId, email
-      } = tokenSet.claims();
+    const {
+      oid: objectId, email
+    } = tokenSet.claims();
+    const decodedJwt = jsonwebtoken.decode(tokenSet.access_token, { json: true });
+    if (!decodedJwt) {
+      return next(createHttpError.InternalServerError("Error decoding JWT"));
+    }
+    const {
+      given_name: firstName, family_name: lastName, upn: userPrincipalName
+    } = decodedJwt;
 
-      if (typeof objectId !== "string") {
-        return next(createHttpError.InternalServerError("Missing OID"));
-      }
-      
-      const personRepository = appDataSource.getRepository(Person);
-      let currentPerson = await personRepository.findOne({ where: { authId: objectId } });
-      
-      if (!currentPerson) {
-        currentPerson = new Person();
-        currentPerson.authId = objectId;
-        if (email) {
-          currentPerson.email = email;
-        }
-        currentPerson = await personRepository.save(currentPerson);
-      }
+    let linkblue = null;
+    if (typeof userPrincipalName === "string" && userPrincipalName.endsWith("@uky.edu")) {
+      linkblue = userPrincipalName.replace(/@uky\.edu$/, "");
+    }
 
-      res.redirect("/");
+    if (typeof objectId !== "string") {
+      return next(createHttpError.InternalServerError("Missing OID"));
+    }
+    
+    const personRepository = appDataSource.getRepository(Person);
+    const [ currentPerson, didCreate ] = await findPersonForLogin(personRepository, { [AuthSource.UkyLinkblue]: objectId }, { email, linkblue });
+    let isPersonChanged = didCreate;
+    
+    if (currentPerson.authIds[AuthSource.UkyLinkblue] !== objectId) {
+      currentPerson.authIds[AuthSource.UkyLinkblue] = objectId;
+      isPersonChanged = true;
+    }
+    if (email && currentPerson.email !== email) {
+      currentPerson.email = email;
+      isPersonChanged = true;
+    }
+    if (typeof firstName === "string" && currentPerson.firstName !== firstName) {
+      currentPerson.firstName = firstName;
+      isPersonChanged = true;
+    }
+    if (typeof lastName === "string" && currentPerson.lastName !== lastName) {
+      currentPerson.lastName = lastName;
+      isPersonChanged = true;
+    }
+    if (linkblue && currentPerson.linkblue !== linkblue) {
+      currentPerson.linkblue = linkblue;
+      isPersonChanged = true;
+    }
+
+    if (isPersonChanged) {
+      await personRepository.save(currentPerson);
+    }
+
+    const userData = currentPerson.toUser();
+    res.locals = {
+      ...res.locals,
+      user: userData,
+    };
+    const jwt = makeUserJwt(userData);
+    res.cookie("token", jwt, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "strict",
     });
+
+    res.redirect("/");
   } catch (err) {
     return next(err);
   }
 });
 
-authApiRouter.get("/login", (req, res, next) => {
-  const nonce = generators.nonce();
-  req.session.oidcNonce = nonce;
-  req.session.save((err) => {
-    if (err) {
-      return next(err);
-    }
+authApiRouter.get("/login", async (req, res, next) => {
+  try {
+    req.session.codeVerifier = generators.codeVerifier();
+    const codeChallenge = generators.codeChallenge(req.session.codeVerifier);
+    await saveSessionAsync(req);
 
-    console.log(req.session);
-    
     if (!res.locals.oidcClient) {
       return next(createHttpError.InternalServerError("Missing OIDC client"));
     }
-    res.redirect(res.locals.oidcClient.authorizationUrl({
+
+    return res.redirect(res.locals.oidcClient.authorizationUrl({
       scope: "openid email profile offline_access User.read",
       response_mode: "form_post",
-      nonce,
+      code_challenge: codeChallenge,
+      code_challenge_method: "S256",
     }));
-  });
+  } catch (err) {
+    return next(err);
+  }
 });
 
 export default authApiRouter;

@@ -18,8 +18,8 @@ export enum CommitteeRole {
 }
 
 export class Role {
-  @Column("enum", { enum: DbRole, default: DbRole.None })
-    dbRole!: DbRole;
+  @Column("enum", { enum: DbRole, default: DbRole.Public })
+    dbRole: DbRole = DbRole.Public;
 
   @Column("enum", { nullable: true, enum: CommitteeRole })
     committeeRole!: CommitteeRole | null;

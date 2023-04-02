@@ -19,13 +19,13 @@ apiRouter.use("/auth", authApiRouter);
 
 // Authentication required
 apiRouter.use((req, res, next) => {
-  if (res.locals.authorization.accessLevel <= AccessLevel.None) {
+  if (res.locals.userData.auth.accessLevel <= AccessLevel.None) {
     const unauthorizedError = new createHttpError.Unauthorized();
     // TODO set the WWW-Authenticate header
     unauthorizedError.expose = false;
     return next(unauthorizedError);
   } else {
-    next();
+    return next();
   }
 });
 
@@ -35,12 +35,12 @@ apiRouter.use("/morale", moraleApiRouter);
 
 // Authorization required (team member)
 apiRouter.use((req, res, next) => {
-  if (res.locals.authorization.accessLevel < AccessLevel.TeamMember) {
+  if (res.locals.userData.auth.accessLevel < AccessLevel.TeamMember) {
     const forbiddenError = new createHttpError.Forbidden();
     forbiddenError.expose = false;
     return next(forbiddenError);
   } else {
-    next();
+    return next();
   }
 });
 
@@ -48,13 +48,13 @@ apiRouter.use("/user", userApiRouter);
 
 // Authorization required (committee)
 apiRouter.use((req, res, next) => {
-  const { accessLevel } = res.locals.authorization;
+  const { accessLevel } = res.locals.userData.auth;
   if (accessLevel < AccessLevel.CommitteeChairOrCoordinator) {
     const forbiddenError = new createHttpError.Forbidden();
     forbiddenError.expose = false;
     return next(forbiddenError);
   } else {
-    next();
+    return next();
   }
 });
 

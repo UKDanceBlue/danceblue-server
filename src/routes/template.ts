@@ -4,6 +4,14 @@ import dree from "dree";
 import express from "express";
 const templateRouter = express.Router();
 
+// Map of slugs to getters for page data
+const pageDataGetters: { [slug: string]: (req: express.Request, res: express.Response) => Record<string, unknown> } = {
+  "/user": (req, res) => ({
+    userId: res.locals.userData.userId,
+    userData: JSON.stringify(res.locals.userData, null, 2),
+  })
+};
+
 interface PathInfo {
   slug: string;
   renderPath: string;
@@ -34,6 +42,12 @@ for (const path of paths) {
       res.sendFile(resolve("views/pages", path.renderPath));
       return;
     } else if (path.type === "ejs") {
+      if (pageDataGetters[path.slug]) {
+        res.locals.pageData = {
+          ...res.locals.pageData,
+          ...(pageDataGetters[path.slug]?.(req, res) ?? {}),
+        };
+      }
       res.render(path.renderPath, res.locals.pageData);
       return;
     } else {

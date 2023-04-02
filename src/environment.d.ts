@@ -5,6 +5,9 @@ declare global {
       APPLICATION_PORT?: string;
       APPLICATION_HOST?: string;
 
+      COOKIE_SECRET?: string;
+      JWT_SECRET?: string;
+
       DB_HOST?: string;
       DB_PORT?: string;
       DB_UNAME?: string;
@@ -14,6 +17,7 @@ declare global {
       // These don't need to be optional because they are checked in index.ts
       MS_OIDC_URL?: string;
       MS_CLIENT_ID?: string;
+      MS_CLIENT_SECRET?: string;
     }
   }
 }

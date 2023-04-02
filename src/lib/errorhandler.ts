@@ -63,5 +63,5 @@ export const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
   return;
 
   // if this is not HTTP error and we are not in production, let express handle it the default way
-  next(err);
+  return next(err);
 };

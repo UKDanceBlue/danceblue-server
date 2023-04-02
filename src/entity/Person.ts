@@ -1,7 +1,7 @@
 import { IsEmail } from "class-validator";
 import { Column, Entity, JoinTable, ManyToMany, OneToMany, PrimaryGeneratedColumn } from "typeorm";
 
-import { User } from "../lib/auth.js";
+import { AuthSource, UserData } from "../lib/auth.js";
 
 import { PointEntry } from "./PointEntry.js";
 import { Role } from "./Role.js";
@@ -16,22 +16,22 @@ export class Person {
       userId!: string;
 
     /**
-     * This is usually either a random uuid, or the oid claim from the OIDC id_token
+     * This is usually either a random uuid, or the oid claim from the OIDC id_token, depending on the auth source
      */
-    @Column("uuid", { unique: true, nullable: true })
-      authId!: string | null;
+    @Column({ type: "jsonb", default: {} })
+      authIds: Partial<Record<AuthSource, string>> = {};
 
-    @Column("text")
+    @Column("text", { nullable: true })
       firstName!: string;
 
-    @Column("text")
+    @Column("text", { nullable: true })
       lastName!: string;
 
     @Column("text")
     @IsEmail()
       email!: string;
 
-    @Column("text")
+    @Column("text", { nullable: true })
       linkblue!: string;
     
     @Column(() => Role)
@@ -39,21 +39,26 @@ export class Person {
     
     @ManyToMany(() => Team, (team) => team.members)
     @JoinTable()
-      memberOf!: Team[];
+      memberOf?: Team[];
 
     @ManyToMany(() => Team, (team) => team.captains)
     @JoinTable()
-      captainOf!: Team[];
+      captainOf?: Team[];
       
     @OneToMany(() => PointEntry, (pointEntry) => pointEntry.personFrom)
-      pointEntries!: PointEntry[];
+      pointEntries?: PointEntry[];
     
-    toUser(): User {
-      return {
-        auth: this.role.toAuthorization(),
-        id: this.userId,
-        teamIds: this.memberOf.map((team) => team.teamId),
-        captainOfTeamIds: this.captainOf.map((team) => team.teamId)
+    toUser(): UserData {
+      const userData: UserData = {
+        userId: this.userId,
+        auth: this.role.toAuthorization()
       };
+      if (this.memberOf) {
+        userData.teamIds = this.memberOf.map((team) => team.teamId);
+      }
+      if (this.captainOf) {
+        userData.captainOfTeamIds = this.captainOf.map((team) => team.teamId);
+      }
+      return userData;
     }
 }

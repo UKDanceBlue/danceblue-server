@@ -15,7 +15,13 @@ import { Team } from "./entity/Team.js";
 
 dotenv.config();
 
-if (!process.env.DB_HOST || !process.env.DB_PORT || !process.env.DB_UNAME || !process.env.DB_PWD || !process.env.DB_NAME) {
+if (
+  !process.env.DB_HOST ||
+  !process.env.DB_PORT ||
+  !process.env.DB_UNAME ||
+  !process.env.DB_PWD ||
+  !process.env.DB_NAME
+) {
   throw new Error("Missing database connection information");
 }
 
@@ -38,7 +44,7 @@ export const appDataSource = new DataSource({
     Person,
     PointEntry,
     PointOpportunity,
-    Team
+    Team,
   ],
   migrations: [],
   subscribers: [],

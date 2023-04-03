@@ -3,12 +3,17 @@
     <a class="navbar-brand" href="#">
       <img src="/favicon.ico" alt="Logo" width="64" height="64" class="d-inline-block align-text-top">
     </a>
-    <h1><%= title %></h1>
+    <h1>
+      <%= title %>
+    </h1>
     <ul class="navbar-nav">
       <%_ for( let index=0; index < shownPages.length; index++ ) { _%>
         <li class="nav-item">
-          <a class="nav-link<%- activePage === shownPages[index].slug ? " active\"aria-current=\"page": "" %>" href="<%=
-              shownPages[index].slug %>"><%= shownPages[index].title %></a>
+          <a class="nav-link<%- activePage === shownPages[index].slug ? " active\"aria-current=\"page": "" %>"
+            href="<%=shownPages[index].slug %>"
+              >
+              <%= shownPages[index].title %>
+          </a>
         </li>
         <%_ } _%>
     </ul>

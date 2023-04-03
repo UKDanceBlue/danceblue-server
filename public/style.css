@@ -4,8 +4,8 @@
   --main-text-color: "#070c18";
   --secondary-text-color: #5c5c5cff;
   --main-accent-color: #2969c9;
-  --main-accent-color-alt: #0032A0;
-  --secondary-accent-color: ##FFC72C;
+  --main-accent-color-alt: #0032a0;
+  --secondary-accent-color: ##ffc72c;
   --error-color: #de1a1aff;
   --warning-color: #f9d94eff;
 }
@@ -32,7 +32,7 @@ body {
   font-family: Verdana, Geneva, Tahoma, sans-serif;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;x
+  justify-content: space-between;
   flex: 1;
 }
 
@@ -42,13 +42,13 @@ header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  flex:0;
+  flex: 0;
 }
 
 main {
   background-color: var(--main-bg-color);
   padding: 1vh 1vw;
-  flex:1;
+  flex: 1;
 }
 
 footer {
@@ -57,7 +57,7 @@ footer {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  flex:0;
+  flex: 0;
 }
 
 a {

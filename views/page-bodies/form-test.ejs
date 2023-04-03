@@ -1,46 +1,46 @@
 <%- include('../partials/header'); %>
 
-<div class="container-lg px-4">
-<form action="/printer" is="xhr-form">
-  <h2>GET Test</h2>
-  <input type="text" name="name" placeholder="Name">
-  <input type="number" name="age" placeholder="Age">
-  <input type="submit" value="Submit">
-</form>
+  <div class="container-lg px-4">
+    <form action="/printer" is="xhr-form">
+      <h2>GET Test</h2>
+      <input type="text" name="name" placeholder="Name">
+      <input type="number" name="age" placeholder="Age">
+      <input type="submit" value="Submit">
+    </form>
 
-<form action="/printer" method="post">
-  <h2>POST Test</h2>
-  <input type="text" name="name" placeholder="Name">
-  <input type="number" name="age" placeholder="Age">
-  <input type="submit" value="Submit">
-</form>
+    <form action="/printer" method="post">
+      <h2>POST Test</h2>
+      <input type="text" name="name" placeholder="Name">
+      <input type="number" name="age" placeholder="Age">
+      <input type="submit" value="Submit">
+    </form>
 
-<form class="card p-4 m-2" action="/printer" method="post" id="xhr-form" is="xhr-form" data-clear-form="true">
-  <div class="mb-3">
-    <label for="exampleInputEmail1" class="form-label">Email address</label>
-    <input type="email" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp">
-    <div id="emailHelp" class="form-text">Testing testing 123.</div>
+    <form class="card p-4 m-2" action="/printer" method="post" id="xhr-form" is="xhr-form" data-clear-form="true">
+      <div class="mb-3">
+        <label for="exampleInputEmail1" class="form-label">Email address</label>
+        <input type="email" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp">
+        <div id="emailHelp" class="form-text">Testing testing 123.</div>
+      </div>
+      <div class="mb-3">
+        <label for="exampleInputPassword1" class="form-label">Password</label>
+        <input type="password" class="form-control" id="exampleInputPassword1">
+      </div>
+      <div class="mb-3 form-check">
+        <input type="checkbox" class="form-check-input" id="exampleCheck1">
+        <label class="form-check-label" for="exampleCheck1">Check me out</label>
+      </div>
+      <button type="submit" class="btn btn-primary">Submit</button>
+    </form>
   </div>
-  <div class="mb-3">
-    <label for="exampleInputPassword1" class="form-label">Password</label>
-    <input type="password" class="form-control" id="exampleInputPassword1">
-  </div>
-  <div class="mb-3 form-check">
-    <input type="checkbox" class="form-check-input" id="exampleCheck1">
-    <label class="form-check-label" for="exampleCheck1">Check me out</label>
-  </div>
-  <button type="submit" class="btn btn-primary">Submit</button>
-</form>
-</div>
 
-<script>
-  const xhrForm = document.getElementById('xhr-form');
+  <script>
+    const xhrForm = document.getElementById('xhr-form');
 
-  xhrForm.addEventListener('xhr-form-success', (event) => {
-    console.log('XHR Form Success', event.detail);
-  });
+    xhrForm.addEventListener('xhr-form-success', (event) => {
+      console.log('XHR Form Success', event.detail);
+    });
 
-  xhrForm.addEventListener('xhr-form-failure', (event) => {
-    console.log('XHR Form Failure', event.detail);
-  });
-</script>
+    xhrForm.addEventListener('xhr-form-failure', (event) => {
+      console.log('XHR Form Failure', event.detail);
+    });
+  </script>

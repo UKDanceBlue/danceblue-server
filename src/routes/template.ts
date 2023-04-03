@@ -5,15 +5,25 @@ import dree from "dree";
 import express from "express";
 import createHttpError from "http-errors";
 
-import { AccessLevel, Authorization, isMinAuthSatisfied, simpleAuthorizations } from "../lib/auth.js";
+import {
+  AccessLevel,
+  Authorization,
+  isMinAuthSatisfied,
+  simpleAuthorizations,
+} from "../lib/auth.js";
 const templateRouter = express.Router();
 
 // Map of slugs to getters for page data
-const pageDataGetters: { [slug: string]: (req: express.Request, res: express.Response) => Record<string, unknown> } = {
+const pageDataGetters: {
+  [slug: string]: (
+    req: express.Request,
+    res: express.Response
+  ) => Record<string, unknown>;
+} = {
   "/user": (req, res) => ({
     userId: res.locals.userData.userId,
     userData: JSON.stringify(res.locals.userData, null, 2),
-  })
+  }),
 };
 
 const pageTitles: { [slug: string]: string | undefined } = {
@@ -23,7 +33,9 @@ const pageTitles: { [slug: string]: string | undefined } = {
   "/form-test": "Form Test",
 };
 
-const pagesByAuth: Partial<Record<string, { minAuth?: Authorization; exactAuth?: Authorization }>> = {
+const pagesByAuth: Partial<
+  Record<string, { minAuth?: Authorization; exactAuth?: Authorization }>
+> = {
   "/user": { minAuth: simpleAuthorizations[AccessLevel.Public] },
   "/api/auth/login": { exactAuth: simpleAuthorizations[AccessLevel.None] },
   "/api/auth/logout": { minAuth: simpleAuthorizations[AccessLevel.Public] },
@@ -31,12 +43,21 @@ const pagesByAuth: Partial<Record<string, { minAuth?: Authorization; exactAuth?:
 
 templateRouter.use((req, res, next) => {
   res.locals.shownPages = [];
-  for (const [ slug, pageAuthRequirements ] of Object.entries(pagesByAuth)) {
+  for (const [slug, pageAuthRequirements] of Object.entries(pagesByAuth)) {
     if (!pageAuthRequirements) {
-      res.locals.shownPages.push({ slug, title: pageTitles[slug] ?? slug.replace(/^(.*(\/.*\/)+)/, "") });
+      res.locals.shownPages.push({
+        slug,
+        title: pageTitles[slug] ?? slug.replace(/^(.*(\/.*\/)+)/, ""),
+      });
       continue;
     }
-    if (pageAuthRequirements.exactAuth && !isDeepStrictEqual(pageAuthRequirements.exactAuth, res.locals.userData.auth)) {
+    if (
+      pageAuthRequirements.exactAuth &&
+      !isDeepStrictEqual(
+        pageAuthRequirements.exactAuth,
+        res.locals.userData.auth
+      )
+    ) {
       if (slug === req.path) {
         const forbiddenError = new createHttpError.Forbidden();
         forbiddenError.expose = false;
@@ -44,7 +65,13 @@ templateRouter.use((req, res, next) => {
       }
       continue;
     }
-    if (pageAuthRequirements.minAuth && !isMinAuthSatisfied(pageAuthRequirements.minAuth, res.locals.userData.auth)) {
+    if (
+      pageAuthRequirements.minAuth &&
+      !isMinAuthSatisfied(
+        pageAuthRequirements.minAuth,
+        res.locals.userData.auth
+      )
+    ) {
       if (slug === req.path) {
         const forbiddenError = new createHttpError.Forbidden();
         forbiddenError.expose = false;
@@ -52,7 +79,10 @@ templateRouter.use((req, res, next) => {
       }
       continue;
     }
-    res.locals.shownPages.push({ slug, title: pageTitles[slug] ?? slug.replace(/^(.*(\/.*\/)+)/, "") });
+    res.locals.shownPages.push({
+      slug,
+      title: pageTitles[slug] ?? slug.replace(/^(.*(\/.*\/)+)/, ""),
+    });
   }
 
   next();
@@ -68,7 +98,7 @@ const paths: PathInfo[] = [];
 
 // Walk baseDir and add all .ejs files to paths, index files are added as /
 const baseDir = resolve("views/pages");
-dree.scan(baseDir, { extensions: [ "ejs", "html" ] }, (file) => {
+dree.scan(baseDir, { extensions: ["ejs", "html"] }, (file) => {
   const pathFromBase = file.path.replace(baseDir, "");
   const path = pathFromBase.replace(/\\/g, "/");
   const renderPath = path.replace(/^\//, "").replace(/\.ejs/g, "");
@@ -83,7 +113,7 @@ dree.scan(baseDir, { extensions: [ "ejs", "html" ] }, (file) => {
 });
 
 const bodyDir = resolve("views/page-bodies");
-dree.scan(bodyDir, { extensions: [ "ejs", "html" ] }, (file) => {
+dree.scan(bodyDir, { extensions: ["ejs", "html"] }, (file) => {
   const pathFromBase = file.path.replace(bodyDir, "");
   const path = pathFromBase.replace(/\\/g, "/");
   const renderPath = path.replace(/^\//, "").replace(/\.ejs/g, "");
@@ -106,8 +136,12 @@ if (pathSlugs.length !== pathSlugsSet.size) {
 
 for (const path of paths) {
   templateRouter.get(path.slug, (req, res) => {
-    let pageData: Record<string, unknown> = { shownPages: res.locals.shownPages, activePage: path.slug, title: pageTitles[path.slug] ?? "DanceBlue Admin" };
-    
+    let pageData: Record<string, unknown> = {
+      shownPages: res.locals.shownPages,
+      activePage: path.slug,
+      title: pageTitles[path.slug] ?? "DanceBlue Admin",
+    };
+
     if (path.type === "html") {
       res.sendFile(resolve("views/pages", path.renderPath));
       return;
@@ -119,7 +153,7 @@ for (const path of paths) {
           ...(pageDataGetters[path.slug]?.(req, res) ?? {}),
         };
       }
-      
+
       // Render page
       if (path.type === "ejs") {
         res.render(path.renderPath, pageData);

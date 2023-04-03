@@ -31,9 +31,21 @@ export const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
   // Respond with html page
   if (req.accepts("html")) {
     if (httpError.expose) {
-      res.send(`<html><head><title>${ httpError.statusCode } ${ errorReason }</title></head><body><h1>${ httpError.statusCode } ${ errorReason }</h1>Message: ${ httpError.message }${ httpError.stack ? `<br><code><pre style="border-radius: 10px;background-color: #ededed;padding:1em;">Stack Trace:\n${httpError.stack}</pre></code>` : "" }</body></html>`);
+      res.send(
+        `<html><head><title>${
+          httpError.statusCode
+        } ${errorReason}</title></head><body><h1>${
+          httpError.statusCode
+        } ${errorReason}</h1>Message: ${httpError.message}${
+          httpError.stack
+            ? `<br><code><pre style="border-radius: 10px;background-color: #ededed;padding:1em;">Stack Trace:\n${httpError.stack}</pre></code>`
+            : ""
+        }</body></html>`
+      );
     } else {
-      res.send(`<html><head><title>${ httpError.statusCode } ${ errorReason }</title></head><body><h1>${ httpError.statusCode } ${ errorReason }</h1></body></html>`);
+      res.send(
+        `<html><head><title>${httpError.statusCode} ${errorReason}</title></head><body><h1>${httpError.statusCode} ${errorReason}</h1></body></html>`
+      );
     }
     return;
   }
@@ -59,7 +71,7 @@ export const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
   }
 
   // default to plain-text. send()
-  res.type("text").send(`${ httpError.statusCode } ${ errorReason }`);
+  res.type("text").send(`${httpError.statusCode} ${errorReason}`);
   return;
 
   // if this is not HTTP error and we are not in production, let express handle it the default way

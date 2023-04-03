@@ -1,6 +1,5 @@
 jest.config.js
 jest.setup.js
-public-ts/
 public/script*
 dist/
 coverage/

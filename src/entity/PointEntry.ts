@@ -7,23 +7,23 @@ import { TeamType } from "./common.js";
 @Entity()
 export class PointEntry {
   @PrimaryGeneratedColumn("identity", { generatedIdentity: "ALWAYS" })
-    id!: number;
+  id!: number;
 
   @Column("uuid", { generated: "uuid", unique: true, nullable: false })
-    entryId!: string;
+  entryId!: string;
 
   @Column({ type: "enum", enum: TeamType })
-    type!: TeamType;
-  
+  type!: TeamType;
+
   @Column("text")
-    description!: string;
+  description!: string;
 
   @Column("integer")
-    points!: number;
+  points!: number;
 
   @ManyToOne(() => Person, (person) => person.pointEntries, { nullable: true })
-    personFrom!: Person | null;
-    
+  personFrom!: Person | null;
+
   @ManyToOne(() => Team, (team) => team.pointEntries)
-    team!: Team;
+  team!: Team;
 }

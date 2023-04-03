@@ -1,6 +1,5 @@
 import { resolve } from "path";
 
-
 import bodyParser from "body-parser";
 import cookieParser from "cookie-parser";
 import express from "express";
@@ -47,18 +46,22 @@ app.use((req, res, next) => {
 });
 
 app.use((req, res, next) => {
-  const [ token, tokenError ] = tokenFromRequest(req);
+  const [token, tokenError] = tokenFromRequest(req);
   switch (tokenError) {
-  case "invalid-header": {
-    return next(new createHttpError.BadRequest("Invalid Authorization header"));
-  }
-  case "not-bearer": {
-    const notBearerError = new createHttpError.BadRequest("Authorization header must be a Bearer token");
-    notBearerError.headers = { "WWW-Authenticate": "Bearer" };
-    return next(notBearerError);
-  }
-  default:
-    break;
+    case "invalid-header": {
+      return next(
+        new createHttpError.BadRequest("Invalid Authorization header")
+      );
+    }
+    case "not-bearer": {
+      const notBearerError = new createHttpError.BadRequest(
+        "Authorization header must be a Bearer token"
+      );
+      notBearerError.headers = { "WWW-Authenticate": "Bearer" };
+      return next(notBearerError);
+    }
+    default:
+      break;
   }
   if (token) {
     try {

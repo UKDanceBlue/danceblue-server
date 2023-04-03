@@ -4,5 +4,5 @@ import { Entity, PrimaryGeneratedColumn } from "typeorm";
 export class Configuration {
   // TODO: Come up with a better solution for this
   @PrimaryGeneratedColumn("identity", { generatedIdentity: "ALWAYS" })
-    id!: number;
+  id!: number;
 }

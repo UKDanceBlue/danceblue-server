@@ -5,11 +5,13 @@
 import { DefaultNamingStrategy, NamingStrategyInterface } from "typeorm";
 import { snakeCase as snakeCaseImport } from "typeorm/util/StringUtils.js";
 
-const snakeCase = (str: string):string => (snakeCaseImport as (param: string) => string)(str);
+const snakeCase = (str: string): string =>
+  (snakeCaseImport as (param: string) => string)(str);
 
 export class CustomNamingStrategy
   extends DefaultNamingStrategy
-  implements NamingStrategyInterface {
+  implements NamingStrategyInterface
+{
   tableName(className: string, customName: string): string {
     return customName ? customName : snakeCase(className);
   }
@@ -30,7 +32,7 @@ export class CustomNamingStrategy
   }
 
   joinColumnName(relationName: string, referencedColumnName: string): string {
-    return snakeCase(`${relationName }_${ referencedColumnName}`);
+    return snakeCase(`${relationName}_${referencedColumnName}`);
   }
 
   joinTableName(
@@ -40,11 +42,10 @@ export class CustomNamingStrategy
     // secondPropertyName: string
   ): string {
     return snakeCase(
-      `${firstTableName
-      }_${
-        firstPropertyName.replace(/\./gi, "_")
-      }_${
-        secondTableName}`
+      `${firstTableName}_${firstPropertyName.replace(
+        /\./gi,
+        "_"
+      )}_${secondTableName}`
     );
   }
 
@@ -53,19 +54,17 @@ export class CustomNamingStrategy
     propertyName: string,
     columnName?: string
   ): string {
-    return snakeCase(
-      `${tableName }_${ columnName ? columnName : propertyName}`
-    );
+    return snakeCase(`${tableName}_${columnName ? columnName : propertyName}`);
   }
 
   classTableInheritanceParentColumnName(
     parentTableName: string,
     parentTableIdPropertyName: string
   ): string {
-    return snakeCase(`${parentTableName }_${ parentTableIdPropertyName}`);
+    return snakeCase(`${parentTableName}_${parentTableIdPropertyName}`);
   }
 
   eagerJoinRelationAlias(alias: string, propertyPath: string): string {
-    return `${alias }__${ propertyPath.replace(".", "_")}`;
+    return `${alias}__${propertyPath.replace(".", "_")}`;
   }
 }

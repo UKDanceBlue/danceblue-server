@@ -7,7 +7,7 @@ export const luxonDateTimeJsDateTransformer: ValueTransformer = {
   },
   to: (value?: DateTime | null | undefined | Record<string, never>) => {
     return value?.toJSDate?.();
-  }
+  },
 };
 
 export const luxonDateISOStringTransformer: ValueTransformer = {
@@ -16,7 +16,7 @@ export const luxonDateISOStringTransformer: ValueTransformer = {
   },
   to: (value?: DateTime | null | undefined | Record<string, never>) => {
     return value?.toISODate?.();
-  }
+  },
 };
 
 export const luxonTimeISOStringTransformer: ValueTransformer = {
@@ -25,5 +25,5 @@ export const luxonTimeISOStringTransformer: ValueTransformer = {
   },
   to: (value?: DateTime | null | undefined | Record<string, never>) => {
     return value?.toISOTime?.();
-  }
+  },
 };

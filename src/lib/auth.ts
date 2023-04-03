@@ -5,7 +5,7 @@ import { Repository } from "typeorm";
 import { Person } from "../entity/Person.js";
 
 export enum AuthSource {
-  UkyLinkblue = "uky-linkblue"
+  UkyLinkblue = "uky-linkblue",
 }
 
 export enum AccessLevel {
@@ -15,7 +15,7 @@ export enum AccessLevel {
   TeamCaptain = 2,
   Committee = 3,
   CommitteeChairOrCoordinator = 3.5,
-  Admin = 4 // Tech committee
+  Admin = 4, // Tech committee
 }
 
 export enum DbRole {
@@ -23,13 +23,13 @@ export enum DbRole {
   Public = "public",
   TeamMember = "team-member",
   TeamCaptain = "team-captain",
-  Committee = "committee"
+  Committee = "committee",
 }
 
 export enum CommitteeRole {
   Chair = "chair",
   Coordinator = "coordinator",
-  Member = "member"
+  Member = "member",
 }
 
 export interface Authorization {
@@ -50,8 +50,11 @@ export interface Authorization {
  * @return True if the authorization object satisfies the minimum authorization object
  *        and false otherwise
  */
-export function isMinAuthSatisfied(minAuth: Authorization, auth: Authorization): boolean {
-  if ((auth.accessLevel < minAuth.accessLevel)) {
+export function isMinAuthSatisfied(
+  minAuth: Authorization,
+  auth: Authorization
+): boolean {
+  if (auth.accessLevel < minAuth.accessLevel) {
     return false;
   }
   if (minAuth.committeeRole && auth.committeeRole !== minAuth.committeeRole) {
@@ -70,35 +73,35 @@ export function isMinAuthSatisfied(minAuth: Authorization, auth: Authorization):
  */
 export const defaultAuthorization = {
   dbRole: DbRole.None,
-  accessLevel: AccessLevel.None
+  accessLevel: AccessLevel.None,
 } satisfies Authorization;
 
 export const simpleAuthorizations: Record<AccessLevel, Authorization> = {
   [AccessLevel.None]: defaultAuthorization,
   [AccessLevel.Public]: {
     dbRole: DbRole.Public,
-    accessLevel: AccessLevel.Public
+    accessLevel: AccessLevel.Public,
   },
   [AccessLevel.TeamMember]: {
     dbRole: DbRole.TeamMember,
-    accessLevel: AccessLevel.TeamMember
+    accessLevel: AccessLevel.TeamMember,
   },
   [AccessLevel.TeamCaptain]: {
     dbRole: DbRole.TeamCaptain,
-    accessLevel: AccessLevel.TeamCaptain
+    accessLevel: AccessLevel.TeamCaptain,
   },
   [AccessLevel.Committee]: {
     dbRole: DbRole.Committee,
-    accessLevel: AccessLevel.Committee
+    accessLevel: AccessLevel.Committee,
   },
   [AccessLevel.CommitteeChairOrCoordinator]: {
     dbRole: DbRole.Committee,
-    accessLevel: AccessLevel.CommitteeChairOrCoordinator
+    accessLevel: AccessLevel.CommitteeChairOrCoordinator,
   },
   [AccessLevel.Admin]: {
     dbRole: DbRole.Committee,
-    accessLevel: AccessLevel.Admin
-  }
+    accessLevel: AccessLevel.Admin,
+  },
 };
 
 export interface UserData {
@@ -117,7 +120,9 @@ export function defaultUserData(): UserData {
   return { auth: defaultAuthorization };
 }
 
-type OptionalNullOrUndefined<T> = Partial<{ [K in keyof T]: NonNullable<T[K]> | null | undefined }>;
+type OptionalNullOrUndefined<T> = Partial<{
+  [K in keyof T]: NonNullable<T[K]> | null | undefined;
+}>;
 /**
  * Searches the database for a user with the given auth IDs or user data, or creates a new user if none is found
  *
@@ -125,20 +130,28 @@ type OptionalNullOrUndefined<T> = Partial<{ [K in keyof T]: NonNullable<T[K]> | 
  * @param authIds The auth IDs to search for
  * @param userData The user data to fall back on if no user is found with the given auth IDs
  */
-export async function findPersonForLogin(personRepository: Repository<Person>, authIds: Partial<Record<AuthSource, string>>, userData: OptionalNullOrUndefined<Person>): Promise<[Person, boolean]> {
+export async function findPersonForLogin(
+  personRepository: Repository<Person>,
+  authIds: Partial<Record<AuthSource, string>>,
+  userData: OptionalNullOrUndefined<Person>
+): Promise<[Person, boolean]> {
   let currentPerson = await personRepository.findOne({ where: { authIds } });
   let created = false;
   if (!currentPerson && userData.linkblue) {
-    currentPerson = await personRepository.findOne({ where: { linkblue: userData.linkblue } });
+    currentPerson = await personRepository.findOne({
+      where: { linkblue: userData.linkblue },
+    });
   }
   if (!currentPerson && userData.email) {
-    currentPerson = await personRepository.findOne({ where: { email: userData.email } });
+    currentPerson = await personRepository.findOne({
+      where: { email: userData.email },
+    });
   }
   if (!currentPerson) {
     currentPerson = new Person();
     created = true;
   }
-  return [ currentPerson, created ];
+  return [currentPerson, created];
 }
 
 const jwtIssuer = "https://app.danceblue.org";
@@ -162,21 +175,37 @@ export function isValidJwtPayload(payload: unknown): payload is JwtPayload {
     return false;
   }
   const {
-    sub, dbRole, committeeRole, committee, accessLevel, teamIds, captainOfTeamIds
+    sub,
+    dbRole,
+    committeeRole,
+    committee,
+    accessLevel,
+    teamIds,
+    captainOfTeamIds,
   } = payload as Record<keyof JwtPayload, unknown>;
   if (typeof sub !== "string") {
     return false;
   }
-  if (typeof dbRole !== "string" || !Object.values(DbRole).includes(dbRole as DbRole)) {
+  if (
+    typeof dbRole !== "string" ||
+    !Object.values(DbRole).includes(dbRole as DbRole)
+  ) {
     return false;
   }
-  if (committeeRole !== undefined && (typeof committeeRole !== "string" || !Object.values(CommitteeRole).includes(committeeRole as CommitteeRole))) {
+  if (
+    committeeRole !== undefined &&
+    (typeof committeeRole !== "string" ||
+      !Object.values(CommitteeRole).includes(committeeRole as CommitteeRole))
+  ) {
     return false;
   }
   if (committee !== undefined && typeof committee !== "string") {
     return false;
   }
-  if (typeof accessLevel !== "number" || !Object.values(AccessLevel).includes(accessLevel as AccessLevel)) {
+  if (
+    typeof accessLevel !== "number" ||
+    !Object.values(AccessLevel).includes(accessLevel as AccessLevel)
+  ) {
     return false;
   }
   if (teamIds !== undefined && !Array.isArray(teamIds)) {
@@ -202,7 +231,7 @@ export function makeUserJwt(user: UserData): string {
   const payload: JwtPayload = {
     sub: user.userId,
     dbRole: user.auth.dbRole,
-    accessLevel: user.auth.accessLevel
+    accessLevel: user.auth.accessLevel,
   };
 
   if (user.auth.committeeRole) {
@@ -239,7 +268,9 @@ export function parseUserJwt(token: string): UserData {
     throw new Error("JWT_SECRET is not set");
   }
 
-  const payload = jsonwebtoken.verify(token, process.env.JWT_SECRET, { issuer: jwtIssuer });
+  const payload = jsonwebtoken.verify(token, process.env.JWT_SECRET, {
+    issuer: jwtIssuer,
+  });
 
   if (!isValidJwtPayload(payload)) {
     throw new Error("Invalid JWT payload");
@@ -250,7 +281,7 @@ export function parseUserJwt(token: string): UserData {
       accessLevel: payload.accessLevel,
       dbRole: payload.dbRole,
     },
-    userId: payload.sub
+    userId: payload.sub,
   };
 
   if (payload.committeeRole) {
@@ -275,11 +306,17 @@ export function parseUserJwt(token: string): UserData {
  * @param req The request to parse the JWT from
  * @return The JWT, or undefined if no JWT was found and any error messages
  */
-export function tokenFromRequest(req: Request): [string | undefined, "invalid-header" | "not-bearer" | null] {
+export function tokenFromRequest(
+  req: Request
+): [string | undefined, "invalid-header" | "not-bearer" | null] {
   // Prefer cookie
   let jsonWebToken: string | undefined = undefined;
   const cookies = req.cookies as unknown;
-  if ( typeof cookies === "object" && cookies && typeof (cookies as { token: unknown }).token === "string") {
+  if (
+    typeof cookies === "object" &&
+    cookies &&
+    typeof (cookies as { token: unknown }).token === "string"
+  ) {
     jsonWebToken = (cookies as { token: string }).token;
   }
 
@@ -288,15 +325,15 @@ export function tokenFromRequest(req: Request): [string | undefined, "invalid-he
   if (authHeader) {
     const headerParts = authHeader.split(" ");
     if (headerParts.length !== 2) {
-      return [ undefined, "invalid-header" ];
+      return [undefined, "invalid-header"];
     }
     const authType = headerParts[0];
     jsonWebToken = headerParts[1];
-  
+
     if (authType !== "Bearer") {
-      return [ undefined, "not-bearer" ];
+      return [undefined, "not-bearer"];
     }
   }
 
-  return [ jsonWebToken, null ];
+  return [jsonWebToken, null];
 }

@@ -9,12 +9,20 @@ import createHttpError from "http-errors";
  * @param next The next function to call if the environment variable is not set
  * @return True if the environment variable is set, false otherwise
  */
-export function requireEnv<const T extends keyof NodeJS.ProcessEnv>(variable: string | undefined, name: T, next: NextFunction): [T, string] | null {
+export function requireEnv<const T extends keyof NodeJS.ProcessEnv>(
+  variable: string | undefined,
+  name: T,
+  next: NextFunction
+): [T, string] | null {
   if (!variable) {
-    next(createHttpError.InternalServerError(`Required environment variable not set: ${name}`));
+    next(
+      createHttpError.InternalServerError(
+        `Required environment variable not set: ${name}`
+      )
+    );
     return null;
   } else {
-    return [ name, variable ];
+    return [name, variable];
   }
 }
 
@@ -25,7 +33,9 @@ export function requireEnv<const T extends keyof NodeJS.ProcessEnv>(variable: st
  * @param next The next function to call if any of the environment variables are not set
  * @return True if all of the environment variables are set, false otherwise
  */
-export function requireEnvs<const T extends Record<keyof NodeJS.ProcessEnv, string | undefined>>(variables: T, next: NextFunction): Record<keyof T, string> | null {
+export function requireEnvs<
+  const T extends Record<keyof NodeJS.ProcessEnv, string | undefined>
+>(variables: T, next: NextFunction): Record<keyof T, string> | null {
   // @ts-expect-error This will be valid after the for loop
   const retVal: Record<keyof T, string> = {};
   for (const key in variables) {

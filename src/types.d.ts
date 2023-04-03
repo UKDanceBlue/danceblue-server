@@ -9,7 +9,7 @@ declare global {
     interface Locals {
       // Remember to make every property optional if it will ever be undefined
       userData: UserData;
-      pageData: Record<string, unknown>;
+      shownPages?: { slug: string; title: string }[];
       oidcClient?: Client;
       applicationUrl: URL;
     }

@@ -1,21 +1,7 @@
 /* eslint-disable no-fallthrough */
 import { Column } from "typeorm";
 
-import { AccessLevel, Authorization } from "../lib/auth.js";
-
-export enum DbRole {
-  None = "none",
-  Public = "public",
-  TeamMember = "team-member",
-  TeamCaptain = "team-captain",
-  Committee = "committee"
-}
-
-export enum CommitteeRole {
-  Chair = "chair",
-  Coordinator = "coordinator",
-  Member = "member"
-}
+import { AccessLevel, Authorization, CommitteeRole, DbRole } from "../lib/auth.js";
 
 export class Role {
   @Column("enum", { enum: DbRole, default: DbRole.Public })

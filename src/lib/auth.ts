@@ -3,7 +3,6 @@ import jsonwebtoken from "jsonwebtoken";
 import { Repository } from "typeorm";
 
 import { Person } from "../entity/Person.js";
-import { CommitteeRole, DbRole } from "../entity/Role.js";
 
 export enum AuthSource {
   UkyLinkblue = "uky-linkblue"
@@ -19,6 +18,20 @@ export enum AccessLevel {
   Admin = 4 // Tech committee
 }
 
+export enum DbRole {
+  None = "none",
+  Public = "public",
+  TeamMember = "team-member",
+  TeamCaptain = "team-captain",
+  Committee = "committee"
+}
+
+export enum CommitteeRole {
+  Chair = "chair",
+  Coordinator = "coordinator",
+  Member = "member"
+}
+
 export interface Authorization {
   dbRole: DbRole;
   committeeRole?: CommitteeRole;
@@ -27,16 +40,66 @@ export interface Authorization {
 }
 
 /**
+ * Compares an authorization object to a minimum authorization object
+ * and returns true if the authorization object satisfies the minimum
+ * authorization object (i.e. the authorization object has at least
+ * the same authorization as the minimum authorization object)
+ *
+ * @param minAuth The minimum authorization object
+ * @param auth The authorization object to compare to the minimum authorization object
+ * @return True if the authorization object satisfies the minimum authorization object
+ *        and false otherwise
+ */
+export function isMinAuthSatisfied(minAuth: Authorization, auth: Authorization): boolean {
+  if ((auth.accessLevel < minAuth.accessLevel)) {
+    return false;
+  }
+  if (minAuth.committeeRole && auth.committeeRole !== minAuth.committeeRole) {
+    return false;
+  }
+  if (minAuth.committee && auth.committee !== minAuth.committee) {
+    return false;
+  }
+  return true;
+}
+
+/**
  * Returns a default authorization object with no authorization
  *
  * @return A default authorization object
  */
-export function defaultAuthorization(): Authorization {
-  return {
-    dbRole: DbRole.None,
-    accessLevel: AccessLevel.None
-  };
-}
+export const defaultAuthorization = {
+  dbRole: DbRole.None,
+  accessLevel: AccessLevel.None
+} satisfies Authorization;
+
+export const simpleAuthorizations: Record<AccessLevel, Authorization> = {
+  [AccessLevel.None]: defaultAuthorization,
+  [AccessLevel.Public]: {
+    dbRole: DbRole.Public,
+    accessLevel: AccessLevel.Public
+  },
+  [AccessLevel.TeamMember]: {
+    dbRole: DbRole.TeamMember,
+    accessLevel: AccessLevel.TeamMember
+  },
+  [AccessLevel.TeamCaptain]: {
+    dbRole: DbRole.TeamCaptain,
+    accessLevel: AccessLevel.TeamCaptain
+  },
+  [AccessLevel.Committee]: {
+    dbRole: DbRole.Committee,
+    accessLevel: AccessLevel.Committee
+  },
+  [AccessLevel.CommitteeChairOrCoordinator]: {
+    dbRole: DbRole.Committee,
+    accessLevel: AccessLevel.CommitteeChairOrCoordinator
+  },
+  [AccessLevel.Admin]: {
+    dbRole: DbRole.Committee,
+    accessLevel: AccessLevel.Admin
+  }
+};
 
 export interface UserData {
   auth: Authorization;
@@ -51,7 +114,7 @@ export interface UserData {
  * @return A default user object
  */
 export function defaultUserData(): UserData {
-  return { auth: defaultAuthorization() };
+  return { auth: defaultAuthorization };
 }
 
 type OptionalNullOrUndefined<T> = Partial<{ [K in keyof T]: NonNullable<T[K]> | null | undefined }>;

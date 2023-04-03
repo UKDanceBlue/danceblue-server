@@ -10,8 +10,8 @@ import { appDataSource } from "../../../data-source.js";
 import { Person } from "../../../entity/Person.js";
 import { AuthSource, findPersonForLogin, makeUserJwt } from "../../../lib/auth.js";
 import { requireEnvs } from "../../../lib/envutils.js";
-import { NYI } from "../../../lib/nyi.js";
-import { saveSessionAsync } from "../../../lib/session.js";
+import { NYI, notFound } from "../../../lib/expressHandlers.js";
+import { destroySessionAsync, saveSessionAsync } from "../../../lib/session.js";
 
 const authApiRouter = express.Router();
 
@@ -58,7 +58,11 @@ authApiRouter.use(async (req, res, next) => {
   }
 });
 
-authApiRouter.post("/logout", NYI);
+authApiRouter.get("/logout", async (req, res) => {
+  await destroySessionAsync(req);
+  res.clearCookie("token");
+  res.redirect("/");
+});
 
 authApiRouter.post("/oidc-callback", async (req, res, next) => {
   try {
@@ -169,5 +173,7 @@ authApiRouter.get("/login", async (req, res, next) => {
     return next(err);
   }
 });
+
+authApiRouter.all("*", notFound);
 
 export default authApiRouter;

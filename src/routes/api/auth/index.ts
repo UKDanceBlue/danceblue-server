@@ -3,6 +3,7 @@ import createHttpError from "http-errors";
 import jsonwebtoken from "jsonwebtoken";
 import { Issuer, generators } from "openid-client";
 
+import { logout } from "../../../actions/auth.js";
 import { appDataSource } from "../../../data-source.js";
 import { LoginFlowSession } from "../../../entity/LoginFlowSession.js";
 import { Person } from "../../../entity/Person.js";
@@ -50,7 +51,7 @@ authApiRouter.use(async (req, res, next) => {
 });
 
 authApiRouter.get("/logout", (req, res) => {
-  res.clearCookie("token");
+  logout(req, res);
   res.redirect("/");
 });
 

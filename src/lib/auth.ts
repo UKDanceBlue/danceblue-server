@@ -116,9 +116,7 @@ export interface UserData {
  *
  * @return A default user object
  */
-export function defaultUserData(): UserData {
-  return { auth: defaultAuthorization };
-}
+export const defaultUserData = { auth: defaultAuthorization };
 
 type OptionalNullOrUndefined<T> = Partial<{
   [K in keyof T]: NonNullable<T[K]> | null | undefined;

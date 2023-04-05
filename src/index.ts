@@ -6,9 +6,16 @@ import express from "express";
 import createHttpError from "http-errors";
 import jsonwebtoken from "jsonwebtoken";
 
+import { logout } from "./actions/auth.js";
 import { appDataSource } from "./data-source.js";
-import { defaultUserData, parseUserJwt, tokenFromRequest } from "./lib/auth.js";
+import {
+  UserData,
+  defaultUserData,
+  parseUserJwt,
+  tokenFromRequest,
+} from "./lib/auth.js";
 import { errorHandler } from "./lib/errorhandler.js";
+import { notFound } from "./lib/expressHandlers.js";
 import apiRouter from "./routes/api/index.js";
 import templateRouter from "./routes/template.js";
 
@@ -63,36 +70,40 @@ app.use((req, res, next) => {
     default:
       break;
   }
+
+  let error: unknown;
+  let userData: UserData | undefined = undefined;
   if (token) {
     try {
-      res.locals.userData = parseUserJwt(token);
+      userData = parseUserJwt(token);
     } catch (err) {
-      if (err instanceof jsonwebtoken.JsonWebTokenError) {
-        const httpError = new createHttpError.Unauthorized(err.message);
-        if (err.stack) {
-          httpError.stack = err.stack;
-        }
-        return next(httpError);
-      } else if (err instanceof jsonwebtoken.TokenExpiredError) {
-        const httpError = new createHttpError.Unauthorized(err.message);
-        if (err.stack) {
-          httpError.stack = err.stack;
-        }
-        return next(httpError);
+      logout(req, res);
+      if (err instanceof jsonwebtoken.TokenExpiredError) {
+        // Do nothing
       } else if (err instanceof jsonwebtoken.NotBeforeError) {
         const httpError = new createHttpError.Unauthorized(err.message);
         if (err.stack) {
           httpError.stack = err.stack;
         }
-        return next(httpError);
+        error = httpError;
+      } else if (err instanceof jsonwebtoken.JsonWebTokenError) {
+        const httpError = new createHttpError.Unauthorized(err.message);
+        if (err.stack) {
+          httpError.stack = err.stack;
+        }
+        error = httpError;
       } else {
-        return next(err);
+        error = err;
       }
     }
-  } else {
-    res.locals.userData = defaultUserData();
   }
-  return next();
+
+  res.locals.userData = userData ?? defaultUserData;
+  if (error) {
+    return next(error);
+  } else {
+    return next();
+  }
 });
 
 app.all("/printer", (req, res) => {
@@ -117,9 +128,7 @@ This route will render the page with only res.locals.pageData
 */
 app.use(templateRouter);
 
-app.use((req, res, next) => {
-  return next(new createHttpError.NotFound());
-});
+app.all("*", notFound);
 
 app.use(errorHandler);
 

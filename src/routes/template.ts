@@ -14,31 +14,29 @@ import {
 const templateRouter = express.Router();
 
 // Map of slugs to getters for page data
-const pageDataGetters: {
-  [slug: string]: (
-    req: express.Request,
-    res: express.Response
-  ) => Record<string, unknown>;
-} = {
+const pageDataGetters: Record<
+  string,
+  (req: express.Request, res: express.Response) => Record<string, unknown>
+> = {
   "/user": (req, res) => ({
     userId: res.locals.userData.userId,
     userData: JSON.stringify(res.locals.userData, null, 2),
   }),
 };
 
-const pageTitles: { [slug: string]: string | undefined } = {
+const pageTitles: Record<string, string | undefined> = {
   "/user": "User",
-  "/api/auth/login": "Login",
-  "/api/auth/logout": "Logout",
   "/form-test": "Form Test",
 };
 
+/**
+ * A page must be in this object to appear in the navbar
+ */
 const pagesByAuth: Partial<
-  Record<string, { minAuth?: Authorization; exactAuth?: Authorization }>
+  Record<string, { minAuth?: Authorization; exactAuth?: Authorization } | null>
 > = {
   "/user": { minAuth: simpleAuthorizations[AccessLevel.Public] },
-  "/api/auth/login": { exactAuth: simpleAuthorizations[AccessLevel.None] },
-  "/api/auth/logout": { minAuth: simpleAuthorizations[AccessLevel.Public] },
+  "/form-test": null,
 };
 
 templateRouter.use((req, res, next) => {
@@ -47,7 +45,7 @@ templateRouter.use((req, res, next) => {
     if (!pageAuthRequirements) {
       res.locals.shownPages.push({
         slug,
-        title: pageTitles[slug] ?? slug.replace(/^(.*(\/.*\/)+)/, ""),
+        title: pageTitles[slug] ?? slug.replace(/^\/?(.*(\/.*\/)+)?\/?/, ""),
       });
       continue;
     }
@@ -140,6 +138,7 @@ for (const path of paths) {
       shownPages: res.locals.shownPages,
       activePage: path.slug,
       title: pageTitles[path.slug] ?? "DanceBlue Admin",
+      isLoggedIn: res.locals.userData.userId != null,
     };
 
     if (path.type === "html") {

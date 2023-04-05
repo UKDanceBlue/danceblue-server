@@ -1,21 +1,22 @@
 <header>
-  <nav class="navbar navbar-expand-lg bg-body-tertiary">
-    <a class="navbar-brand" href="#">
-      <img src="/favicon.ico" alt="Logo" width="64" height="64" class="d-inline-block align-text-top">
-    </a>
-    <h1>
-      <%= title %>
-    </h1>
-    <ul class="navbar-nav">
+  <nav class="navbar navbar-expand-lg bg-body-tertiary d-flex justify-content-between">
+    <div class="d-flex justify-content-start">
+      <a class="navbar-brand" href="/">
+        <img src="/favicon.ico" alt="Logo" width="64" height="64" class="d-inline-block align-text-top">
+      </a>
+      <h1>
+        <%= title %>
+      </h1>
+    </div>
+    <ul class="navbar-nav align-self-end">
       <%_ for( let index=0; index < shownPages.length; index++ ) { _%>
-        <li class="nav-item">
-          <a class="nav-link<%- activePage === shownPages[index].slug ? " active\"aria-current=\"page": "" %>"
-            href="<%=shownPages[index].slug %>"
-              >
-              <%= shownPages[index].title %>
-          </a>
-        </li>
-        <%_ } _%>
+      <%- include("./nav-item.ejs", shownPages[index]) %>
+      <%_ } _%>
+      <%_ if (isLoggedIn) { _%>
+      <%- include("./nav-item.ejs", { slug: "/api/auth/logout", title: "Log Out"}) %>
+      <%_ } else { _%>
+      <%- include("./nav-item.ejs", { slug: "/api/auth/login", title: "Log In"}) %>
+      <%_ } _%>
     </ul>
   </nav>
 </header>

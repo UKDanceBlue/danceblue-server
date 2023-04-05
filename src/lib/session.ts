@@ -18,6 +18,23 @@ export function saveSessionAsync(req: Request): Promise<void> {
 }
 
 /**
+ * Reload the session asynchronously (rather than using the callback)
+ *
+ * @param req Express request
+ */
+export function reloadSessionAsync(req: Request): Promise<void> {
+  return new Promise((resolve, reject) => {
+    req.session.reload((err) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve();
+      }
+    });
+  });
+}
+
+/**
  * Destroy the session asynchronously (rather than using the callback)
  *
  * @param req Express request

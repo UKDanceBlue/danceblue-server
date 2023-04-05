@@ -7,6 +7,7 @@ import { Client } from "./entity/Client.js";
 import { Configuration } from "./entity/Configuration.js";
 import { Event } from "./entity/Event.js";
 import { Image } from "./entity/Image.js";
+import { LoginFlowSession } from "./entity/LoginFlowSession.js";
 import { Notification } from "./entity/Notification.js";
 import { Person } from "./entity/Person.js";
 import { PointEntry } from "./entity/PointEntry.js";
@@ -45,6 +46,7 @@ export const appDataSource = new DataSource({
     PointEntry,
     PointOpportunity,
     Team,
+    LoginFlowSession,
   ],
   migrations: [],
   subscribers: [],

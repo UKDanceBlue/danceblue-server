@@ -1,58 +1,39 @@
-import { randomUUID } from "crypto";
-
 import express from "express";
-import session, { SessionOptions } from "express-session";
 import createHttpError from "http-errors";
 import jsonwebtoken from "jsonwebtoken";
 import { Issuer, generators } from "openid-client";
 
 import { appDataSource } from "../../../data-source.js";
+import { LoginFlowSession } from "../../../entity/LoginFlowSession.js";
 import { Person } from "../../../entity/Person.js";
 import {
   AuthSource,
   findPersonForLogin,
   makeUserJwt,
 } from "../../../lib/auth.js";
-import { requireEnvs } from "../../../lib/envutils.js";
 import { notFound } from "../../../lib/expressHandlers.js";
-import { destroySessionAsync, saveSessionAsync } from "../../../lib/session.js";
 
 const authApiRouter = express.Router();
 
-if (!process.env.COOKIE_SECRET) {
-  console.error("Missing COOKIE_SECRET environment variable");
-  process.exit(1);
+if (!process.env.MS_OIDC_URL) {
+  throw new Error("Missing MS_OIDC_URL environment variable");
 }
-
-const sessionConfig: SessionOptions = {
-  secret: process.env.COOKIE_SECRET, // https://github.com/expressjs/session#secret
-  cookie: { path: "/api/auth", secure: true },
-  genid: () => randomUUID(),
-};
-
-authApiRouter.use(session(sessionConfig));
+if (!process.env.MS_CLIENT_ID) {
+  throw new Error("Missing MS_CLIENT_ID environment variable");
+}
+if (!process.env.MS_CLIENT_SECRET) {
+  throw new Error("Missing MS_CLIENT_SECRET environment variable");
+}
 
 authApiRouter.use(async (req, res, next) => {
   try {
     if (!res.locals.oidcClient) {
-      const envs = requireEnvs(
-        {
-          MS_OIDC_URL: process.env.MS_OIDC_URL,
-          MS_CLIENT_ID: process.env.MS_CLIENT_ID,
-          MS_CLIENT_SECRET: process.env.MS_CLIENT_SECRET,
-        },
-        next
+      const microsoftGateway = await Issuer.discover(
+        process.env.MS_OIDC_URL ?? ""
       );
-
-      if (!envs) {
-        return;
-      }
-      const { MS_CLIENT_ID, MS_CLIENT_SECRET, MS_OIDC_URL } = envs;
-
-      const microsoftGateway = await Issuer.discover(MS_OIDC_URL);
       res.locals.oidcClient = new microsoftGateway.Client({
-        client_id: MS_CLIENT_ID,
-        client_secret: MS_CLIENT_SECRET,
+        client_id: process.env.MS_CLIENT_ID ?? "",
+        client_secret: process.env.MS_CLIENT_SECRET ?? "",
         redirect_uris: [
           new URL(
             "/api/auth/oidc-callback",
@@ -68,36 +49,52 @@ authApiRouter.use(async (req, res, next) => {
   }
 });
 
-authApiRouter.get("/logout", async (req, res) => {
-  await destroySessionAsync(req);
+authApiRouter.get("/logout", (req, res) => {
   res.clearCookie("token");
   res.redirect("/");
 });
 
 authApiRouter.post("/oidc-callback", async (req, res, next) => {
+  if (!res.locals.oidcClient) {
+    throw createHttpError.InternalServerError("Missing OIDC client");
+  }
+
+  const params = res.locals.oidcClient.callbackParams(req);
+  const flowSessionId = params.state;
+
+  if (flowSessionId == null) {
+    return next(createHttpError.BadRequest());
+  }
+
+  let sessionDeleted = false;
+
   try {
-    if (!res.locals.oidcClient) {
-      return next(createHttpError.InternalServerError("Missing OIDC client"));
-    }
-    console.log(req.session);
-    if (!req.session.codeVerifier) {
-      return next(createHttpError.InternalServerError("Missing codeVerifier"));
+    const sessionRepository = appDataSource.getRepository(LoginFlowSession);
+    const session = await sessionRepository.findOneBy({
+      sessionId: flowSessionId,
+    });
+
+    if (!session?.codeVerifier) {
+      throw createHttpError.InternalServerError(
+        `No ${session == null ? "session" : "codeVerifier"} found`
+      );
     }
 
     // Perform OIDC validation
-    const params = res.locals.oidcClient.callbackParams(req);
     const tokenSet = await res.locals.oidcClient.callback(
       new URL("/api/auth/oidc-callback", res.locals.applicationUrl).toString(),
       params,
-      { code_verifier: req.session.codeVerifier }
+      { code_verifier: session.codeVerifier, state: flowSessionId }
     );
 
-    // Clear the codeVerifier and then load the auth info
-    delete req.session.codeVerifier;
-    await saveSessionAsync(req);
+    // Destroy the session
+    await sessionRepository.delete({
+      sessionId: flowSessionId,
+    });
+    sessionDeleted = true;
 
     if (!tokenSet.access_token) {
-      return next(createHttpError.InternalServerError("Missing access token"));
+      throw createHttpError.InternalServerError("Missing access token");
     }
 
     const { oid: objectId, email } = tokenSet.claims();
@@ -105,7 +102,7 @@ authApiRouter.post("/oidc-callback", async (req, res, next) => {
       json: true,
     });
     if (!decodedJwt) {
-      return next(createHttpError.InternalServerError("Error decoding JWT"));
+      throw createHttpError.InternalServerError("Error decoding JWT");
     }
     const {
       given_name: firstName,
@@ -170,24 +167,31 @@ authApiRouter.post("/oidc-callback", async (req, res, next) => {
     res.cookie("token", jwt, {
       httpOnly: true,
       secure: true,
-      sameSite: "strict",
+      sameSite: "lax",
     });
 
-    res.redirect("/");
+    return res.redirect("/");
   } catch (err) {
+    if (!sessionDeleted) {
+      const sessionRepository = appDataSource.getRepository(LoginFlowSession);
+      sessionRepository
+        .delete({ sessionId: flowSessionId })
+        .catch(console.error);
+    }
     return next(err);
   }
 });
 
 authApiRouter.get("/login", async (req, res, next) => {
   try {
-    req.session.codeVerifier = generators.codeVerifier();
-    const codeChallenge = generators.codeChallenge(req.session.codeVerifier);
-    await saveSessionAsync(req);
-
     if (!res.locals.oidcClient) {
       return next(createHttpError.InternalServerError("Missing OIDC client"));
     }
+
+    const sessionRepository = appDataSource.getRepository(LoginFlowSession);
+    const session = await sessionRepository.save(sessionRepository.create());
+
+    const codeChallenge = generators.codeChallenge(session.codeVerifier);
 
     return res.redirect(
       res.locals.oidcClient.authorizationUrl({
@@ -195,6 +199,7 @@ authApiRouter.get("/login", async (req, res, next) => {
         response_mode: "form_post",
         code_challenge: codeChallenge,
         code_challenge_method: "S256",
+        state: session.sessionId,
       })
     );
   } catch (err) {

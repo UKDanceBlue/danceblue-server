@@ -96,12 +96,12 @@ app.use((req, res, next) => {
 });
 
 app.all("/printer", (req, res) => {
-  console.log("Request:");
-  console.log(req.method);
-  console.log(req.query);
-  console.log(req.params);
-  console.log(req.url);
-  console.log(req.body);
+  console.log("Request details:");
+  console.log("Method: %s", req.method);
+  console.log("Method: %s", req.url);
+  console.log("Query: %s", req.query);
+  console.log("Params: %s", req.params);
+  console.log("Body: %s", req.body);
   res.status(200).send();
 });
 

@@ -27,4 +27,7 @@ export class LoginFlowSession {
     transformer: luxonDateTimeJsDateTransformer,
   })
   creationDate!: DateTime;
+
+  @Column("text", { nullable: true })
+  redirectToAfterLogin?: string;
 }

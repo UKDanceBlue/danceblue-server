@@ -28,8 +28,8 @@ if (!process.env.APPLICATION_HOST) {
   console.error("Missing APPLICATION_HOST environment variable");
   process.exit(1);
 }
-const url: URL = new URL(`https://${process.env.APPLICATION_HOST}`);
-url.port = port.toString();
+const FAKE_APP_URL: URL = new URL(`https://${process.env.APPLICATION_HOST}`);
+FAKE_APP_URL.port = port.toString();
 
 await appDataSource.initialize();
 
@@ -45,9 +45,8 @@ app.set("views", resolve("views/pages"));
 
 app.use((req, res, next) => {
   res.locals.pageData = {};
-  const urlWithProtocol = new URL("", url);
-  urlWithProtocol.protocol = req.protocol;
-  res.locals.applicationUrl = urlWithProtocol;
+  res.locals.applicationUrl = new URL("", FAKE_APP_URL);
+  res.locals.applicationUrl.protocol = req.protocol;
 
   return next();
 });

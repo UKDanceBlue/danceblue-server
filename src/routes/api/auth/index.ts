@@ -171,7 +171,7 @@ authApiRouter.post("/oidc-callback", async (req, res, next) => {
       sameSite: "lax",
     });
 
-    return res.redirect("/");
+    return res.redirect(session.redirectToAfterLogin ?? "/");
   } catch (err) {
     if (!sessionDeleted) {
       const sessionRepository = appDataSource.getRepository(LoginFlowSession);
@@ -189,8 +189,24 @@ authApiRouter.get("/login", async (req, res, next) => {
       return next(createHttpError.InternalServerError("Missing OIDC client"));
     }
 
+    // Figure out where to redirect to after login
+    const loginFlowSessionInitializer: Partial<LoginFlowSession> = {};
+    const { host: hostHeader } = req.headers;
+    const host = hostHeader
+      ? new URL(`https://${hostHeader}`).host
+      : res.locals.applicationUrl.host;
+    if (req.headers.referer && req.headers.referer.length > 0) {
+      const referer = new URL(req.headers.referer);
+      console.log(referer.host, host);
+      if (referer.host === host) {
+        loginFlowSessionInitializer.redirectToAfterLogin = referer.pathname;
+      }
+    }
+
     const sessionRepository = appDataSource.getRepository(LoginFlowSession);
-    const session = await sessionRepository.save(sessionRepository.create());
+    const session = await sessionRepository.save(
+      sessionRepository.create(loginFlowSessionInitializer)
+    );
 
     const codeChallenge = generators.codeChallenge(session.codeVerifier);
 

@@ -54,5 +54,5 @@ export const appDataSource = new DataSource({
   namingStrategy: new CustomNamingStrategy(),
   useUTC: true,
   // DANGER!!!
-  dropSchema: true,
+  // dropSchema: true,
 });

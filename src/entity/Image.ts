@@ -1,10 +1,9 @@
-import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity } from "typeorm";
+
+import { EntityWithId } from "./EntityWithId.js";
 
 @Entity()
-export class Image {
-  @PrimaryGeneratedColumn("identity", { generatedIdentity: "ALWAYS" })
-  id!: number;
-
+export class Image extends EntityWithId {
   @Column("uuid", { generated: "uuid", unique: true, nullable: false })
   imageId!: string;
 

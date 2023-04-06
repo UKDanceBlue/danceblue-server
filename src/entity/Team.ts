@@ -1,21 +1,13 @@
-import {
-  Column,
-  Entity,
-  ManyToMany,
-  OneToMany,
-  PrimaryGeneratedColumn,
-} from "typeorm";
+import { Column, Entity, ManyToMany, OneToMany } from "typeorm";
 
+import { EntityWithId } from "./EntityWithId.js";
 import { Person } from "./Person.js";
 import { PointEntry } from "./PointEntry.js";
 import { Role } from "./Role.js";
 import { TeamType } from "./common.js";
 
 @Entity()
-export class Team {
-  @PrimaryGeneratedColumn("identity", { generatedIdentity: "ALWAYS" })
-  id!: number;
-
+export class Team extends EntityWithId {
   @Column("uuid", { generated: "uuid", unique: true, nullable: false })
   teamId!: string;
 

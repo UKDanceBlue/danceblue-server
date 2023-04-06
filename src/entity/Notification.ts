@@ -1,10 +1,9 @@
-import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity } from "typeorm";
+
+import { EntityWithId } from "./EntityWithId.js";
 
 @Entity()
-export class Notification {
-  @PrimaryGeneratedColumn("identity", { generatedIdentity: "ALWAYS" })
-  id!: number;
-
+export class Notification extends EntityWithId {
   @Column("uuid", { generated: "uuid", unique: true, nullable: false })
   notificationId!: string;
 }

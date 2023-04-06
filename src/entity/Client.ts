@@ -1,18 +1,10 @@
-import {
-  Check,
-  Column,
-  Entity,
-  ManyToOne,
-  PrimaryGeneratedColumn,
-} from "typeorm";
+import { Check, Column, Entity, ManyToOne } from "typeorm";
 
+import { EntityWithId } from "./EntityWithId.js";
 import { Person } from "./Person.js";
 
 @Entity()
-export class Client {
-  @PrimaryGeneratedColumn("identity", { generatedIdentity: "ALWAYS" })
-  id!: number;
-
+export class Client extends EntityWithId {
   @Column("uuid", { generated: "uuid", unique: true, nullable: false })
   deviceId!: string;
 

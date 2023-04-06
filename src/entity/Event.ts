@@ -1,21 +1,13 @@
 import { DateTime } from "luxon";
-import {
-  Column,
-  Entity,
-  JoinTable,
-  ManyToMany,
-  PrimaryGeneratedColumn,
-} from "typeorm";
+import { Column, Entity, JoinTable, ManyToMany } from "typeorm";
 
 import { luxonDateTimeJsDateTransformer } from "../lib/transformers.js";
 
+import { EntityWithId } from "./EntityWithId.js";
 import { Image } from "./Image.js";
 
 @Entity()
-export class Event {
-  @PrimaryGeneratedColumn("identity", { generatedIdentity: "ALWAYS" })
-  id!: number;
-
+export class Event extends EntityWithId {
   @Column("uuid", { generated: "uuid", unique: true, nullable: false })
   eventId!: string;
 

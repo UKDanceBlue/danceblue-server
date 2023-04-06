@@ -2,7 +2,6 @@ import "reflect-metadata";
 import * as dotenv from "dotenv";
 import { DataSource } from "typeorm";
 
-import { CustomNamingStrategy } from "./NamingStrategy.js";
 import { Client } from "./entity/Client.js";
 import { Configuration } from "./entity/Configuration.js";
 import { Event } from "./entity/Event.js";
@@ -13,6 +12,7 @@ import { Person } from "./entity/Person.js";
 import { PointEntry } from "./entity/PointEntry.js";
 import { PointOpportunity } from "./entity/PointOpportunity.js";
 import { Team } from "./entity/Team.js";
+import { CustomNamingStrategy } from "./lib/NamingStrategy.js";
 
 dotenv.config();
 

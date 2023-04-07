@@ -1,4 +1,4 @@
-import { DateTime } from "luxon";
+import { DateTime, Interval } from "luxon";
 import { Column, Entity, JoinTable, ManyToMany } from "typeorm";
 
 import { luxonDateTimeJsDateTransformer } from "../lib/transformers.js";
@@ -15,17 +15,38 @@ export class Event extends EntityWithId {
   @JoinTable()
   images!: Image[];
 
-  @Column("timestamptz", { transformer: luxonDateTimeJsDateTransformer })
-  start!: DateTime;
+  @Column("timestamptz", {
+    transformer: luxonDateTimeJsDateTransformer,
+    array: true,
+    nullable: true,
+  })
+  start!: DateTime[];
 
-  @Column("timestamptz", { transformer: luxonDateTimeJsDateTransformer })
-  end!: DateTime;
+  @Column("timestamptz", {
+    transformer: luxonDateTimeJsDateTransformer,
+    array: true,
+    nullable: true,
+  })
+  end!: DateTime[];
+
+  get intervals(): Interval[] {
+    if (this.start.length !== this.end.length) {
+      throw new Error("Start and end DateTime arrays have different lengths");
+    }
+    return this.start.map((start, index) => {
+      const end = this.end[index];
+      if (!end) {
+        throw new Error("End DateTime is undefined");
+      }
+      return Interval.fromDateTimes(start, end);
+    });
+  }
 
   @Column("text")
   title!: string;
 
   @Column("text", { nullable: true })
-  shortDescription!: string;
+  summary!: string;
 
   @Column("text", { nullable: true })
   description!: string;

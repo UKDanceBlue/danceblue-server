@@ -2,6 +2,8 @@ import { ErrorRequestHandler } from "express";
 import createHttpError from "http-errors";
 import { getReasonPhrase } from "http-status-codes";
 
+import { ErrorApiResponse } from "./JsonResponse.js";
+
 export const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
   if (res.headersSent) {
     // Allow express to handle the error if headers have already been sent
@@ -31,49 +33,51 @@ export const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
   // Respond with html page
   if (req.accepts("html")) {
     if (httpError.expose) {
-      res.send(
-        `<html><head><title>${
-          httpError.statusCode
-        } ${errorReason}</title></head><body><h1>${
-          httpError.statusCode
-        } ${errorReason}</h1>Message: ${httpError.message}${
-          httpError.stack
-            ? `<br><code><pre style="border-radius: 10px;background-color: #ededed;padding:1em;">Stack Trace:\n${httpError.stack}</pre></code>`
-            : ""
-        }</body></html>`
-      );
+      res
+        .type("html")
+        .send(
+          `<html><head><title>${
+            httpError.statusCode
+          } ${errorReason}</title></head><body><h1>${
+            httpError.statusCode
+          } ${errorReason}</h1>Message: ${httpError.message}${
+            httpError.stack
+              ? `<br><code><pre style="border-radius: 10px;background-color: #ededed;padding:1em;">Stack Trace:\n${httpError.stack}</pre></code>`
+              : ""
+          }</body></html>`
+        );
     } else {
-      res.send(
-        `<html><head><title>${httpError.statusCode} ${errorReason}</title></head><body><h1>${httpError.statusCode} ${errorReason}</h1></body></html>`
-      );
+      res
+        .type("html")
+        .send(
+          `<html><head><title>${httpError.statusCode} ${errorReason}</title></head><body><h1>${httpError.statusCode} ${errorReason}</h1></body></html>`
+        );
     }
     return;
   }
 
   // Respond with json
   if (req.accepts("json")) {
-    const responseObject: {
-      error: string;
-      code: number;
-      stack?: string;
-      message?: string;
-    } = { error: errorReason, code: httpError.statusCode };
+    const responseObject: ErrorApiResponse = {
+      ok: false,
+      errorMessage: errorReason,
+    };
 
     if (httpError.expose) {
-      responseObject.message = httpError.message;
-      if (httpError.stack) {
-        responseObject.stack = httpError.stack;
+      responseObject.errorDetails = httpError.message;
+      if (httpError.stack && process.env.NODE_ENV !== "production") {
+        responseObject.errorDetails = httpError.stack;
+      }
+      if (httpError.cause && process.env.NODE_ENV !== "production") {
+        responseObject.errorCause = httpError.cause;
       }
     }
 
-    res.send(responseObject);
+    res.type("application/json").send(responseObject);
     return;
   }
 
   // default to plain-text. send()
   res.type("text").send(`${httpError.statusCode} ${errorReason}`);
   return;
-
-  // if this is not HTTP error and we are not in production, let express handle it the default way
-  return next(err);
 };

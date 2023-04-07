@@ -14,6 +14,11 @@ import userApiRouter from "./user/index.js";
 
 const apiRouter = express.Router();
 
+apiRouter.use((req, res, next) => {
+  res.contentType("application/json");
+  return next();
+});
+
 // No authentication required
 apiRouter.use("/coniguration", configurationApiRouter);
 apiRouter.use("/auth", authApiRouter);

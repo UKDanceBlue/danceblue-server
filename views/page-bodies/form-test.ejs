@@ -8,14 +8,14 @@
     <input type="submit" value="Submit">
   </form>
 
-  <form action="/printer" id="xhr-form-get" data-clear-form="true">
+  <form action="/printer" class="xhr-form" data-clear-form="true">
     <h2>XHR GET Test</h2>
     <input type="text" name="name" placeholder="Name">
     <input type="number" name="age" placeholder="Age">
     <input type="submit" value="Submit">
   </form>
 
-  <form class="card p-4 m-2" action="/printer" method="post" id="xhr-form" data-clear-form="true">
+  <form class="card p-4 m-2 xhr-form" action="/printer" method="post" data-clear-form="true">
     <div class="mb-3">
       <label for="exampleInput1" class="form-label">Text Test</label>
       <input type="text" class="form-control" id="exampleInput1" aria-describedby="testHelp" name="text">

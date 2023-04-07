@@ -27,6 +27,7 @@ const pageDataGetters: Record<
 const pageTitles: Record<string, string | undefined> = {
   "/user": "User",
   "/form-test": "Form Test",
+  "/new-event": "New Event",
 };
 
 /**
@@ -37,6 +38,9 @@ const pagesByAuth: Partial<
 > = {
   "/user": { minAuth: simpleAuthorizations[AccessLevel.Public] },
   "/form-test": null,
+  "/new-event": {
+    minAuth: simpleAuthorizations[AccessLevel.CommitteeChairOrCoordinator],
+  },
 };
 
 templateRouter.use((req, res, next) => {

@@ -13,6 +13,11 @@ function urlencodeFormData(formData: FormData) {
   return s;
 }
 
+/**
+ * This function overrides the default form submission behavior of a form for GET and POST.
+ *
+ * Rather than navigating to the form's action URL, it will instead send an XHR request to the form's action URL.
+ */
 function xhrifyFormElement(form: HTMLFormElement) {
   form.addEventListener("submit", (event: SubmitEvent) => {
     console.log("Form submitted!");
@@ -126,3 +131,14 @@ function xhrifyFormElement(form: HTMLFormElement) {
     event.preventDefault();
   });
 }
+
+document.onload = () => {
+  const forms = document.getElementsByClassName("xhr-form");
+  for (const form of forms) {
+    if (!(form instanceof HTMLFormElement)) {
+      console.error("Found non-form element with class xhr-form");
+      continue;
+    }
+    xhrifyFormElement(form);
+  }
+};

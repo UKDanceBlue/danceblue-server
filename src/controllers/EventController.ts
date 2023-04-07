@@ -24,10 +24,10 @@ export function createEventFrom(body: ParsedNewEventBody) {
   if (body.eventIntervals.length > 0) {
     const eventStartDateTimes: DateTime[] = [];
     const eventEndDateTimes: DateTime[] = [];
-    body.eventIntervals.forEach((interval) => {
+    for (const interval of body.eventIntervals) {
       eventStartDateTimes.push(interval.start);
       eventEndDateTimes.push(interval.end);
-    });
+    }
     event.start = eventStartDateTimes;
     event.end = eventEndDateTimes;
   }

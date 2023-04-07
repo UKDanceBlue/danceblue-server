@@ -1,5 +1,5 @@
-import { join, resolve } from "path";
-import { isDeepStrictEqual } from "util";
+import { join, resolve } from "node:path";
+import { isDeepStrictEqual } from "node:util";
 
 import dree from "dree";
 import express from "express";
@@ -102,9 +102,9 @@ const paths: PathInfo[] = [];
 const baseDir = resolve("views/pages");
 dree.scan(baseDir, { extensions: ["ejs", "html"] }, (file) => {
   const pathFromBase = file.path.replace(baseDir, "");
-  const path = pathFromBase.replace(/\\/g, "/");
-  const renderPath = path.replace(/^\//, "").replace(/\.ejs/g, "");
-  const slug = path.replace(/index/, "").replace(/\.[A-Za-z\d]+$/, "");
+  const path = pathFromBase.replaceAll('\\', "/");
+  const renderPath = path.replace(/^\//, "").replaceAll('.ejs', "");
+  const slug = path.replace(/index/, "").replace(/\.[\dA-Za-z]+$/, "");
   let type: "html" | "ejs" | "unknown" = "unknown";
   if (file.extension === "html") {
     type = "html";
@@ -117,9 +117,9 @@ dree.scan(baseDir, { extensions: ["ejs", "html"] }, (file) => {
 const bodyDir = resolve("views/page-bodies");
 dree.scan(bodyDir, { extensions: ["ejs", "html"] }, (file) => {
   const pathFromBase = file.path.replace(bodyDir, "");
-  const path = pathFromBase.replace(/\\/g, "/");
-  const renderPath = path.replace(/^\//, "").replace(/\.ejs/g, "");
-  const slug = path.replace(/index/, "").replace(/\.[A-Za-z\d]+$/, "");
+  const path = pathFromBase.replaceAll('\\', "/");
+  const renderPath = path.replace(/^\//, "").replaceAll('.ejs', "");
+  const slug = path.replace(/index/, "").replace(/\.[\dA-Za-z]+$/, "");
   if (file.extension !== "ejs") {
     return;
   }

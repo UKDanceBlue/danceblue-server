@@ -5,12 +5,12 @@ import {
   AccessLevel,
   Authorization,
   CommitteeRole,
-  DbRole,
+  DbRole as DatabaseRole,
 } from "../lib/auth.js";
 
 export class Role {
-  @Column("enum", { enum: DbRole, default: DbRole.Public })
-  dbRole: DbRole = DbRole.Public;
+  @Column("enum", { enum: DatabaseRole, default: DatabaseRole.Public })
+  dbRole: DatabaseRole = DatabaseRole.Public;
 
   @Column("enum", { nullable: true, enum: CommitteeRole })
   committeeRole!: CommitteeRole | null;
@@ -26,15 +26,19 @@ export class Role {
    */
   toAccessLevel(): AccessLevel {
     switch (this.dbRole) {
-      case DbRole.None:
+      case DatabaseRole.None: {
         return AccessLevel.None;
-      case DbRole.Public:
+      }
+      case DatabaseRole.Public: {
         return AccessLevel.Public;
-      case DbRole.TeamMember:
+      }
+      case DatabaseRole.TeamMember: {
         return AccessLevel.TeamMember;
-      case DbRole.TeamCaptain:
+      }
+      case DatabaseRole.TeamCaptain: {
         return AccessLevel.TeamCaptain;
-      case DbRole.Committee:
+      }
+      case DatabaseRole.Committee: {
         if (
           this.committeeRole === CommitteeRole.Coordinator ||
           this.committeeRole === CommitteeRole.Chair
@@ -43,39 +47,47 @@ export class Role {
         } else {
           return AccessLevel.Committee;
         }
-      default:
+      }
+      default: {
         try {
           throw new Error(`Illegal DbRole: ${JSON.stringify(this.dbRole)}`);
-        } catch (e) {
-          console.error(e);
+        } catch (error) {
+          console.error(error);
           throw new Error(
             `Illegal DbRole: [Parsing of '${String(this.dbRole)}' failed]`
           );
         }
+      }
     }
   }
 
   toAuthorization(): Authorization {
     let accessLevel: AccessLevel = AccessLevel.None;
     switch (this.dbRole) {
-      case DbRole.Committee:
+      case DatabaseRole.Committee: {
         accessLevel = AccessLevel.Committee;
         break;
-      case DbRole.TeamCaptain:
+      }
+      case DatabaseRole.TeamCaptain: {
         accessLevel = AccessLevel.TeamCaptain;
         break;
-      case DbRole.TeamMember:
+      }
+      case DatabaseRole.TeamMember: {
         accessLevel = AccessLevel.TeamMember;
         break;
-      case DbRole.Public:
+      }
+      case DatabaseRole.Public: {
         accessLevel = AccessLevel.Public;
         break;
-      case DbRole.None:
+      }
+      case DatabaseRole.None: {
         accessLevel = AccessLevel.None;
         break;
-      default:
+      }
+      default: {
         accessLevel = AccessLevel.None;
         break;
+      }
     }
     if (
       this.committeeRole === CommitteeRole.Chair ||

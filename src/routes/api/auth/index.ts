@@ -45,8 +45,8 @@ authApiRouter.use(async (req, res, next) => {
       });
     }
     return next();
-  } catch (err) {
-    return next(err);
+  } catch (error) {
+    return next(error);
   }
 });
 
@@ -57,11 +57,11 @@ authApiRouter.get("/logout", (req, res) => {
 
 authApiRouter.post("/oidc-callback", async (req, res, next) => {
   if (!res.locals.oidcClient) {
-    throw createHttpError.InternalServerError("Missing OIDC client");
+    throw new createHttpError.InternalServerError("Missing OIDC client");
   }
 
-  const params = res.locals.oidcClient.callbackParams(req);
-  const flowSessionId = params.state;
+  const parameters = res.locals.oidcClient.callbackParams(req);
+  const flowSessionId = parameters.state;
 
   if (flowSessionId == null) {
     return next(createHttpError.BadRequest());
@@ -76,7 +76,7 @@ authApiRouter.post("/oidc-callback", async (req, res, next) => {
     });
 
     if (!session?.codeVerifier) {
-      throw createHttpError.InternalServerError(
+      throw new createHttpError.InternalServerError(
         `No ${session == null ? "session" : "codeVerifier"} found`
       );
     }
@@ -84,7 +84,7 @@ authApiRouter.post("/oidc-callback", async (req, res, next) => {
     // Perform OIDC validation
     const tokenSet = await res.locals.oidcClient.callback(
       new URL("/api/auth/oidc-callback", res.locals.applicationUrl).toString(),
-      params,
+      parameters,
       { code_verifier: session.codeVerifier, state: flowSessionId }
     );
 
@@ -95,7 +95,7 @@ authApiRouter.post("/oidc-callback", async (req, res, next) => {
     sessionDeleted = true;
 
     if (!tokenSet.access_token) {
-      throw createHttpError.InternalServerError("Missing access token");
+      throw new createHttpError.InternalServerError("Missing access token");
     }
 
     const { oid: objectId, email } = tokenSet.claims();
@@ -103,7 +103,7 @@ authApiRouter.post("/oidc-callback", async (req, res, next) => {
       json: true,
     });
     if (!decodedJwt) {
-      throw createHttpError.InternalServerError("Error decoding JWT");
+      throw new createHttpError.InternalServerError("Error decoding JWT");
     }
     const {
       given_name: firstName,
@@ -172,14 +172,14 @@ authApiRouter.post("/oidc-callback", async (req, res, next) => {
     });
 
     return res.redirect(session.redirectToAfterLogin ?? "/");
-  } catch (err) {
+  } catch (error) {
     if (!sessionDeleted) {
       const sessionRepository = appDataSource.getRepository(LoginFlowSession);
       sessionRepository
         .delete({ sessionId: flowSessionId })
         .catch(console.error);
     }
-    return next(err);
+    return next(error);
   }
 });
 
@@ -191,12 +191,12 @@ authApiRouter.get("/login", async (req, res, next) => {
 
     // Figure out where to redirect to after login
     const loginFlowSessionInitializer: Partial<LoginFlowSession> = {};
-    const { host: hostHeader } = req.headers;
+    const { host: hostHeader, referer: hostReferer } = req.headers;
     const host = hostHeader
       ? new URL(`https://${hostHeader}`).host
       : res.locals.applicationUrl.host;
-    if (req.headers.referer && req.headers.referer.length > 0) {
-      const referer = new URL(req.headers.referer);
+    if (hostReferer && hostReferer.length > 0) {
+      const referer = new URL(hostReferer);
       console.log(referer.host, host);
       if (referer.host === host) {
         loginFlowSessionInitializer.redirectToAfterLogin = referer.pathname;
@@ -219,8 +219,8 @@ authApiRouter.get("/login", async (req, res, next) => {
         state: session.sessionId,
       })
     );
-  } catch (err) {
-    return next(err);
+  } catch (error) {
+    return next(error);
   }
 });
 

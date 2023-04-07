@@ -1,4 +1,4 @@
-import { URL } from "url";
+import { URL } from "node:url";
 
 import { Client } from "openid-client";
 
@@ -17,7 +17,7 @@ declare global {
     }
   }
   namespace NodeJS {
-    type ProcessEnv = Readonly<{
+    type ProcessEnvironment = Readonly<{
       NODE_ENV?: "development" | "production";
       APPLICATION_PORT?: string;
       APPLICATION_HOST?: string;

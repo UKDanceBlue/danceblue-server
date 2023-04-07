@@ -7,9 +7,9 @@ import { Request } from "express";
  */
 export function saveSessionAsync(req: Request): Promise<void> {
   return new Promise((resolve, reject) => {
-    req.session.save((err) => {
-      if (err) {
-        reject(err);
+    req.session.save((error) => {
+      if (error) {
+        reject(error);
       } else {
         resolve();
       }
@@ -24,9 +24,9 @@ export function saveSessionAsync(req: Request): Promise<void> {
  */
 export function reloadSessionAsync(req: Request): Promise<void> {
   return new Promise((resolve, reject) => {
-    req.session.reload((err) => {
-      if (err) {
-        reject(err);
+    req.session.reload((error) => {
+      if (error) {
+        reject(error);
       } else {
         resolve();
       }
@@ -41,9 +41,9 @@ export function reloadSessionAsync(req: Request): Promise<void> {
  */
 export function destroySessionAsync(req: Request): Promise<void> {
   return new Promise((resolve, reject) => {
-    req.session.destroy((err) => {
-      if (err) {
-        reject(err);
+    req.session.destroy((error) => {
+      if (error) {
+        reject(error);
       } else {
         resolve();
       }

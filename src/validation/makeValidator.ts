@@ -10,12 +10,15 @@ import { ObjectSchema, ValidationOptions } from "joi";
  */
 export function makeValidator<const T = unknown>(
   schema: ObjectSchema<T>,
-  options: ValidationOptions = {
-    stripUnknown: true,
-  }
+  options?: ValidationOptions
 ) {
   return (body: unknown) => {
-    const result = schema.validate(body, options);
+    const result = schema.validate(
+      body,
+      options ?? {
+        stripUnknown: true,
+      }
+    );
 
     if (result.error) {
       throw result.error;

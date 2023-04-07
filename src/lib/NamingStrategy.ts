@@ -5,15 +5,15 @@
 import { DefaultNamingStrategy, NamingStrategyInterface } from "typeorm";
 import { snakeCase as snakeCaseImport } from "typeorm/util/StringUtils.js";
 
-const snakeCase = (str: string): string =>
-  (snakeCaseImport as (param: string) => string)(str);
+const snakeCase = (string_: string): string =>
+  (snakeCaseImport as (parameter: string) => string)(string_);
 
 export class CustomNamingStrategy
   extends DefaultNamingStrategy
   implements NamingStrategyInterface
 {
   tableName(className: string, customName: string): string {
-    return customName ? customName : snakeCase(className);
+    return customName || snakeCase(className);
   }
 
   columnName(
@@ -22,8 +22,8 @@ export class CustomNamingStrategy
     embeddedPrefixes: string[]
   ): string {
     return (
-      snakeCase(embeddedPrefixes.concat("").join("_")) +
-      (customName ? customName : snakeCase(propertyName))
+      snakeCase([...embeddedPrefixes, ""].join("_")) +
+      (customName || snakeCase(propertyName))
     );
   }
 
@@ -42,7 +42,7 @@ export class CustomNamingStrategy
     // secondPropertyName: string
   ): string {
     return snakeCase(
-      `${firstTableName}_${firstPropertyName.replace(
+      `${firstTableName}_${firstPropertyName.replaceAll(
         /\./gi,
         "_"
       )}_${secondTableName}`
@@ -54,7 +54,7 @@ export class CustomNamingStrategy
     propertyName: string,
     columnName?: string
   ): string {
-    return snakeCase(`${tableName}_${columnName ? columnName : propertyName}`);
+    return snakeCase(`${tableName}_${columnName ?? propertyName}`);
   }
 
   classTableInheritanceParentColumnName(

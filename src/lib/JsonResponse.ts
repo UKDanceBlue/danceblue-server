@@ -53,12 +53,8 @@ export function createdResponseFrom<DataType>({
   value?: DataType;
   id: string;
 }): CreatedApiResponse<DataType> {
-  let okResponse: OkApiResponse<DataType>;
-  if (value !== undefined) {
-    okResponse = okResponseFrom({ value });
-  } else {
-    okResponse = okResponseFrom();
-  }
+  const okResponse: OkApiResponse<DataType> =
+    value !== undefined ? okResponseFrom({ value }) : okResponseFrom();
   return {
     ...okResponse,
     id,

@@ -1,4 +1,4 @@
-import { resolve } from "path";
+import { resolve } from "node:path";
 
 import bodyParser from "body-parser";
 import cookieParser from "cookie-parser";
@@ -23,7 +23,7 @@ if (!process.env.APPLICATION_PORT) {
   console.error("Missing APPLICATION_PORT environment variable");
   process.exit(1);
 }
-const port = parseInt(process.env.APPLICATION_PORT, 10);
+const port = Number.parseInt(process.env.APPLICATION_PORT, 10);
 if (!process.env.APPLICATION_HOST) {
   console.error("Missing APPLICATION_HOST environment variable");
   process.exit(1);
@@ -66,8 +66,9 @@ app.use((req, res, next) => {
       notBearerError.headers = { "WWW-Authenticate": "Bearer" };
       return next(notBearerError);
     }
-    default:
+    default: {
       break;
+    }
   }
 
   let error: unknown;
@@ -75,34 +76,30 @@ app.use((req, res, next) => {
   if (token) {
     try {
       userData = parseUserJwt(token);
-    } catch (err) {
+    } catch (error_) {
       logout(req, res);
-      if (err instanceof jsonwebtoken.TokenExpiredError) {
+      if (error_ instanceof jsonwebtoken.TokenExpiredError) {
         // Do nothing
-      } else if (err instanceof jsonwebtoken.NotBeforeError) {
-        const httpError = new createHttpError.Unauthorized(err.message);
-        if (err.stack) {
-          httpError.stack = err.stack;
+      } else if (error_ instanceof jsonwebtoken.NotBeforeError) {
+        const httpError = new createHttpError.Unauthorized(error_.message);
+        if (error_.stack) {
+          httpError.stack = error_.stack;
         }
         error = httpError;
-      } else if (err instanceof jsonwebtoken.JsonWebTokenError) {
-        const httpError = new createHttpError.Unauthorized(err.message);
-        if (err.stack) {
-          httpError.stack = err.stack;
+      } else if (error_ instanceof jsonwebtoken.JsonWebTokenError) {
+        const httpError = new createHttpError.Unauthorized(error_.message);
+        if (error_.stack) {
+          httpError.stack = error_.stack;
         }
         error = httpError;
       } else {
-        error = err;
+        error = error_;
       }
     }
   }
 
   res.locals.userData = userData ?? defaultUserData;
-  if (error) {
-    return next(error);
-  } else {
-    return next();
-  }
+  return error ? next(error) : next();
 });
 
 app.all("/printer", (req, res) => {

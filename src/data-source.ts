@@ -30,7 +30,7 @@ export const appDataSource = new DataSource({
   type: "postgres",
   schema: "danceblue",
   host: process.env.DB_HOST,
-  port: parseInt(process.env.DB_PORT, 10),
+  port: Number.parseInt(process.env.DB_PORT, 10),
   username: process.env.DB_UNAME,
   password: process.env.DB_PWD,
   database: process.env.DB_NAME,

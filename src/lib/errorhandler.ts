@@ -4,23 +4,23 @@ import { getReasonPhrase } from "http-status-codes";
 
 import { ErrorApiResponse } from "./JsonResponse.js";
 
-export const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
+export const errorHandler: ErrorRequestHandler = (error, req, res, next) => {
   if (res.headersSent) {
     // Allow express to handle the error if headers have already been sent
-    return next(err);
+    return next(error);
   }
 
   let httpError: createHttpError.HttpError | undefined = undefined;
-  if (createHttpError.isHttpError(err)) {
-    httpError = err;
-  } else if (err instanceof Error) {
-    httpError = createHttpError(500, err.message);
+  if (createHttpError.isHttpError(error)) {
+    httpError = error;
+  } else if (error instanceof Error) {
+    httpError = createHttpError(500, error.message);
   } else {
     httpError = createHttpError(500, "Unknown error");
   }
 
   if (!httpError.expose && httpError.statusCode >= 500) {
-    console.error(err);
+    console.error(error);
   }
 
   // Configure response

@@ -13,12 +13,7 @@ export function makeValidator<const T = unknown>(
   options?: ValidationOptions
 ) {
   return (body: unknown) => {
-    const result = schema.validate(
-      body,
-      options ?? {
-        stripUnknown: true,
-      }
-    );
+    const result = schema.validate(body, options);
 
     if (result.error) {
       throw result.error;

@@ -38,14 +38,14 @@ export class LuxonError extends Error {
 }
 
 export class ParsingError extends Error {
-  cause: object;
+  cause?: object;
 
-  constructor(message: string, cause: object) {
+  constructor(message: string, cause?: object) {
     super("Error parsing body");
     this.name = "ParsingError";
 
     this.message = message;
-    this.cause = cause;
+    if (cause) this.cause = cause;
   }
 
   toHttpError(
@@ -55,7 +55,7 @@ export class ParsingError extends Error {
     const httpError = createHttpError[code](this.message);
     httpError.expose = expose;
     httpError.name = this.name;
-    httpError.cause = this.cause;
+    if (this.cause) httpError.cause = this.cause;
     return [httpError, errorResponseFrom({ errorMessage: this.message })];
   }
 }

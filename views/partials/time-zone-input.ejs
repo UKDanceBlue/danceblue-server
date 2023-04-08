@@ -1,0 +1,5 @@
+<input type="hidden" name="timezone" value="">
+<script>
+  const inputs = document.getElementsByTagName('input');
+  inputs[inputs.length - 1].value = Intl.DateTimeFormat().resolvedOptions().timeZone;
+</script>

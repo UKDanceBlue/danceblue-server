@@ -1,6 +1,36 @@
-export type BodyArrayKey<T extends string> = `${T}[${number}]`;
+// Seems like this file may be unnecessary and can probably be deleted, but leaving it here for now
 
-export type WithBodyArray<T extends string, U> = Record<BodyArrayKey<T>, U>;
+export type BodyArrayKey<
+  T extends string,
+  Suffix extends string = ""
+> = `${T}[${number}]${Suffix extends "" ? "" : `.${Suffix}`}`;
+
+/**
+ * Checks if a key is a body array key.
+ *
+ * @param key The key to check (i.e. "value[0]")
+ * @param keyText The key's base text (i.e. "value" for "value[0]")
+ * @return True if the key is a body array key
+ */
+export function isBodyArrayKey<T extends string>(
+  key: string,
+  keyText: T
+): key is BodyArrayKey<T> {
+  return /^\w+\[\d+]$/.test(key) && key.startsWith(`${keyText}[`);
+}
+
+/**
+ * Gets the index of a body array key.
+ *
+ * @param key The key to get the index of (i.e. "value[241]")
+ * @return The index of the key (i.e. 241), or null if the key is invalid
+ */
+export function getBodyArrayIndex<T extends string>(
+  key: BodyArrayKey<T>
+): number | null {
+  const index = Number.parseInt(key.slice(key.indexOf("[") + 1, -1), 10);
+  return Number.isNaN(index) ? null : index;
+}
 
 /**
  *
@@ -11,7 +41,7 @@ export type WithBodyArray<T extends string, U> = Record<BodyArrayKey<T>, U>;
 export function doForEachBodyArrayKey<
   const KeyType extends string,
   const ValueType,
-  const BodyType extends WithBodyArray<KeyType, ValueType>
+  const BodyType extends Record<BodyArrayKey<KeyType>, ValueType>
 >(
   keyText: KeyType,
   body: BodyType,
@@ -22,7 +52,7 @@ export function doForEachBodyArrayKey<
       continue;
     }
 
-    const eventOccurrenceIndex = parseInt(key.slice(16, -1), 10);
+    const eventOccurrenceIndex = Number.parseInt(key.slice(16, -1), 10);
 
     const eventOccurrence = body[`${keyText}[${eventOccurrenceIndex}]`];
     if (!eventOccurrence) {
@@ -44,7 +74,7 @@ export function doForEachBodyArrayKey<
 export function bodyArrayToArray<
   const KeyType extends string,
   const ValueType,
-  const BodyType extends WithBodyArray<KeyType, ValueType>,
+  const BodyType extends Record<BodyArrayKey<KeyType>, ValueType>,
   const ReturnType
 >(
   keyText: KeyType,

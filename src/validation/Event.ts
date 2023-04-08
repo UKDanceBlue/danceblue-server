@@ -2,34 +2,28 @@ import joi from "joi";
 import { Interval } from "luxon";
 
 import { LuxonError, ParsingError } from "../lib/CustomErrors.js";
-import { bodyArrayToArray } from "../lib/bodyArray.js";
 import { NewEventBody, ParsedNewEventBody } from "../lib/request/Event.js";
-import {
-  BodyDateTime,
-  isBodyDateTime,
-  parseBodyDateTime,
-} from "../lib/request/common.js";
+import { parseBodyDateTime } from "../lib/request/htmlDateTime.js";
 
+import { bodyDateTimeSchema } from "./BodyDateTime.js";
 import { makeValidator } from "./makeValidator.js";
 
-const newEventBodySchema = joi
-  .object<NewEventBody>({
-    eventName: joi.string().required(),
-    eventSummary: joi.string().required().max(100),
-    eventDescription: joi.string().required(),
-    eventAddress: joi.string().required(),
-  })
-  .pattern(/eventOccurrence\[\d+\]\./, [
-    joi.object<BodyDateTime>({
-      dateTimeString: joi.string().required(),
-      timezone: joi.string().optional(),
-    }),
-    joi.object<BodyDateTime>({
-      date: joi.string().required(),
-      time: joi.string().required(),
-      timezone: joi.string().optional(),
-    }),
-  ]);
+const newEventBodySchema = joi.object<NewEventBody>({
+  eventTitle: joi.string().required(),
+  eventSummary: joi.string().optional().max(100),
+  eventDescription: joi.string().optional(),
+  eventAddress: joi.string().optional(),
+  eventOccurrences: joi
+    .array()
+    .items(
+      joi.object({
+        start: bodyDateTimeSchema.required(),
+        end: bodyDateTimeSchema.required(),
+      })
+    )
+    .default([]),
+  timezone: joi.string().optional(),
+});
 
 const newEventBodyValidator = makeValidator(newEventBodySchema);
 
@@ -45,53 +39,33 @@ const newEventBodyValidator = makeValidator(newEventBodySchema);
  * @throws An error if the start or end date time is invalid
  */
 export function parseNewEventBody(body: unknown): ParsedNewEventBody {
-  const { value, warning } = newEventBodyValidator(body);
+  const { value: eventBody, warning } = newEventBodyValidator(body);
 
   if (warning) {
     console.error("Error parsing new event body:", warning.annotate());
   }
 
-  const eventIntervals = bodyArrayToArray(
-    "eventOccurrence",
-    value,
-    (eventOccurrence: { start: BodyDateTime; end: BodyDateTime }): Interval => {
-      if (!isBodyDateTime(eventOccurrence.start)) {
-        throw new ParsingError(
-          "Invalid start date time",
-          eventOccurrence.start
-        );
-      }
-      if (!isBodyDateTime(eventOccurrence.end)) {
-        throw new ParsingError("Invalid end date time", eventOccurrence.end);
-      }
+  const eventIntervals = eventBody.eventOccurrences.map((occurrence) => {
+    const start = parseBodyDateTime(occurrence.start, eventBody.timezone);
+    if (!start.isValid) throw new LuxonError(start);
+    const end = parseBodyDateTime(occurrence.end, eventBody.timezone);
+    if (!end.isValid) throw new LuxonError(end);
 
-      const eventStartDateTime = parseBodyDateTime(eventOccurrence.start);
-      const eventEndDateTime = parseBodyDateTime(eventOccurrence.end);
+    const interval = Interval.fromDateTimes(start, end);
+    if (!interval.isValid) throw new ParsingError("Invalid interval");
 
-      if (!eventStartDateTime.isValid) {
-        throw new LuxonError(eventStartDateTime);
-      }
-      if (!eventEndDateTime.isValid) {
-        throw new LuxonError(eventEndDateTime);
-      }
+    return interval;
+  });
 
-      const eventInterval = Interval.fromDateTimes(
-        eventStartDateTime,
-        eventEndDateTime
-      );
-      if (!eventInterval.isValid) {
-        throw new LuxonError(eventInterval);
-      }
-
-      return eventInterval;
-    }
-  );
-
-  return {
-    eventName: value.eventName,
-    eventSummary: value.eventSummary,
-    eventDescription: value.eventDescription,
-    eventAddress: value.eventAddress,
+  const parsedBody: ParsedNewEventBody = {
+    eventTitle: eventBody.eventTitle,
     eventIntervals,
   };
+
+  if (eventBody.eventSummary) parsedBody.eventSummary = eventBody.eventSummary;
+  if (eventBody.eventDescription)
+    parsedBody.eventDescription = eventBody.eventDescription;
+  if (eventBody.eventAddress) parsedBody.eventAddress = eventBody.eventAddress;
+
+  return parsedBody;
 }

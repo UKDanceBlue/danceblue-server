@@ -1,9 +1,49 @@
-<form class="card p-4 m-2 xhr-form" action="/api/event" method="post" data-clear-form="true">
-  <div class="mb-3">
-    <!-- eventName -->
-    <label for="event-name-field" class="form-label">Event Name</label>
-    <input type="text" class="form-control" id="event-name-field" aria-describedby="event-name-help" name="eventName">
-    <div id="event-name-help" class="form-text">The name of the event.</div>
-  </div>
-  
-</form>
+<%- include('../partials/header'); %>
+
+<main>
+  <form class="card p-4 m-2 xhr-form" action="/api/event" method="post" data-clear-form="true">
+    <div class="mb-3">
+      <label for="event-name-field" class="form-label">Event Name</label>
+      <input type="text" class="form-control" id="event-name-field" aria-describedby="event-name-help" name="eventTitle" required>
+      <div id="event-name-help" class="form-text">The name of the event.</div>
+    </div>
+    <div class="mb-3">
+      <label for="event-summary-field" class="form-label">Event Summary</label>
+      <input type="text" class="form-control" id="event-summary-field" aria-describedby="event-summary-help" name="eventSummary">
+      <div id="event-summary-help" class="form-text">A short summary of the event.</div>
+    </div>
+    <div class="mb-3">
+      <label for="event-address-field" class="form-label">Event <Address></Address></label>
+      <input type="text" class="form-control" id="event-address-field" aria-describedby="event-address-help" name="eventAddress">
+      <div id="event-address-help" class="form-text">The address of the event.</div>
+    </div>
+    <div class="mb-3">
+      <label for="event-start-date-field" class="form-label">Event Date</label>
+      <input type="date" class="form-control" id="event-start-date-field" aria-describedby="event-start-date-help" name="eventOccurrences[0][start][date]">
+      <div id="event-start-date-help" class="form-text">The start date of the event.</div>
+    </div>
+    <div class="mb-3">
+      <label for="event-start-time-field" class="form-label">Event Start Time</label>
+      <input type="time" class="form-control" id="event-start-time-field" aria-describedby="event-start-time-help" name="eventOccurrences[0][start][time]">
+      <div id="event-start-time-help" class="form-text">The start time of the event.</div>
+    </div>
+    <div class="mb-3">
+      <label for="event-end-date-field" class="form-label">Event End Date</label>
+      <input type="date" class="form-control" id="event-end-date-field" aria-describedby="event-end-date-help" name="eventOccurrences[0][end][date]">
+      <div id="event-end-date-help" class="form-text">The end date of the event.</div>
+    </div>
+    <div class="mb-3">
+      <label for="event-end-time-field" class="form-label">Event End Time</label>
+      <input type="time" class="form-control" id="event-end-time-field" aria-describedby="event-end-time-help" name="eventOccurrences[0][end][time]">
+      <div id="event-end-time-help" class="form-text">The end time of the event.</div>
+    </div>
+    <div class="mb-3">
+      <label for="event-description-field" class="form-label">Event Description</label>
+      <textarea class="form-control" id="event-description-field" aria-describedby="event-description-help" name="eventDescription"></textarea>
+      <div id="event-description-help" class="form-text">The description of the event.</div>
+    </div>
+    <%- include("../partials/time-zone-input.ejs") %>
+
+    <button type="submit" class="btn btn-primary">Submit</button>
+  </form>
+</main>

@@ -1,7 +1,7 @@
 import { DateTime, Interval } from "luxon";
 import { Column, Entity, JoinTable, ManyToMany } from "typeorm";
 
-import { luxonDateTimeJsDateTransformer } from "../lib/transformers.js";
+import { luxonDateTimeJsDateArrayTransformer } from "../lib/transformers.js";
 
 import { EntityWithId } from "./EntityWithId.js";
 import { Image } from "./Image.js";
@@ -16,14 +16,14 @@ export class Event extends EntityWithId {
   images!: Image[];
 
   @Column("timestamptz", {
-    transformer: luxonDateTimeJsDateTransformer,
+    transformer: luxonDateTimeJsDateArrayTransformer,
     array: true,
     nullable: true,
   })
   start!: DateTime[];
 
   @Column("timestamptz", {
-    transformer: luxonDateTimeJsDateTransformer,
+    transformer: luxonDateTimeJsDateArrayTransformer,
     array: true,
     nullable: true,
   })

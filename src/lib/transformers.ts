@@ -2,11 +2,29 @@ import { DateTime } from "luxon";
 import { ValueTransformer } from "typeorm";
 
 export const luxonDateTimeJsDateTransformer: ValueTransformer = {
-  from: (value: Date) => {
+  from: (value: Date): DateTime => {
     return DateTime.fromJSDate(value, { zone: "utc" });
   },
-  to: (value?: DateTime | null | undefined | Record<string, never>) => {
-    return value?.toJSDate?.();
+  to: (
+    value?: DateTime | null | undefined | Record<string, never>
+  ): Date | undefined => {
+    if (!value) return undefined;
+    if (!DateTime.isDateTime(value)) throw new Error("Not a DateTime");
+    return value.toJSDate();
+  },
+};
+
+export const luxonDateTimeJsDateArrayTransformer: ValueTransformer = {
+  from: (value: Date[]): DateTime[] => {
+    return value.map((date) => DateTime.fromJSDate(date, { zone: "utc" }));
+  },
+  to: (value?: DateTime[] | null | undefined | Record<string, never>) => {
+    if (!value) return undefined;
+    if (!Array.isArray(value)) throw new Error("Not an array");
+    return value.map((dateTime) => {
+      if (!DateTime.isDateTime(dateTime)) throw new Error("Not a DateTime");
+      return dateTime.toJSDate();
+    });
   },
 };
 

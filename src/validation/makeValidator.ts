@@ -1,4 +1,4 @@
-import { ObjectSchema, ValidationOptions } from "joi";
+import { ObjectSchema, ValidationOptions, ValidationResult } from "joi";
 
 /**
  * Creates a validator function for a Joi schema. The validator function
@@ -8,11 +8,11 @@ import { ObjectSchema, ValidationOptions } from "joi";
  * @param options The Joi validation options
  * @return A validator function
  */
-export function makeValidator<const T = unknown>(
+export function makeValidator<const T>(
   schema: ObjectSchema<T>,
   options?: ValidationOptions
-) {
-  return (body: unknown) => {
+): (body: unknown) => ValidationResult<T> {
+  return (body: unknown): ValidationResult<T> => {
     const result = schema.validate(body, options);
 
     if (result.error) {

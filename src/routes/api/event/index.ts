@@ -17,7 +17,6 @@ eventApiRouter.post("/", async (req, res) => {
 
   let createdEvent;
   try {
-    console.log(newEvent);
     createdEvent = await createEventFrom(newEvent);
   } catch (error) {
     return sendValidationError(res, error);

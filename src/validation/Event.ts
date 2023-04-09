@@ -3,12 +3,14 @@ import { Interval } from "luxon";
 
 import { LuxonError, ParsingError } from "../lib/CustomErrors.js";
 import { NewEventBody, ParsedNewEventBody } from "../lib/request/Event.js";
+import { PaginationOptions, SortingOptions } from "../lib/request/Query.js";
 import { parseBodyDateTime } from "../lib/request/htmlDateTime.js";
 
 import { bodyDateTimeSchema } from "./BodyDateTime.js";
+import { paginationOptionsSchema, sortingOptionsSchema } from "./Query.js";
 import { makeValidator } from "./makeValidator.js";
 
-const newEventBodySchema = joi.object<NewEventBody>({
+const newEventBodySchema: joi.StrictSchemaMap<NewEventBody> = {
   eventTitle: joi.string().required(),
   eventSummary: joi.string().optional().max(100),
   eventDescription: joi.string().optional(),
@@ -23,9 +25,11 @@ const newEventBodySchema = joi.object<NewEventBody>({
     )
     .default([]),
   timezone: joi.string().optional(),
-});
+};
 
-const newEventBodyValidator = makeValidator(newEventBodySchema);
+const newEventBodyValidator = makeValidator<NewEventBody>(
+  joi.object(newEventBodySchema)
+);
 
 /**
  * Parses the body of a new event request. Uses Joi to validate the body
@@ -43,6 +47,10 @@ export function parseNewEventBody(body: unknown): ParsedNewEventBody {
 
   if (warning) {
     console.error("Error parsing new event body:", warning.annotate());
+  }
+
+  if (!eventBody) {
+    throw new ParsingError("Invalid event body");
   }
 
   const eventIntervals = eventBody.eventOccurrences.map((occurrence) => {
@@ -68,4 +76,38 @@ export function parseNewEventBody(body: unknown): ParsedNewEventBody {
   if (eventBody.eventAddress) parsedBody.eventAddress = eventBody.eventAddress;
 
   return parsedBody;
+}
+
+const listEventsQuerySchema = joi
+  .object<PaginationOptions & SortingOptions>({})
+  .keys(paginationOptionsSchema)
+  .keys(sortingOptionsSchema);
+
+const listEventsQueryValidator = makeValidator<
+  PaginationOptions & SortingOptions
+>(listEventsQuerySchema);
+
+/**
+ * Parses the query of a list events request. Uses Joi to validate the query
+ * and throw an error if it is invalid. If everything is valid, it returns
+ * the parsed query.
+ *
+ * @param query The query of the request
+ * @return The parsed query
+ * @throws An error if the query is invalid
+ */
+export function parseListEventsQuery(
+  query: unknown
+): PaginationOptions & SortingOptions {
+  const { value: parsedQuery, warning } = listEventsQueryValidator(query);
+
+  if (warning) {
+    console.error("Error parsing list events query:", warning.annotate());
+  }
+
+  if (!parsedQuery) {
+    throw new ParsingError("Invalid list events query");
+  }
+
+  return parsedQuery;
 }

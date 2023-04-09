@@ -197,7 +197,6 @@ authApiRouter.get("/login", async (req, res, next) => {
       : res.locals.applicationUrl.host;
     if (hostReferer && hostReferer.length > 0) {
       const referer = new URL(hostReferer);
-      console.log(referer.host, host);
       if (referer.host === host) {
         loginFlowSessionInitializer.redirectToAfterLogin = referer.pathname;
       }

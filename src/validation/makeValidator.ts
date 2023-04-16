@@ -1,4 +1,4 @@
-import { ObjectSchema, ValidationOptions, ValidationResult } from "joi";
+import type { ObjectSchema, ValidationOptions, ValidationResult } from "joi";
 
 /**
  * Creates a validator function for a Joi schema. The validator function

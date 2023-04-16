@@ -1,8 +1,8 @@
+import { createdResponseFrom } from "@ukdanceblue/db-app-common";
 import express from "express";
 
 import { sendValidationError } from "../../../actions/SendCustomError.js";
 import { createEventFrom } from "../../../controllers/EventController.js";
-import { createdResponseFrom } from "../../../lib/JsonResponse.js";
 import { notFound } from "../../../lib/expressHandlers.js";
 import { parseNewEventBody } from "../../../validation/Event.js";
 const eventApiRouter = express.Router();

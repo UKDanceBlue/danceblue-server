@@ -1,5 +1,6 @@
 import { resolve } from "node:path";
 
+import type { UserData } from "@ukdanceblue/db-app-common";
 import bodyParser from "body-parser";
 import cookieParser from "cookie-parser";
 import express from "express";
@@ -8,12 +9,7 @@ import jsonwebtoken from "jsonwebtoken";
 
 import { logout } from "./actions/auth.js";
 import { appDataSource } from "./data-source.js";
-import {
-  UserData,
-  defaultUserData,
-  parseUserJwt,
-  tokenFromRequest,
-} from "./lib/auth.js";
+import { defaultUserData, parseUserJwt, tokenFromRequest } from "./lib/auth.js";
 import { errorHandler } from "./lib/errorhandler.js";
 import { notFound } from "./lib/expressHandlers.js";
 import apiRouter from "./routes/api/index.js";

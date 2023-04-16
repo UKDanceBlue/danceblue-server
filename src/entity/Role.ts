@@ -1,16 +1,16 @@
 /* eslint-disable no-fallthrough */
-import { Column } from "typeorm";
-
+import type {
+  Authorization} from "@ukdanceblue/db-app-common";
 import {
   AccessLevel,
-  Authorization,
   CommitteeRole,
-  DbRole as DatabaseRole,
-} from "../lib/auth.js";
+  DbRole,
+} from "@ukdanceblue/db-app-common";
+import { Column } from "typeorm";
 
 export class Role {
-  @Column("enum", { enum: DatabaseRole, default: DatabaseRole.Public })
-  dbRole: DatabaseRole = DatabaseRole.Public;
+  @Column("enum", { enum: DbRole, default: DbRole.Public })
+  dbRole: DbRole = DbRole.Public;
 
   @Column("enum", { nullable: true, enum: CommitteeRole })
   committeeRole!: CommitteeRole | null;
@@ -26,19 +26,19 @@ export class Role {
    */
   toAccessLevel(): AccessLevel {
     switch (this.dbRole) {
-      case DatabaseRole.None: {
+      case DbRole.None: {
         return AccessLevel.None;
       }
-      case DatabaseRole.Public: {
+      case DbRole.Public: {
         return AccessLevel.Public;
       }
-      case DatabaseRole.TeamMember: {
+      case DbRole.TeamMember: {
         return AccessLevel.TeamMember;
       }
-      case DatabaseRole.TeamCaptain: {
+      case DbRole.TeamCaptain: {
         return AccessLevel.TeamCaptain;
       }
-      case DatabaseRole.Committee: {
+      case DbRole.Committee: {
         if (
           this.committeeRole === CommitteeRole.Coordinator ||
           this.committeeRole === CommitteeRole.Chair
@@ -64,23 +64,23 @@ export class Role {
   toAuthorization(): Authorization {
     let accessLevel: AccessLevel = AccessLevel.None;
     switch (this.dbRole) {
-      case DatabaseRole.Committee: {
+      case DbRole.Committee: {
         accessLevel = AccessLevel.Committee;
         break;
       }
-      case DatabaseRole.TeamCaptain: {
+      case DbRole.TeamCaptain: {
         accessLevel = AccessLevel.TeamCaptain;
         break;
       }
-      case DatabaseRole.TeamMember: {
+      case DbRole.TeamMember: {
         accessLevel = AccessLevel.TeamMember;
         break;
       }
-      case DatabaseRole.Public: {
+      case DbRole.Public: {
         accessLevel = AccessLevel.Public;
         break;
       }
-      case DatabaseRole.None: {
+      case DbRole.None: {
         accessLevel = AccessLevel.None;
         break;
       }

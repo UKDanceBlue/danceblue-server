@@ -1,4 +1,5 @@
-import { DateTime, Interval } from "luxon";
+import type { DateTime} from "luxon";
+import { Interval } from "luxon";
 import { Column, Entity, JoinTable, ManyToMany } from "typeorm";
 
 import { luxonDateTimeJsDateArrayTransformer } from "../lib/transformers.js";

@@ -1,8 +1,13 @@
-import { Response } from "express";
-import createHttpError, { HttpError } from "http-errors";
+import type {
+  ErrorApiResponse} from "@ukdanceblue/db-app-common";
+import {
+  errorResponseFrom,
+} from "@ukdanceblue/db-app-common";
+import type { Response } from "express";
+import type { HttpError } from "http-errors";
+import createHttpError from "http-errors";
 
 import { LuxonError, ParsingError } from "../lib/CustomErrors.js";
-import { ErrorApiResponse, errorResponseFrom } from "../lib/JsonResponse.js";
 
 /**
  * Send an error response to the client

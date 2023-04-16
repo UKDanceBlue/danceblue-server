@@ -1,7 +1,12 @@
-import createHttpError, { HttpError } from "http-errors";
-import { DateTime, Duration, Interval } from "luxon";
+import type {
+  ErrorApiResponse} from "@ukdanceblue/db-app-common";
+import {
+  errorResponseFrom,
+} from "@ukdanceblue/db-app-common";
+import type { HttpError } from "http-errors";
+import createHttpError from "http-errors";
+import type { DateTime, Duration, Interval } from "luxon";
 
-import { ErrorApiResponse, errorResponseFrom } from "./JsonResponse.js";
 
 export class LuxonError extends Error {
   cause: Duration | Interval | DateTime;

@@ -1,3 +1,4 @@
+import type { AuthSource, UserData } from "@ukdanceblue/db-app-common";
 import { IsEmail } from "class-validator";
 import {
   Column,
@@ -7,8 +8,6 @@ import {
   OneToMany,
   PrimaryGeneratedColumn,
 } from "typeorm";
-
-import { AuthSource, UserData } from "../lib/auth.js";
 
 import { PointEntry } from "./PointEntry.js";
 import { Role } from "./Role.js";

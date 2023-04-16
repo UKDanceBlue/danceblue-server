@@ -1,3 +1,4 @@
+import { AuthSource } from "@ukdanceblue/db-app-common";
 import express from "express";
 import createHttpError from "http-errors";
 import jsonwebtoken from "jsonwebtoken";
@@ -7,11 +8,7 @@ import { logout } from "../../../actions/auth.js";
 import { appDataSource } from "../../../data-source.js";
 import { LoginFlowSession } from "../../../entity/LoginFlowSession.js";
 import { Person } from "../../../entity/Person.js";
-import {
-  AuthSource,
-  findPersonForLogin,
-  makeUserJwt,
-} from "../../../lib/auth.js";
+import { findPersonForLogin, makeUserJwt } from "../../../lib/auth.js";
 import { notFound } from "../../../lib/expressHandlers.js";
 
 const authApiRouter = express.Router();

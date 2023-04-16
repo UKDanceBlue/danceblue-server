@@ -1,7 +1,7 @@
+import { AccessLevel } from "@ukdanceblue/db-app-common";
 import express from "express";
 import createHttpError from "http-errors";
 
-import { AccessLevel } from "../../lib/auth.js";
 import { notFound } from "../../lib/expressHandlers.js";
 
 import adminApiRouter from "./admin/index.js";

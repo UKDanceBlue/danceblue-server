@@ -1,6 +1,5 @@
+import type { PaginationOptions, SortingOptions } from "@ukdanceblue/db-app-common";
 import Joi from "joi";
-
-import { PaginationOptions, SortingOptions } from "../lib/request/Query.js";
 
 export const paginationOptionsSchema: Joi.StrictSchemaMap<PaginationOptions> = {
   page: Joi.number().integer().min(1).optional().default(1),

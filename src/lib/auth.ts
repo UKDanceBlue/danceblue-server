@@ -1,43 +1,19 @@
-import { Request } from "express";
+import type {
+  AuthSource,
+  Authorization,
+  JwtPayload,
+  OptionalNullOrUndefined,
+  UserData} from "@ukdanceblue/db-app-common";
+import {
+  AccessLevel,
+  CommitteeRole,
+  DbRole
+} from "@ukdanceblue/db-app-common";
+import type { Request } from "express";
 import jsonwebtoken from "jsonwebtoken";
-import { Repository } from "typeorm";
+import type { Repository } from "typeorm";
 
 import { Person } from "../entity/Person.js";
-
-export enum AuthSource {
-  UkyLinkblue = "uky-linkblue",
-}
-
-export enum AccessLevel {
-  None = -1,
-  Public = 0,
-  TeamMember = 1,
-  TeamCaptain = 2,
-  Committee = 3,
-  CommitteeChairOrCoordinator = 3.5,
-  Admin = 4, // Tech committee
-}
-
-export enum DbRole {
-  None = "none",
-  Public = "public",
-  TeamMember = "team-member",
-  TeamCaptain = "team-captain",
-  Committee = "committee",
-}
-
-export enum CommitteeRole {
-  Chair = "chair",
-  Coordinator = "coordinator",
-  Member = "member",
-}
-
-export interface Authorization {
-  dbRole: DbRole;
-  committeeRole?: CommitteeRole;
-  committee?: string;
-  accessLevel: AccessLevel;
-}
 
 /**
  * Compares an authorization object to a minimum authorization object
@@ -104,13 +80,6 @@ export const simpleAuthorizations: Record<AccessLevel, Authorization> = {
   },
 };
 
-export interface UserData {
-  auth: Authorization;
-  userId?: string;
-  teamIds?: string[];
-  captainOfTeamIds?: string[];
-}
-
 /**
  * Returns a default user object with no authorization
  *
@@ -118,9 +87,6 @@ export interface UserData {
  */
 export const defaultUserData = { auth: defaultAuthorization };
 
-type OptionalNullOrUndefined<T> = Partial<{
-  [K in keyof T]: NonNullable<T[K]> | null | undefined;
-}>;
 /**
  * Searches the database for a user with the given auth IDs or user data, or creates a new user if none is found
  *
@@ -153,16 +119,6 @@ export async function findPersonForLogin(
 }
 
 const jwtIssuer = "https://app.danceblue.org";
-
-export interface JwtPayload {
-  sub: string;
-  dbRole: DbRole;
-  committeeRole?: CommitteeRole;
-  committee?: string;
-  accessLevel: AccessLevel;
-  teamIds?: string[];
-  captainOfTeamIds?: string[];
-}
 
 /**
  * @param payload The payload to check

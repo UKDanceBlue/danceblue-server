@@ -1,5 +1,5 @@
 import { DateTime } from "luxon";
-import { ValueTransformer } from "typeorm";
+import type { ValueTransformer } from "typeorm";
 
 export const luxonDateTimeJsDateTransformer: ValueTransformer = {
   from: (value: Date): DateTime => {

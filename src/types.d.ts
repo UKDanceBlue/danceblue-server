@@ -1,8 +1,7 @@
-import { URL } from "node:url";
+import type { URL } from "node:url";
 
-import { Client } from "openid-client";
-
-import { UserData } from "./lib/auth.ts";
+import type { UserData } from "@ukdanceblue/db-app-common";
+import type { Client } from "openid-client";
 
 declare global {
   namespace Express {

@@ -1,8 +1,8 @@
-import { DateTime } from "luxon";
+import type { ParsedNewEventBody } from "@ukdanceblue/db-app-common";
+import type { DateTime } from "luxon";
 
 import { appDataSource } from "../data-source.js";
 import { Event } from "../entity/Event.js";
-import { ParsedNewEventBody } from "../lib/request/Event.js";
 
 export const EventRepository = appDataSource.getRepository(Event).extend({
   findByEventId(eventId: string) {

@@ -1,6 +1,5 @@
+import type { BodyDateTime } from "@ukdanceblue/db-app-common";
 import joi from "joi";
-
-import { BodyDateTime } from "../lib/request/htmlDateTime.js";
 
 export const bodyDateTimeSchema = joi.alternatives<BodyDateTime>(
   joi.object<BodyDateTime>({

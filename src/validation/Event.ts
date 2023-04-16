@@ -1,10 +1,15 @@
+import type {
+  NewEventBody,
+  PaginationOptions,
+  ParsedNewEventBody,
+  SortingOptions} from "@ukdanceblue/db-app-common";
+import {
+  parseBodyDateTime,
+} from "@ukdanceblue/db-app-common";
 import joi from "joi";
 import { Interval } from "luxon";
 
 import { LuxonError, ParsingError } from "../lib/CustomErrors.js";
-import { NewEventBody, ParsedNewEventBody } from "../lib/request/Event.js";
-import { PaginationOptions, SortingOptions } from "../lib/request/Query.js";
-import { parseBodyDateTime } from "../lib/request/htmlDateTime.js";
 
 import { bodyDateTimeSchema } from "./BodyDateTime.js";
 import { paginationOptionsSchema, sortingOptionsSchema } from "./Query.js";

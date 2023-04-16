@@ -2,7 +2,8 @@
 // Credits to @recurrence
 // https://gist.github.com/recurrence/b6a4cb04a8ddf42eda4e4be520921bd2
 
-import { DefaultNamingStrategy, NamingStrategyInterface } from "typeorm";
+import type { NamingStrategyInterface } from "typeorm";
+import { DefaultNamingStrategy } from "typeorm";
 import { snakeCase as snakeCaseImport } from "typeorm/util/StringUtils.js";
 
 const snakeCase = (string_: string): string =>

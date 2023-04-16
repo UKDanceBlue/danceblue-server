@@ -1,8 +1,8 @@
-import { ErrorRequestHandler } from "express";
+import type { ErrorApiResponse } from "@ukdanceblue/db-app-common";
+import type { ErrorRequestHandler } from "express";
 import createHttpError from "http-errors";
 import { getReasonPhrase } from "http-status-codes";
 
-import { ErrorApiResponse } from "./JsonResponse.js";
 
 export const errorHandler: ErrorRequestHandler = (error, req, res, next) => {
   if (res.headersSent) {

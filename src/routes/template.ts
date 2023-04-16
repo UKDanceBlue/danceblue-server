@@ -1,16 +1,13 @@
 import { join, resolve } from "node:path";
 import { isDeepStrictEqual } from "node:util";
 
+import type { Authorization } from "@ukdanceblue/db-app-common";
+import { AccessLevel } from "@ukdanceblue/db-app-common";
 import dree from "dree";
 import express from "express";
 import createHttpError from "http-errors";
 
-import {
-  AccessLevel,
-  Authorization,
-  isMinAuthSatisfied,
-  simpleAuthorizations,
-} from "../lib/auth.js";
+import { isMinAuthSatisfied, simpleAuthorizations } from "../lib/auth.js";
 const templateRouter = express.Router();
 
 // Map of slugs to getters for page data
@@ -102,8 +99,8 @@ const paths: PathInfo[] = [];
 const baseDir = resolve("views/pages");
 dree.scan(baseDir, { extensions: ["ejs", "html"] }, (file) => {
   const pathFromBase = file.path.replace(baseDir, "");
-  const path = pathFromBase.replaceAll('\\', "/");
-  const renderPath = path.replace(/^\//, "").replaceAll('.ejs', "");
+  const path = pathFromBase.replaceAll("\\", "/");
+  const renderPath = path.replace(/^\//, "").replaceAll(".ejs", "");
   const slug = path.replace(/index/, "").replace(/\.[\dA-Za-z]+$/, "");
   let type: "html" | "ejs" | "unknown" = "unknown";
   if (file.extension === "html") {
@@ -117,8 +114,8 @@ dree.scan(baseDir, { extensions: ["ejs", "html"] }, (file) => {
 const bodyDir = resolve("views/page-bodies");
 dree.scan(bodyDir, { extensions: ["ejs", "html"] }, (file) => {
   const pathFromBase = file.path.replace(bodyDir, "");
-  const path = pathFromBase.replaceAll('\\', "/");
-  const renderPath = path.replace(/^\//, "").replaceAll('.ejs', "");
+  const path = pathFromBase.replaceAll("\\", "/");
+  const renderPath = path.replace(/^\//, "").replaceAll(".ejs", "");
   const slug = path.replace(/index/, "").replace(/\.[\dA-Za-z]+$/, "");
   if (file.extension !== "ejs") {
     return;

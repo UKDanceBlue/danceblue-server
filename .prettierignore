@@ -4,3 +4,4 @@ public/script*
 dist/
 coverage/
 .vscode/
+*.ignore

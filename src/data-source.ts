@@ -13,6 +13,7 @@ import { PointEntry } from "./entity/PointEntry.js";
 import { PointOpportunity } from "./entity/PointOpportunity.js";
 import { Team } from "./entity/Team.js";
 import { CustomNamingStrategy } from "./lib/NamingStrategy.js";
+import { CustomTypeormLogger } from "./logger.js";
 
 dotenv.config();
 
@@ -35,7 +36,8 @@ export const appDataSource = new DataSource({
   password: process.env.DB_PWD,
   database: process.env.DB_NAME,
   synchronize: true,
-  logging: false,
+  logging: true,
+  logger: new CustomTypeormLogger(),
   entities: [
     Client,
     Configuration,

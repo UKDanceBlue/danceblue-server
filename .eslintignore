@@ -5,3 +5,4 @@ public/script*
 dist/
 coverage/
 .vscode/
+*.log

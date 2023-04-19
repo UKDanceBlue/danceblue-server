@@ -1,4 +1,6 @@
-import type { LoggerOptions } from "winston";
+import type { LogLevel, LogMessage } from "typeorm";
+import { AbstractLogger as AbstractTypeormLogger } from "typeorm";
+import type { Logger, LoggerOptions } from "winston";
 import { createLogger, format, transports } from "winston";
 
 import { crashServer } from "./index.js";
@@ -6,7 +8,6 @@ import { crashServer } from "./index.js";
 const loggerOptions: LoggerOptions = {
   level: "info",
   format: format.combine(format.splat(), format.timestamp(), format.json()),
-  defaultMeta: { service: "danceblue-server" },
   transports: [
     // Write all logs with importance level of `error` or less to `error.log`
     new transports.File({ filename: "error.log", level: "error" }),
@@ -17,7 +18,10 @@ const loggerOptions: LoggerOptions = {
   exitOnError: false,
 };
 
-const logger = createLogger(loggerOptions);
+const logger = createLogger({
+  ...loggerOptions,
+  defaultMeta: { service: "danceblue-server" },
+});
 
 // If we're not in production then log to the `console` with the format:
 // `${info.level}: ${info.message} JSON.stringify({ ...rest }) `
@@ -32,8 +36,6 @@ if (process.env.NODE_ENV !== "production") {
     })
   );
 }
-
-logger.data;
 
 /**
  * Log a debug message to the logger
@@ -137,6 +139,55 @@ export const logEmergency = logger.emerg;
 export function logFatal(content: unknown) {
   // Logs the error and then crashes the server
   logger.emerg(String(content), crashServer);
+}
+
+export class CustomTypeormLogger extends AbstractTypeormLogger {
+  typeormLogger: Logger = createLogger({
+    ...loggerOptions,
+    defaultMeta: { service: "danceblue-server-database" },
+  });
+
+  /**
+   * Write log to specific output.
+   *
+   * @param level Log level
+   * @param logMessage Log message
+   */
+  protected writeLog(level: LogLevel, logMessage: LogMessage | LogMessage[]) {
+    const messages = this.prepareLogMessages(logMessage, {
+      highlightSql: true,
+    });
+
+    for (const message of messages) {
+      switch (message.type ?? level) {
+        case "log":
+        case "schema":
+        case "schema-build":
+        case "migration": {
+          this.typeormLogger.debug(message);
+          break;
+        }
+
+        case "info":
+        case "query": {
+          this.typeormLogger.info(message);
+          break;
+        }
+
+        case "warn":
+        case "query-slow": {
+          this.typeormLogger.warn(message);
+          break;
+        }
+
+        case "error":
+        case "query-error": {
+          this.typeormLogger.error(message);
+          break;
+        }
+      }
+    }
+  }
 }
 
 export default logger;

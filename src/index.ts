@@ -12,7 +12,7 @@ import { appDataSource } from "./data-source.js";
 import { defaultUserData, parseUserJwt, tokenFromRequest } from "./lib/auth.js";
 import { errorHandler } from "./lib/errorhandler.js";
 import { notFound } from "./lib/expressHandlers.js";
-import { logCritical, logInfo } from "./logger.js";
+import rawLogger, { logCritical, logInfo } from "./logger.js";
 import apiRouter from "./routes/api/index.js";
 import templateRouter from "./routes/template.js";
 
@@ -138,9 +138,19 @@ const httpServer = app.listen(port, () => {
 /**
  * This function will kill the server and exit the process
  * it sets the exit code to 1, indicating an error
+ *
+ * @param beforeExit - A function to run before exiting (warning, exceptions will be ignored)
  */
-export function crashServer() {
-  httpServer.close(() => {
-    process.exit(1);
+export function crashServer(beforeExit?: () => void) {
+  rawLogger.on("finish", () => {
+    try {
+      beforeExit?.();
+    } catch {
+      // Ignore exceptions
+    }
+    httpServer.close(() => {
+      process.exit(1);
+    });
   });
+  rawLogger.end();
 }

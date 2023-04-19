@@ -2,10 +2,9 @@ import type {
   NewEventBody,
   PaginationOptions,
   ParsedNewEventBody,
-  SortingOptions} from "@ukdanceblue/db-app-common";
-import {
-  parseBodyDateTime,
+  SortingOptions,
 } from "@ukdanceblue/db-app-common";
+import { parseBodyDateTime } from "@ukdanceblue/db-app-common";
 import joi from "joi";
 import { Interval } from "luxon";
 

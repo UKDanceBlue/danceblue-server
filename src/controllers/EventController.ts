@@ -22,16 +22,17 @@ export function createEventFrom(body: ParsedNewEventBody) {
   if (body.eventAddress) event.location = body.eventAddress;
 
   if (body.eventIntervals.length > 0) {
-    console.log(body.eventIntervals);
     const eventStartDateTimes: DateTime[] = [];
     const eventEndDateTimes: DateTime[] = [];
     for (const interval of body.eventIntervals) {
       console.log(interval);
+      if (!interval.start || !interval.end) {
+        console.error("Invalid interval:", interval.toString());
+        throw new Error("Invalid interval");
+      }
       eventStartDateTimes.push(interval.start);
       eventEndDateTimes.push(interval.end);
     }
-    console.log(eventStartDateTimes);
-    console.log(eventEndDateTimes);
     event.start = eventStartDateTimes;
     event.end = eventEndDateTimes;
   }

@@ -1,4 +1,7 @@
-import type { PaginationOptions, SortingOptions } from "@ukdanceblue/db-app-common";
+import type {
+  PaginationOptions,
+  SortingOptions,
+} from "@ukdanceblue/db-app-common";
 import Joi from "joi";
 
 export const paginationOptionsSchema: Joi.StrictSchemaMap<PaginationOptions> = {

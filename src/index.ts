@@ -12,16 +12,17 @@ import { appDataSource } from "./data-source.js";
 import { defaultUserData, parseUserJwt, tokenFromRequest } from "./lib/auth.js";
 import { errorHandler } from "./lib/errorhandler.js";
 import { notFound } from "./lib/expressHandlers.js";
+import { logCritical, logInfo } from "./logger.js";
 import apiRouter from "./routes/api/index.js";
 import templateRouter from "./routes/template.js";
 
 if (!process.env.APPLICATION_PORT) {
-  console.error("Missing APPLICATION_PORT environment variable");
+  logCritical("Missing APPLICATION_PORT environment variable");
   process.exit(1);
 }
 const port = Number.parseInt(process.env.APPLICATION_PORT, 10);
 if (!process.env.APPLICATION_HOST) {
-  console.error("Missing APPLICATION_HOST environment variable");
+  logCritical("Missing APPLICATION_HOST environment variable");
   process.exit(1);
 }
 const FAKE_APP_URL: URL = new URL(`https://${process.env.APPLICATION_HOST}`);
@@ -99,12 +100,18 @@ app.use((req, res, next) => {
 });
 
 app.all("/printer", (req, res) => {
-  console.log("Request details:");
-  console.log("Method: %s", req.method);
-  console.log("Method: %s", req.url);
-  console.log("Query: %s", req.query);
-  console.log("Params: %s", req.params);
-  console.log("Body: %s", req.body);
+  logInfo("Request details:");
+  logInfo("Method: %s", req.method);
+  logInfo("Method: %s", req.url);
+  logInfo(
+    "Query: %s",
+    Array.isArray(req.query) ? req.query.join(", ") : String(req.query)
+  );
+  logInfo(
+    "Params: %s",
+    Array.isArray(req.params) ? req.params.join(", ") : String(req.params)
+  );
+  logInfo("Body: %s", JSON.stringify(req.body));
   res.status(200).send();
 });
 
@@ -124,6 +131,16 @@ app.all("*", notFound);
 
 app.use(errorHandler);
 
-app.listen(port, () => {
-  console.log(`DB Server listening on port ${port}`);
+const httpServer = app.listen(port, () => {
+  logInfo(`DB Server listening on port ${port}`);
 });
+
+/**
+ * This function will kill the server and exit the process
+ * it sets the exit code to 1, indicating an error
+ */
+export function crashServer() {
+  httpServer.close(() => {
+    process.exit(1);
+  });
+}

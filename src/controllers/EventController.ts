@@ -3,6 +3,7 @@ import type { DateTime } from "luxon";
 
 import { appDataSource } from "../data-source.js";
 import { Event } from "../entity/Event.js";
+import { logDebug, logError } from "../logger.js";
 
 export const EventRepository = appDataSource.getRepository(Event).extend({
   findByEventId(eventId: string) {
@@ -25,9 +26,11 @@ export function createEventFrom(body: ParsedNewEventBody) {
     const eventStartDateTimes: DateTime[] = [];
     const eventEndDateTimes: DateTime[] = [];
     for (const interval of body.eventIntervals) {
-      console.log(interval);
+      logDebug(interval);
       if (!interval.start || !interval.end) {
-        console.error("Invalid interval:", interval.toString());
+        // This really should not happen as previous validation should have
+        // caught this, but just in case...
+        logError("Invalid interval:", interval.toString());
         throw new Error("Invalid interval");
       }
       eventStartDateTimes.push(interval.start);
@@ -37,7 +40,7 @@ export function createEventFrom(body: ParsedNewEventBody) {
     event.end = eventEndDateTimes;
   }
 
-  console.log(event);
+  logDebug(event);
 
   return EventRepository.save(event);
 }

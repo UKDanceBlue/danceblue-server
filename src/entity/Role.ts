@@ -1,12 +1,9 @@
 /* eslint-disable no-fallthrough */
-import type {
-  Authorization} from "@ukdanceblue/db-app-common";
-import {
-  AccessLevel,
-  CommitteeRole,
-  DbRole,
-} from "@ukdanceblue/db-app-common";
+import type { Authorization } from "@ukdanceblue/db-app-common";
+import { AccessLevel, CommitteeRole, DbRole } from "@ukdanceblue/db-app-common";
 import { Column } from "typeorm";
+
+import { logError } from "../logger.js";
 
 export class Role {
   @Column("enum", { enum: DbRole, default: DbRole.Public })
@@ -52,7 +49,7 @@ export class Role {
         try {
           throw new Error(`Illegal DbRole: ${JSON.stringify(this.dbRole)}`);
         } catch (error) {
-          console.error(error);
+          logError(error);
           throw new Error(
             `Illegal DbRole: [Parsing of '${String(this.dbRole)}' failed]`
           );

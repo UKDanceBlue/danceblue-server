@@ -2,6 +2,7 @@ import type { URL } from "node:url";
 
 import type { UserData } from "@ukdanceblue/db-app-common";
 import type { Client } from "openid-client";
+import type { Logger } from "winston";
 
 declare global {
   namespace Express {
@@ -10,6 +11,7 @@ declare global {
       userData: UserData;
       shownPages?: { slug: string; title: string }[];
       applicationUrl: URL;
+      logger: Logger;
 
       // Auth flow
       oidcClient?: Client;

@@ -9,6 +9,7 @@ import joi from "joi";
 import { Interval } from "luxon";
 
 import { LuxonError, ParsingError } from "../lib/CustomErrors.js";
+import { logWarning } from "../logger.js";
 
 import { bodyDateTimeSchema } from "./BodyDateTime.js";
 import { paginationOptionsSchema, sortingOptionsSchema } from "./Query.js";
@@ -50,7 +51,7 @@ export function parseNewEventBody(body: unknown): ParsedNewEventBody {
   const { value: eventBody, warning } = newEventBodyValidator(body);
 
   if (warning) {
-    console.error("Error parsing new event body:", warning.annotate());
+    logWarning("Error parsing new event body: %s", warning.annotate());
   }
 
   if (!eventBody) {
@@ -106,7 +107,7 @@ export function parseListEventsQuery(
   const { value: parsedQuery, warning } = listEventsQueryValidator(query);
 
   if (warning) {
-    console.error("Error parsing list events query:", warning.annotate());
+    logWarning("Error parsing list events query: %s", warning.annotate());
   }
 
   if (!parsedQuery) {

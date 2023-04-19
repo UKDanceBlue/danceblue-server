@@ -3,6 +3,7 @@ import type { ErrorRequestHandler } from "express";
 import createHttpError from "http-errors";
 import { getReasonPhrase } from "http-status-codes";
 
+import { logError } from "../logger.js";
 
 export const errorHandler: ErrorRequestHandler = (error, req, res, next) => {
   if (res.headersSent) {
@@ -20,7 +21,7 @@ export const errorHandler: ErrorRequestHandler = (error, req, res, next) => {
   }
 
   if (!httpError.expose && httpError.statusCode >= 500) {
-    console.error(error);
+    logError(error);
   }
 
   // Configure response

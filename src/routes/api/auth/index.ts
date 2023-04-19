@@ -10,6 +10,7 @@ import { LoginFlowSession } from "../../../entity/LoginFlowSession.js";
 import { Person } from "../../../entity/Person.js";
 import { findPersonForLogin, makeUserJwt } from "../../../lib/auth.js";
 import { notFound } from "../../../lib/expressHandlers.js";
+import { logCritical } from "../../../logger.js";
 
 const authApiRouter = express.Router();
 
@@ -172,9 +173,7 @@ authApiRouter.post("/oidc-callback", async (req, res, next) => {
   } catch (error) {
     if (!sessionDeleted) {
       const sessionRepository = appDataSource.getRepository(LoginFlowSession);
-      sessionRepository
-        .delete({ sessionId: flowSessionId })
-        .catch(console.error);
+      sessionRepository.delete({ sessionId: flowSessionId }).catch(logCritical);
     }
     return next(error);
   }

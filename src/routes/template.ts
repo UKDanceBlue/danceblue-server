@@ -8,6 +8,7 @@ import express from "express";
 import createHttpError from "http-errors";
 
 import { isMinAuthSatisfied, simpleAuthorizations } from "../lib/auth.js";
+import { logAlert, logEmergency } from "../logger.js";
 const templateRouter = express.Router();
 
 // Map of slugs to getters for page data
@@ -127,9 +128,7 @@ dree.scan(bodyDir, { extensions: ["ejs", "html"] }, (file) => {
 const pathSlugs = paths.map((path) => path.slug);
 const pathSlugsSet = new Set(pathSlugs);
 if (pathSlugs.length !== pathSlugsSet.size) {
-  console.error("Conflicting paths detected!");
-  console.error("Paths:");
-  console.table(paths);
+  logEmergency("Conflicting paths detected!", paths);
   process.exit(1);
 }
 
@@ -166,7 +165,7 @@ for (const path of paths) {
       return;
     } else {
       res.status(500);
-      console.error(`Unknown file type for ${path.renderPath}`);
+      logAlert(`Unknown file type for ${path.renderPath}`);
       return;
     }
   });

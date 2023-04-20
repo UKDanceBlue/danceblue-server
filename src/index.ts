@@ -1,3 +1,4 @@
+import type { Server } from "node:http";
 import { resolve } from "node:path";
 
 import type { UserData } from "@ukdanceblue/db-app-common";
@@ -131,17 +132,20 @@ app.all("*", notFound);
 
 app.use(errorHandler);
 
-const httpServer = app.listen(port, () => {
-  logInfo(`DB Server listening on port ${port}`);
-});
+// eslint-disable-next-line prefer-const
+let httpServer: Server;
 
 /**
  * This function will kill the server and exit the process
  * it sets the exit code to 1, indicating an error
  *
  * @param beforeExit - A function to run before exiting (warning, exceptions will be ignored)
+ * @param code - The exit code to use
  */
-export function crashServer(beforeExit?: () => void) {
+export function stopServer(
+  beforeExit?: (() => void) | null | undefined,
+  code = 1
+) {
   rawLogger.on("finish", () => {
     try {
       beforeExit?.();
@@ -149,8 +153,17 @@ export function crashServer(beforeExit?: () => void) {
       // Ignore exceptions
     }
     httpServer.close(() => {
-      process.exit(1);
+      process.exit(code);
     });
   });
+  logInfo("Stopping server");
   rawLogger.end();
 }
+
+process.on("SIGINT", () => {
+  stopServer();
+});
+
+httpServer = app.listen(port, () => {
+  logInfo(`DB Server listening on port ${port}`);
+});

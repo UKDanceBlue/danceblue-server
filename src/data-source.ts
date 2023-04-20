@@ -55,6 +55,12 @@ export const appDataSource = new DataSource({
   uuidExtension: "pgcrypto",
   namingStrategy: new CustomNamingStrategy(),
   useUTC: true,
-  // DANGER!!!
-  // dropSchema: true,
+  // dropSchema: true, // DANGER!!!
+});
+
+process.on("exit", () => {
+  appDataSource.destroy().catch((error) => {
+    console.error("Failed to close database connection before exiting");
+    console.error(error);
+  });
 });

@@ -15,7 +15,9 @@ export const EventRepository = appDataSource.getRepository(Event).extend({
  * @param body - The body of the request
  * @return The parsed body
  */
-export function createEventFrom(body: ParsedNewEventBody) {
+export async function createEventFrom(
+  body: ParsedNewEventBody
+): Promise<Event> {
   const event = new Event();
   event.title = body.eventTitle;
   if (body.eventSummary) event.summary = body.eventSummary;
@@ -40,7 +42,9 @@ export function createEventFrom(body: ParsedNewEventBody) {
     event.end = eventEndDateTimes;
   }
 
-  logDebug(event);
+  const createdEvent = await EventRepository.save(event);
 
-  return EventRepository.save(event);
+  logDebug(`Created event: ${createdEvent.eventId}`, createdEvent);
+
+  return createdEvent;
 }

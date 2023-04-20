@@ -6,4 +6,13 @@ export abstract class EntityWithId {
    */
   @PrimaryGeneratedColumn("identity", { generatedIdentity: "ALWAYS" })
   id!: number;
+
+  /**
+   * DEBUG METHOD
+   *
+   * @return A string representation of the entity
+   */
+  toString(): string {
+    return JSON.stringify(this);
+  }
 }

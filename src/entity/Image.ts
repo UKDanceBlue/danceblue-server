@@ -1,10 +1,11 @@
 import type { ImageResource } from "@ukdanceblue/db-app-common";
-import { Column, Entity } from "typeorm";
+import { Column, Entity, Index } from "typeorm";
 
 import { EntityWithId } from "./EntityWithId.js";
 
 @Entity()
 export class Image extends EntityWithId implements ImageResource {
+  @Index()
   @Column("uuid", { generated: "uuid", unique: true })
   imageId!: string;
 

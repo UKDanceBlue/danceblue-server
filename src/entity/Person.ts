@@ -4,7 +4,14 @@ import type {
   UserData,
 } from "@ukdanceblue/db-app-common";
 import { IsEmail } from "class-validator";
-import { Column, Entity, JoinTable, ManyToMany, OneToMany } from "typeorm";
+import {
+  Column,
+  Entity,
+  Index,
+  JoinTable,
+  ManyToMany,
+  OneToMany,
+} from "typeorm";
 
 import { EntityWithId } from "./EntityWithId.js";
 import { PointEntry } from "./PointEntry.js";
@@ -13,6 +20,7 @@ import { Team } from "./Team.js";
 
 @Entity()
 export class Person extends EntityWithId implements PersonResource {
+  @Index()
   @Column("uuid", { generated: "uuid", unique: true })
   userId!: string;
 
@@ -32,6 +40,7 @@ export class Person extends EntityWithId implements PersonResource {
   @IsEmail()
   email!: string;
 
+  @Index()
   @Column("text", { nullable: true })
   linkblue!: string | null;
 

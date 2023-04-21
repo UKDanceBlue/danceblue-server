@@ -1,7 +1,7 @@
 import { TeamType } from "@ukdanceblue/db-app-common";
 import type { PointOpportunityResource } from "@ukdanceblue/db-app-common";
 import type { DateTime } from "luxon";
-import { Column, Entity, ManyToOne } from "typeorm";
+import { Column, Entity, Index, ManyToOne } from "typeorm";
 
 import { luxonDateTimeJsDateTransformer } from "../lib/transformers.js";
 
@@ -14,6 +14,7 @@ export class PointOpportunity
   extends EntityWithId
   implements PointOpportunityResource
 {
+  @Index()
   @Column("uuid", { generated: "uuid", unique: true })
   entryId!: string;
 
@@ -23,6 +24,7 @@ export class PointOpportunity
   @Column("text")
   name!: string;
 
+  // Probably want an index or something on this
   @Column("timestamptz", {
     nullable: true,
     transformer: luxonDateTimeJsDateTransformer,

@@ -1,6 +1,6 @@
 import { TeamType } from "@ukdanceblue/db-app-common";
 import type { TeamResource } from "@ukdanceblue/db-app-common";
-import { Column, Entity, ManyToMany, OneToMany } from "typeorm";
+import { Column, Entity, Index, ManyToMany, OneToMany } from "typeorm";
 
 import { EntityWithId } from "./EntityWithId.js";
 import { Person } from "./Person.js";
@@ -9,6 +9,7 @@ import { Role } from "./Role.js";
 
 @Entity()
 export class Team extends EntityWithId implements TeamResource {
+  @Index()
   @Column("uuid", { generated: "uuid", unique: true })
   teamId!: string;
 

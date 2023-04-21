@@ -1,6 +1,6 @@
 import type { PointEntryResource } from "@ukdanceblue/db-app-common";
 import { TeamType } from "@ukdanceblue/db-app-common";
-import { Column, Entity, ManyToOne } from "typeorm";
+import { Column, Entity, Index, ManyToOne } from "typeorm";
 
 import { EntityWithId } from "./EntityWithId.js";
 import { Person } from "./Person.js";
@@ -8,6 +8,7 @@ import { Team } from "./Team.js";
 
 @Entity()
 export class PointEntry extends EntityWithId implements PointEntryResource {
+  @Index()
   @Column("uuid", { generated: "uuid", unique: true })
   entryId!: string;
 
@@ -23,6 +24,7 @@ export class PointEntry extends EntityWithId implements PointEntryResource {
   @ManyToOne(() => Person, (person) => person.pointEntries, { nullable: true })
   personFrom!: Person | null;
 
+  @Index()
   @ManyToOne(() => Team, (team) => team.pointEntries)
   team!: Team;
 }

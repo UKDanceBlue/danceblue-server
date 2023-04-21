@@ -1,7 +1,7 @@
 import type { EventResource } from "@ukdanceblue/db-app-common";
 import type { DateTime } from "luxon";
 import { Interval } from "luxon";
-import { Column, Entity, JoinTable, ManyToMany } from "typeorm";
+import { Column, Entity, Index, JoinTable, ManyToMany } from "typeorm";
 
 import { luxonDateTimeJsDateArrayTransformer } from "../lib/transformers.js";
 
@@ -10,6 +10,7 @@ import { Image } from "./Image.js";
 
 @Entity()
 export class Event extends EntityWithId implements EventResource {
+  @Index()
   @Column("uuid", { generated: "uuid", unique: true })
   eventId!: string;
 

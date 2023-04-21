@@ -1,11 +1,12 @@
 import type { ClientResource } from "@ukdanceblue/db-app-common";
-import { Check, Column, Entity, ManyToOne } from "typeorm";
+import { Check, Column, Entity, Index, ManyToOne } from "typeorm";
 
 import { EntityWithId } from "./EntityWithId.js";
 import { Person } from "./Person.js";
 
 @Entity()
 export class Client extends EntityWithId implements ClientResource {
+  @Index()
   @Column("uuid", { generated: "uuid", unique: true })
   deviceId!: string;
 

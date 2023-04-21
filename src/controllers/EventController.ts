@@ -1,9 +1,8 @@
 import type { ParsedCreateEventBody } from "@ukdanceblue/db-app-common";
-import type { DateTime } from "luxon";
 
 import { appDataSource } from "../data-source.js";
 import { Event } from "../entity/Event.js";
-import { logDebug, logError } from "../logger.js";
+import { logDebug } from "../logger.js";
 
 export const EventRepository = appDataSource.getRepository(Event).extend({
   findByEventId(eventId: string) {
@@ -23,24 +22,8 @@ export async function createEventFrom(
   if (body.eventSummary) event.summary = body.eventSummary;
   if (body.eventDescription) event.description = body.eventDescription;
   if (body.eventAddress) event.location = body.eventAddress;
-
-  if (body.eventIntervals.length > 0) {
-    const eventStartDateTimes: DateTime[] = [];
-    const eventEndDateTimes: DateTime[] = [];
-    for (const interval of body.eventIntervals) {
-      logDebug(interval);
-      if (!interval.start || !interval.end) {
-        // This really should not happen as previous validation should have
-        // caught this, but just in case...
-        logError("Invalid interval:", interval.toString());
-        throw new Error("Invalid interval");
-      }
-      eventStartDateTimes.push(interval.start);
-      eventEndDateTimes.push(interval.end);
-    }
-    event.start = eventStartDateTimes;
-    event.end = eventEndDateTimes;
-  }
+  if (body.eventIntervals.length > 0) event.occurrences = body.eventIntervals;
+  // TODO: Add images
 
   const createdEvent = await EventRepository.save(event);
 

@@ -1,4 +1,5 @@
-import type { DateTime} from "luxon";
+import type { EventResource } from "@ukdanceblue/db-app-common";
+import type { DateTime } from "luxon";
 import { Interval } from "luxon";
 import { Column, Entity, JoinTable, ManyToMany } from "typeorm";
 
@@ -8,7 +9,7 @@ import { EntityWithId } from "./EntityWithId.js";
 import { Image } from "./Image.js";
 
 @Entity()
-export class Event extends EntityWithId {
+export class Event extends EntityWithId implements EventResource {
   @Column("uuid", { generated: "uuid", unique: true, nullable: false })
   eventId!: string;
 

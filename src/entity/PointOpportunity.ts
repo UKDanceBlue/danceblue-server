@@ -1,3 +1,5 @@
+import { TeamType } from "@ukdanceblue/db-app-common";
+import type { PointOpportunityResource } from "@ukdanceblue/db-app-common";
 import type { DateTime } from "luxon";
 import { Column, Entity, ManyToOne } from "typeorm";
 
@@ -6,10 +8,12 @@ import { luxonDateTimeJsDateTransformer } from "../lib/transformers.js";
 import { EntityWithId } from "./EntityWithId.js";
 import { Person } from "./Person.js";
 import { Team } from "./Team.js";
-import { TeamType } from "./common.js";
 
 @Entity()
-export class PointOpportunity extends EntityWithId {
+export class PointOpportunity
+  extends EntityWithId
+  implements PointOpportunityResource
+{
   @Column("uuid", { generated: "uuid", unique: true, nullable: false })
   entryId!: string;
 

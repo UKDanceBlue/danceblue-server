@@ -1,7 +1,7 @@
 import type {
-  NewEventBody,
+  CreateEventBody,
   PaginationOptions,
-  ParsedNewEventBody,
+  ParsedCreateEventBody,
   SortingOptions,
 } from "@ukdanceblue/db-app-common";
 import { parseBodyDateTime } from "@ukdanceblue/db-app-common";
@@ -15,7 +15,7 @@ import { bodyDateTimeSchema } from "./BodyDateTime.js";
 import { paginationOptionsSchema, sortingOptionsSchema } from "./Query.js";
 import { makeValidator } from "./makeValidator.js";
 
-const newEventBodySchema: joi.StrictSchemaMap<NewEventBody> = {
+const createEventBodySchema: joi.StrictSchemaMap<CreateEventBody> = {
   eventTitle: joi.string().required(),
   eventSummary: joi.string().optional().max(100),
   eventDescription: joi.string().optional(),
@@ -32,8 +32,8 @@ const newEventBodySchema: joi.StrictSchemaMap<NewEventBody> = {
   timezone: joi.string().optional(),
 };
 
-const newEventBodyValidator = makeValidator<NewEventBody>(
-  joi.object(newEventBodySchema)
+const createEventBodyValidator = makeValidator<CreateEventBody>(
+  joi.object(createEventBodySchema)
 );
 
 /**
@@ -47,8 +47,8 @@ const newEventBodyValidator = makeValidator<NewEventBody>(
  * @throws An error if the body is invalid
  * @throws An error if the start or end date time is invalid
  */
-export function parseNewEventBody(body: unknown): ParsedNewEventBody {
-  const { value: eventBody, warning } = newEventBodyValidator(body);
+export function parseCreateEventBody(body: unknown): ParsedCreateEventBody {
+  const { value: eventBody, warning } = createEventBodyValidator(body);
 
   if (warning) {
     logWarning("Error parsing new event body: %s", warning.annotate());
@@ -70,7 +70,7 @@ export function parseNewEventBody(body: unknown): ParsedNewEventBody {
     return interval;
   });
 
-  const parsedBody: ParsedNewEventBody = {
+  const parsedBody: ParsedCreateEventBody = {
     eventTitle: eventBody.eventTitle,
     eventIntervals,
   };

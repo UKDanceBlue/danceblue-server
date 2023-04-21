@@ -4,20 +4,20 @@ import express from "express";
 import { sendValidationError } from "../../../actions/SendCustomError.js";
 import { createEventFrom } from "../../../controllers/EventController.js";
 import { notFound } from "../../../lib/expressHandlers.js";
-import { parseNewEventBody } from "../../../validation/Event.js";
+import { parseCreateEventBody } from "../../../validation/Event.js";
 const eventApiRouter = express.Router();
 
 eventApiRouter.post("/", async (req, res) => {
-  let newEvent;
+  let createEvent;
   try {
-    newEvent = parseNewEventBody(req.body);
+    createEvent = parseCreateEventBody(req.body);
   } catch (error) {
     return sendValidationError(res, error);
   }
 
   let createdEvent;
   try {
-    createdEvent = await createEventFrom(newEvent);
+    createdEvent = await createEventFrom(createEvent);
   } catch (error) {
     return sendValidationError(res, error);
   }

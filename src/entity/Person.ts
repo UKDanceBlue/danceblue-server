@@ -1,23 +1,18 @@
-import type { AuthSource, UserData } from "@ukdanceblue/db-app-common";
+import type {
+  AuthSource,
+  PersonResource,
+  UserData,
+} from "@ukdanceblue/db-app-common";
 import { IsEmail } from "class-validator";
-import {
-  Column,
-  Entity,
-  JoinTable,
-  ManyToMany,
-  OneToMany,
-  PrimaryGeneratedColumn,
-} from "typeorm";
+import { Column, Entity, JoinTable, ManyToMany, OneToMany } from "typeorm";
 
+import { EntityWithId } from "./EntityWithId.js";
 import { PointEntry } from "./PointEntry.js";
 import { Role } from "./Role.js";
 import { Team } from "./Team.js";
 
 @Entity()
-export class Person {
-  @PrimaryGeneratedColumn("identity")
-  id!: number;
-
+export class Person extends EntityWithId implements PersonResource {
   @Column("uuid", { generated: "uuid", unique: true })
   userId!: string;
 

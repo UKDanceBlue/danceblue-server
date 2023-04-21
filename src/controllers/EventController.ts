@@ -1,4 +1,4 @@
-import type { ParsedNewEventBody } from "@ukdanceblue/db-app-common";
+import type { ParsedCreateEventBody } from "@ukdanceblue/db-app-common";
 import type { DateTime } from "luxon";
 
 import { appDataSource } from "../data-source.js";
@@ -16,7 +16,7 @@ export const EventRepository = appDataSource.getRepository(Event).extend({
  * @return The parsed body
  */
 export async function createEventFrom(
-  body: ParsedNewEventBody
+  body: ParsedCreateEventBody
 ): Promise<Event> {
   const event = new Event();
   event.title = body.eventTitle;

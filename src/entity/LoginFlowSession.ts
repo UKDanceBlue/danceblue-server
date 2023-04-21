@@ -1,3 +1,4 @@
+import type { LoginFlowSessionResource } from "@ukdanceblue/db-app-common";
 import { DateTime } from "luxon";
 import { generators } from "openid-client";
 import { Column, CreateDateColumn, Entity } from "typeorm";
@@ -7,7 +8,10 @@ import { luxonDateTimeJsDateTransformer } from "../lib/transformers.js";
 import { EntityWithId } from "./EntityWithId.js";
 
 @Entity()
-export class LoginFlowSession extends EntityWithId {
+export class LoginFlowSession
+  extends EntityWithId
+  implements LoginFlowSessionResource
+{
   @Column("uuid", { generated: "uuid", unique: true, nullable: false })
   sessionId!: string;
 

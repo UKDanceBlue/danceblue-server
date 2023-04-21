@@ -1,12 +1,8 @@
-import type {
-  ErrorApiResponse} from "@ukdanceblue/db-app-common";
-import {
-  errorResponseFrom,
-} from "@ukdanceblue/db-app-common";
+import type { ApiError, ErrorApiResponse } from "@ukdanceblue/db-app-common";
+import { errorResponseFrom } from "@ukdanceblue/db-app-common";
 import type { HttpError } from "http-errors";
 import createHttpError from "http-errors";
 import type { DateTime, Duration, Interval } from "luxon";
-
 
 export class LuxonError extends Error {
   cause: Duration | Interval | DateTime;
@@ -31,14 +27,12 @@ export class LuxonError extends Error {
     httpError.expose = expose;
     httpError.name = this.name;
     httpError.cause = this.cause;
-    return [
-      httpError,
-      errorResponseFrom({
-        errorMessage: this.message,
-        errorCause: this.cause,
-        errorExplanation: this.explanation ?? undefined,
-      }),
-    ];
+    const apiError: ApiError = {
+      errorMessage: this.message,
+      errorCause: this.cause,
+    };
+    if (this.explanation) apiError.errorExplanation = this.explanation;
+    return [httpError, errorResponseFrom(apiError)];
   }
 }
 

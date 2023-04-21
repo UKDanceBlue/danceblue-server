@@ -12,7 +12,7 @@ export class LoginFlowSession
   extends EntityWithId
   implements LoginFlowSessionResource
 {
-  @Column("uuid", { generated: "uuid", unique: true, nullable: false })
+  @Column("uuid", { generated: "uuid", unique: true })
   sessionId!: string;
 
   @Column("text", {
@@ -27,5 +27,5 @@ export class LoginFlowSession
   creationDate!: DateTime;
 
   @Column("text", { nullable: true })
-  redirectToAfterLogin?: string;
+  redirectToAfterLogin!: string | null;
 }

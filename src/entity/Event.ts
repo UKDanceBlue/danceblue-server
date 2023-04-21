@@ -10,7 +10,7 @@ import { Image } from "./Image.js";
 
 @Entity()
 export class Event extends EntityWithId implements EventResource {
-  @Column("uuid", { generated: "uuid", unique: true, nullable: false })
+  @Column("uuid", { generated: "uuid", unique: true })
   eventId!: string;
 
   @ManyToMany(() => Image)
@@ -20,14 +20,12 @@ export class Event extends EntityWithId implements EventResource {
   @Column("timestamptz", {
     transformer: luxonDateTimeJsDateArrayTransformer,
     array: true,
-    nullable: true,
   })
   start!: DateTime[];
 
   @Column("timestamptz", {
     transformer: luxonDateTimeJsDateArrayTransformer,
     array: true,
-    nullable: true,
   })
   end!: DateTime[];
 
@@ -48,11 +46,11 @@ export class Event extends EntityWithId implements EventResource {
   title!: string;
 
   @Column("text", { nullable: true })
-  summary!: string;
+  summary!: string | null;
 
   @Column("text", { nullable: true })
-  description!: string;
+  description!: string | null;
 
   @Column("text", { nullable: true })
-  location!: string;
+  location!: string | null;
 }

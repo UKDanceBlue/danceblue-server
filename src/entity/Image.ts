@@ -5,7 +5,7 @@ import { EntityWithId } from "./EntityWithId.js";
 
 @Entity()
 export class Image extends EntityWithId implements ImageResource {
-  @Column("uuid", { generated: "uuid", unique: true, nullable: false })
+  @Column("uuid", { generated: "uuid", unique: true })
   imageId!: string;
 
   @Column("text", {

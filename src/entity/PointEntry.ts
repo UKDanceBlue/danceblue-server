@@ -8,7 +8,7 @@ import { Team } from "./Team.js";
 
 @Entity()
 export class PointEntry extends EntityWithId implements PointEntryResource {
-  @Column("uuid", { generated: "uuid", unique: true, nullable: false })
+  @Column("uuid", { generated: "uuid", unique: true })
   entryId!: string;
 
   @Column({ type: "enum", enum: TeamType })

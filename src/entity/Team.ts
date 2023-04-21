@@ -9,7 +9,7 @@ import { Role } from "./Role.js";
 
 @Entity()
 export class Team extends EntityWithId implements TeamResource {
-  @Column("uuid", { generated: "uuid", unique: true, nullable: false })
+  @Column("uuid", { generated: "uuid", unique: true })
   teamId!: string;
 
   @Column("text")

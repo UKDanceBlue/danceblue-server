@@ -23,43 +23,39 @@ export class Person extends EntityWithId implements PersonResource {
   authIds: Partial<Record<AuthSource, string>> = {};
 
   @Column("text", { nullable: true })
-  firstName!: string;
+  firstName!: string | null;
 
   @Column("text", { nullable: true })
-  lastName!: string;
+  lastName!: string | null;
 
   @Column("text")
   @IsEmail()
   email!: string;
 
   @Column("text", { nullable: true })
-  linkblue!: string;
+  linkblue!: string | null;
 
   @Column(() => Role)
   role!: Role;
 
   @ManyToMany(() => Team, (team) => team.members)
   @JoinTable()
-  memberOf?: Team[];
+  memberOf!: Team[];
 
   @ManyToMany(() => Team, (team) => team.captains)
   @JoinTable()
-  captainOf?: Team[];
+  captainOf!: Team[];
 
   @OneToMany(() => PointEntry, (pointEntry) => pointEntry.personFrom)
-  pointEntries?: PointEntry[];
+  pointEntries!: PointEntry[];
 
   toUser(): UserData {
     const userData: UserData = {
       userId: this.userId,
       auth: this.role.toAuthorization(),
     };
-    if (this.memberOf) {
-      userData.teamIds = this.memberOf.map((team) => team.teamId);
-    }
-    if (this.captainOf) {
-      userData.captainOfTeamIds = this.captainOf.map((team) => team.teamId);
-    }
+    userData.teamIds = this.memberOf.map((team) => team.teamId);
+    userData.captainOfTeamIds = this.captainOf.map((team) => team.teamId);
     return userData;
   }
 }

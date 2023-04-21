@@ -14,7 +14,7 @@ export class PointOpportunity
   extends EntityWithId
   implements PointOpportunityResource
 {
-  @Column("uuid", { generated: "uuid", unique: true, nullable: false })
+  @Column("uuid", { generated: "uuid", unique: true })
   entryId!: string;
 
   @Column({ type: "enum", enum: TeamType })

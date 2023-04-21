@@ -5,6 +5,6 @@ import { EntityWithId } from "./EntityWithId.js";
 
 @Entity()
 export class Notification extends EntityWithId implements NotificationResource {
-  @Column("uuid", { generated: "uuid", unique: true, nullable: false })
+  @Column("uuid", { generated: "uuid", unique: true })
   notificationId!: string;
 }

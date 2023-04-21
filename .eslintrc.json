@@ -91,7 +91,7 @@
     "no-promise-executor-return": "error",
     "no-self-compare": "error",
     "require-atomic-updates": "error",
-    "class-methods-use-this": "error",
+    "class-methods-use-this": "off",
     "eqeqeq": ["error", "smart"],
     // jsdoc
     "jsdoc/no-types": "off",

@@ -1,13 +1,20 @@
 import type { ConfigurationResource } from "@ukdanceblue/db-app-common";
 import { Column, Entity } from "typeorm";
 
-import { EntityWithId } from "./EntityWithId.js";
+import type { EntityMethods } from "./Base.js";
+import { EntityWithId } from "./Base.js";
 
 @Entity()
 export class Configuration
   extends EntityWithId
-  implements ConfigurationResource
+  implements ConfigurationResource, EntityMethods<ConfigurationResource>
 {
   @Column("text")
   key!: string;
+
+  toJson(): ConfigurationResource {
+    return {
+      key: this.key,
+    };
+  }
 }

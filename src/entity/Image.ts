@@ -1,10 +1,14 @@
 import type { ImageResource } from "@ukdanceblue/db-app-common";
 import { Column, Entity, Index } from "typeorm";
 
-import { EntityWithId } from "./EntityWithId.js";
+import type { EntityMethods } from "./Base.js";
+import { EntityWithId } from "./Base.js";
 
 @Entity()
-export class Image extends EntityWithId implements ImageResource {
+export class Image
+  extends EntityWithId
+  implements ImageResource, EntityMethods<ImageResource>
+{
   @Index()
   @Column("uuid", { generated: "uuid", unique: true })
   imageId!: string;
@@ -42,4 +46,17 @@ export class Image extends EntityWithId implements ImageResource {
 
   @Column("integer")
   height!: number;
+
+  toJson(): ImageResource {
+    return {
+      imageId: this.imageId,
+      url: this.url,
+      imageData: this.imageData,
+      mimeType: this.mimeType,
+      thumbHash: this.thumbHash,
+      alt: this.alt,
+      width: this.width,
+      height: this.height,
+    };
+  }
 }

@@ -2,7 +2,7 @@ import { TeamType } from "@ukdanceblue/db-app-common";
 import type { TeamResource } from "@ukdanceblue/db-app-common";
 import { Column, Entity, Index, ManyToMany, OneToMany } from "typeorm";
 
-import { EntityWithId } from "./EntityWithId.js";
+import { EntityWithId } from "./Base.js";
 import { Person } from "./Person.js";
 import { PointEntry } from "./PointEntry.js";
 import { Role } from "./Role.js";
@@ -30,4 +30,16 @@ export class Team extends EntityWithId implements TeamResource {
 
   @OneToMany(() => PointEntry, (pointEntry) => pointEntry.team)
   pointEntries!: PointEntry[];
+
+  toJson(): TeamResource {
+    return {
+      teamId: this.teamId,
+      name: this.name,
+      type: this.type,
+      visibility: this.visibility,
+      members: this.members.map((member) => member.toJson()),
+      captains: this.captains.map((captain) => captain.toJson()),
+      pointEntries: this.pointEntries.map((pointEntry) => pointEntry.toJson()),
+    };
+  }
 }

@@ -13,13 +13,17 @@ import {
   OneToMany,
 } from "typeorm";
 
-import { EntityWithId } from "./EntityWithId.js";
+import type { EntityMethods } from "./Base.js";
+import { EntityWithId } from "./Base.js";
 import { PointEntry } from "./PointEntry.js";
 import { Role } from "./Role.js";
 import { Team } from "./Team.js";
 
 @Entity()
-export class Person extends EntityWithId implements PersonResource {
+export class Person
+  extends EntityWithId
+  implements PersonResource, EntityMethods<PersonResource>
+{
   @Index()
   @Column("uuid", { generated: "uuid", unique: true })
   userId!: string;
@@ -66,5 +70,20 @@ export class Person extends EntityWithId implements PersonResource {
     userData.teamIds = this.memberOf.map((team) => team.teamId);
     userData.captainOfTeamIds = this.captainOf.map((team) => team.teamId);
     return userData;
+  }
+
+  toJson(): PersonResource {
+    return {
+      userId: this.userId,
+      authIds: this.authIds,
+      firstName: this.firstName,
+      lastName: this.lastName,
+      email: this.email,
+      linkblue: this.linkblue,
+      role: this.role.toJson(),
+      memberOf: this.memberOf.map((team) => team.toJson()),
+      captainOf: this.captainOf.map((team) => team.toJson()),
+      pointEntries: this.pointEntries.map((pointEntry) => pointEntry.toJson()),
+    };
   }
 }

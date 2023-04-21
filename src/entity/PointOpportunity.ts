@@ -5,14 +5,15 @@ import { Column, Entity, Index, ManyToOne } from "typeorm";
 
 import { luxonDateTimeJsDateTransformer } from "../lib/transformers.js";
 
-import { EntityWithId } from "./EntityWithId.js";
+import type { EntityMethods } from "./Base.js";
+import { EntityWithId } from "./Base.js";
 import { Person } from "./Person.js";
 import { Team } from "./Team.js";
 
 @Entity()
 export class PointOpportunity
   extends EntityWithId
-  implements PointOpportunityResource
+  implements PointOpportunityResource, EntityMethods<PointOpportunityResource>
 {
   @Index()
   @Column("uuid", { generated: "uuid", unique: true })
@@ -36,4 +37,15 @@ export class PointOpportunity
 
   @ManyToOne(() => Team, (team) => team.pointEntries)
   team!: Team;
+
+  toJson(): PointOpportunityResource {
+    return {
+      entryId: this.entryId,
+      type: this.type,
+      name: this.name,
+      opportunityDate: this.opportunityDate,
+      personFrom: this.personFrom?.toJson() ?? null,
+      team: this.team.toJson(),
+    };
+  }
 }

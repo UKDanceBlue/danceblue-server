@@ -5,12 +5,13 @@ import { Column, CreateDateColumn, Entity, Index } from "typeorm";
 
 import { luxonDateTimeJsDateTransformer } from "../lib/transformers.js";
 
-import { EntityWithId } from "./EntityWithId.js";
+import type { EntityMethods } from "./Base.js";
+import { EntityWithId } from "./Base.js";
 
 @Entity()
 export class LoginFlowSession
   extends EntityWithId
-  implements LoginFlowSessionResource
+  implements LoginFlowSessionResource, EntityMethods<LoginFlowSessionResource>
 {
   @Index()
   @Column("uuid", { generated: "uuid", unique: true })
@@ -29,4 +30,13 @@ export class LoginFlowSession
 
   @Column("text", { nullable: true })
   redirectToAfterLogin!: string | null;
+
+  toJson(): LoginFlowSessionResource {
+    return {
+      sessionId: this.sessionId,
+      codeVerifier: this.codeVerifier,
+      creationDate: this.creationDate,
+      redirectToAfterLogin: this.redirectToAfterLogin,
+    };
+  }
 }

@@ -1,11 +1,15 @@
 import type { ClientResource } from "@ukdanceblue/db-app-common";
 import { Check, Column, Entity, Index, ManyToOne } from "typeorm";
 
-import { EntityWithId } from "./EntityWithId.js";
+import type { EntityMethods } from "./Base.js";
+import { EntityWithId } from "./Base.js";
 import { Person } from "./Person.js";
 
 @Entity()
-export class Client extends EntityWithId implements ClientResource {
+export class Client
+  extends EntityWithId
+  implements ClientResource, EntityMethods<ClientResource>
+{
   @Index()
   @Column("uuid", { generated: "uuid", unique: true })
   deviceId!: string;
@@ -18,4 +22,12 @@ export class Client extends EntityWithId implements ClientResource {
 
   @ManyToOne(() => Person)
   lastUser!: Person;
+
+  toJson(): ClientResource {
+    return {
+      deviceId: this.deviceId,
+      expoPushToken: this.expoPushToken,
+      lastUser: this.lastUser.toJson(),
+    };
+  }
 }

@@ -162,7 +162,7 @@ authApiRouter.post("/oidc-callback", async (req, res, next) => {
       ...res.locals,
       user: userData,
     };
-    const jwt = makeUserJwt(userData);
+    const jwt = makeUserJwt(userData, AuthSource.UkyLinkblue);
     res.cookie("token", jwt, {
       httpOnly: true,
       secure: true,

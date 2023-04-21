@@ -1,13 +1,14 @@
 import type {
-  AuthSource,
   Authorization,
   JwtPayload,
   OptionalNullOrUndefined,
-  UserData} from "@ukdanceblue/db-app-common";
+  UserData,
+} from "@ukdanceblue/db-app-common";
 import {
   AccessLevel,
+  AuthSource,
   CommitteeRole,
-  DbRole
+  DbRole,
 } from "@ukdanceblue/db-app-common";
 import type { Request } from "express";
 import jsonwebtoken from "jsonwebtoken";
@@ -130,14 +131,18 @@ export function isValidJwtPayload(payload: unknown): payload is JwtPayload {
   }
   const {
     sub,
+    auth_source,
     dbRole,
-    committeeRole,
+    committee_role,
     committee,
-    accessLevel,
-    teamIds,
-    captainOfTeamIds,
+    access_level,
+    team_ids,
+    captain_of_team_ids,
   } = payload as Record<keyof JwtPayload, unknown>;
   if (typeof sub !== "string") {
+    return false;
+  }
+  if (!Object.values(AuthSource).includes(auth_source as AuthSource)) {
     return false;
   }
   if (
@@ -147,9 +152,9 @@ export function isValidJwtPayload(payload: unknown): payload is JwtPayload {
     return false;
   }
   if (
-    committeeRole !== undefined &&
-    (typeof committeeRole !== "string" ||
-      !Object.values(CommitteeRole).includes(committeeRole as CommitteeRole))
+    committee_role !== undefined &&
+    (typeof committee_role !== "string" ||
+      !Object.values(CommitteeRole).includes(committee_role as CommitteeRole))
   ) {
     return false;
   }
@@ -157,15 +162,18 @@ export function isValidJwtPayload(payload: unknown): payload is JwtPayload {
     return false;
   }
   if (
-    typeof accessLevel !== "number" ||
-    !Object.values(AccessLevel).includes(accessLevel as AccessLevel)
+    typeof access_level !== "number" ||
+    !Object.values(AccessLevel).includes(access_level as AccessLevel)
   ) {
     return false;
   }
-  if (teamIds !== undefined && !Array.isArray(teamIds)) {
+  if (team_ids !== undefined && !Array.isArray(team_ids)) {
     return false;
   }
-  if (captainOfTeamIds !== undefined && !Array.isArray(captainOfTeamIds)) {
+  if (
+    captain_of_team_ids !== undefined &&
+    !Array.isArray(captain_of_team_ids)
+  ) {
     return false;
   }
   return true;
@@ -175,30 +183,32 @@ export function isValidJwtPayload(payload: unknown): payload is JwtPayload {
  * Mints a JWT for the given user data
  *
  * @param user The user data to mint a JWT for
+ * @param source The source of the user's authorization
  * @return The JWT, containing the user's authorization data
  */
-export function makeUserJwt(user: UserData): string {
+export function makeUserJwt(user: UserData, source: AuthSource): string {
   if (!user.userId) {
     throw new Error("Cannot make a JWT for a user with no ID");
   }
 
   const payload: JwtPayload = {
     sub: user.userId,
+    auth_source: source,
     dbRole: user.auth.dbRole,
-    accessLevel: user.auth.accessLevel,
+    access_level: user.auth.accessLevel,
   };
 
   if (user.auth.committeeRole) {
-    payload.committeeRole = user.auth.committeeRole;
+    payload.committee_role = user.auth.committeeRole;
   }
   if (user.auth.committee) {
     payload.committee = user.auth.committee;
   }
   if (user.teamIds) {
-    payload.teamIds = user.teamIds;
+    payload.team_ids = user.teamIds;
   }
   if (user.captainOfTeamIds) {
-    payload.captainOfTeamIds = user.captainOfTeamIds;
+    payload.captain_of_team_ids = user.captainOfTeamIds;
   }
 
   if (!process.env.JWT_SECRET) {
@@ -230,25 +240,34 @@ export function parseUserJwt(token: string): UserData {
     throw new Error("Invalid JWT payload");
   }
 
+  if (
+    payload.auth_source === AuthSource.Anonymous &&
+    payload.access_level > AccessLevel.Public
+  ) {
+    throw new jsonwebtoken.JsonWebTokenError(
+      "Anonymous users cannot have access levels greater than public"
+    );
+  }
+
   const userData: UserData = {
     auth: {
-      accessLevel: payload.accessLevel,
+      accessLevel: payload.access_level,
       dbRole: payload.dbRole,
     },
     userId: payload.sub,
   };
 
-  if (payload.committeeRole) {
-    userData.auth.committeeRole = payload.committeeRole;
+  if (payload.committee_role) {
+    userData.auth.committeeRole = payload.committee_role;
   }
   if (payload.committee) {
     userData.auth.committee = payload.committee;
   }
-  if (payload.teamIds) {
-    userData.teamIds = payload.teamIds;
+  if (payload.team_ids) {
+    userData.teamIds = payload.team_ids;
   }
-  if (payload.captainOfTeamIds) {
-    userData.captainOfTeamIds = payload.captainOfTeamIds;
+  if (payload.captain_of_team_ids) {
+    userData.captainOfTeamIds = payload.captain_of_team_ids;
   }
 
   return userData;

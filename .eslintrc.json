@@ -30,7 +30,8 @@
         "@typescript-eslint/return-await": "error",
         "@typescript-eslint/no-misused-promises": "off",
         "@typescript-eslint/prefer-for-of": "off",
-        "@typescript-eslint/consistent-type-imports": "error"
+        "@typescript-eslint/consistent-type-imports": "error",
+        "jsdoc/no-types": "off"
       }
     },
     {
@@ -94,7 +95,12 @@
     "class-methods-use-this": "off",
     "eqeqeq": ["error", "smart"],
     // jsdoc
-    "jsdoc/no-types": "off",
+    "jsdoc/require-jsdoc": [
+      "warn",
+      {
+        "publicOnly": true
+      }
+    ],
     "jsdoc/require-param-type": "off",
     "jsdoc/require-returns-type": "off",
     // Imports

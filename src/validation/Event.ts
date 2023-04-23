@@ -1,18 +1,28 @@
 import type {
   CreateEventBody,
+  EditEventBody,
+  GetEventParams,
+  ListEventsQuery,
   PaginationOptions,
   ParsedCreateEventBody,
+  ParsedEditEventBody,
   SortingOptions,
 } from "@ukdanceblue/db-app-common";
-import { parseBodyDateTime } from "@ukdanceblue/db-app-common";
+import { EditType, parseBodyDateTime } from "@ukdanceblue/db-app-common";
 import joi from "joi";
 import { Interval } from "luxon";
 
 import { LuxonError, ParsingError } from "../lib/CustomErrors.js";
-import { logWarning } from "../logger.js";
+import { logInfo, logWarning } from "../logger.js";
 
-import { bodyDateTimeSchema } from "./BodyDateTime.js";
-import { paginationOptionsSchema, sortingOptionsSchema } from "./Query.js";
+import {
+  makeFilterOptionsSchema,
+  paginationOptionsSchema,
+  sortingOptionsSchema,
+} from "./Query.js";
+import { mapEditArray, startEndDateTimeToInterval } from "./commonParsers.js";
+import { intervalSchema } from "./commonSchemas.js";
+import { makeEditArrayValidator } from "./editValidation.js";
 import { makeValidator } from "./makeValidator.js";
 
 const createEventBodySchema: joi.StrictSchemaMap<CreateEventBody> = {
@@ -20,15 +30,7 @@ const createEventBodySchema: joi.StrictSchemaMap<CreateEventBody> = {
   eventSummary: joi.string().optional().max(100),
   eventDescription: joi.string().optional(),
   eventAddress: joi.string().optional(),
-  eventOccurrences: joi
-    .array()
-    .items(
-      joi.object({
-        start: bodyDateTimeSchema.required(),
-        end: bodyDateTimeSchema.required(),
-      })
-    )
-    .default([]),
+  eventOccurrences: joi.array().items(intervalSchema).default([]),
   timezone: joi.string().optional(),
 };
 
@@ -84,13 +86,33 @@ export function parseCreateEventBody(body: unknown): ParsedCreateEventBody {
 }
 
 const listEventsQuerySchema = joi
-  .object<PaginationOptions & SortingOptions>({})
+  .object<ListEventsQuery>({})
   .keys(paginationOptionsSchema)
-  .keys(sortingOptionsSchema);
+  .keys(sortingOptionsSchema)
+  .keys(
+    makeFilterOptionsSchema(
+      [
+        "eventTitle",
+        "eventSummary",
+        "eventDescription",
+        "eventAddress",
+        "eventOccurrences",
+      ],
+      [
+        ["eventTitle", joi.string()],
+        ["eventSummary", joi.string()],
+        ["eventDescription", joi.string()],
+        ["eventAddress", joi.string()],
+        ["eventOccurrences", joi.array().items(intervalSchema).default([])],
+      ]
+    )
+  );
 
-const listEventsQueryValidator = makeValidator<
-  PaginationOptions & SortingOptions
->(listEventsQuerySchema);
+logInfo("listEventsQuerySchema", listEventsQuerySchema.describe());
+
+const listEventsQueryValidator = makeValidator<ListEventsQuery>(
+  listEventsQuerySchema
+);
 
 /**
  * Parses the query of a list events request. Uses Joi to validate the query
@@ -115,4 +137,106 @@ export function parseListEventsQuery(
   }
 
   return parsedQuery;
+}
+
+const getEventParamsSchema = joi.object<GetEventParams>({
+  eventId: joi.string().uuid({ version: "uuidv4" }).required(),
+});
+
+const singleEventParamsValidator =
+  makeValidator<GetEventParams>(getEventParamsSchema);
+
+/**
+ * Parses the params of a get event request. Uses Joi to validate the params
+ *
+ * @param params The params of the request
+ * @return The parsed params
+ * @throws An error if the params are invalid
+ */
+export function parseSingleEventParams(params: unknown): GetEventParams {
+  const { value: parsedParams, warning } = singleEventParamsValidator(params);
+
+  if (warning) {
+    logWarning("Error parsing get event params: %s", warning.annotate());
+  }
+
+  if (!parsedParams) {
+    throw new ParsingError("Invalid get event params");
+  }
+
+  return parsedParams;
+}
+
+const editEventBodySchema = joi.alternatives<EditEventBody>(
+  joi.object<EditEventBody & { type: EditType.MODIFY }>({
+    type: joi.number().valid(EditType.MODIFY).required(),
+    value: joi.object({
+      eventTitle: joi.string().optional(),
+      eventSummary: joi.string().allow(null).optional().max(100),
+      eventDescription: joi.string().allow(null).optional(),
+      eventAddress: joi.string().allow(null).optional(),
+      eventOccurrences: makeEditArrayValidator(intervalSchema).optional(),
+    }),
+  })
+);
+
+const editEventBodyValidator =
+  makeValidator<EditEventBody>(editEventBodySchema);
+
+/**
+ * Parses the body of an edit event request. Uses Joi to validate the body
+ * and throw an error if it is invalid. Then it converts the start and end
+ * date times to a Luxon Interval. If either is invalid, it will throw an
+ * error. If everything is valid, it returns the parsed body.
+ *
+ * @param body The body of the request
+ * @throws An error if the body is invalid
+ * @throws An error if the start or end date time is invalid
+ * @return The parsed body
+ */
+export function parseEditEventBody(body: unknown): ParsedEditEventBody {
+  const { value: eventBody, warning } = editEventBodyValidator(body);
+
+  if (warning) {
+    logWarning("Error parsing edit event body: %s", warning.annotate());
+  }
+
+  if (!eventBody) {
+    throw new ParsingError("Invalid event body");
+  }
+
+  switch (eventBody.type) {
+    case EditType.MODIFY: {
+      const parsedBody: ParsedEditEventBody = {
+        type: EditType.MODIFY,
+        value: {},
+      };
+
+      // TODO find a better approach than all of these if statements
+      if (eventBody.value.eventTitle)
+        parsedBody.value.eventTitle = eventBody.value.eventTitle;
+      if (eventBody.value.eventSummary)
+        parsedBody.value.eventSummary = eventBody.value.eventSummary;
+      if (eventBody.value.eventDescription)
+        parsedBody.value.eventDescription = eventBody.value.eventDescription;
+      if (eventBody.value.eventAddress)
+        parsedBody.value.eventAddress = eventBody.value.eventAddress;
+      if (eventBody.value.eventOccurrences) {
+        parsedBody.value.eventIntervals = mapEditArray(
+          eventBody.value.eventOccurrences,
+          startEndDateTimeToInterval
+        );
+      }
+      return parsedBody;
+    }
+    case EditType.REPLACE: {
+      return {
+        type: EditType.REPLACE,
+        value: parseCreateEventBody(eventBody.value),
+      };
+    }
+    default: {
+      throw new ParsingError("Invalid event body");
+    }
+  }
 }

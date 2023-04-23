@@ -1,4 +1,4 @@
-import type { ObjectSchema, ValidationOptions, ValidationResult } from "joi";
+import type { Schema, ValidationOptions, ValidationResult } from "joi";
 
 /**
  * Creates a validator function for a Joi schema. The validator function
@@ -9,11 +9,11 @@ import type { ObjectSchema, ValidationOptions, ValidationResult } from "joi";
  * @return A validator function
  */
 export function makeValidator<const T>(
-  schema: ObjectSchema<T>,
+  schema: Schema<T>,
   options?: ValidationOptions
-): (body: unknown) => ValidationResult<T> {
-  return (body: unknown): ValidationResult<T> => {
-    const result = schema.validate(body, options);
+): (value: unknown) => ValidationResult<T> {
+  return (value: unknown): ValidationResult<T> => {
+    const result = schema.validate(value, options);
 
     if (result.error) {
       throw result.error;

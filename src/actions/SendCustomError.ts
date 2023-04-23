@@ -1,8 +1,5 @@
-import type {
-  ErrorApiResponse} from "@ukdanceblue/db-app-common";
-import {
-  errorResponseFrom,
-} from "@ukdanceblue/db-app-common";
+import type { ErrorApiResponse } from "@ukdanceblue/db-app-common";
+import { errorResponseFrom } from "@ukdanceblue/db-app-common";
 import type { Response } from "express";
 import type { HttpError } from "http-errors";
 import createHttpError from "http-errors";
@@ -25,6 +22,18 @@ export function sendHttpError(
   })
 ): Response {
   return res.status(error.status).json(errorContent);
+}
+
+/**
+ * Send a 404 error response to the client
+ *
+ * @param res Express response object
+ * @param what `${what} Not Found`, otherwise just "Not Found"
+ * @return Express response object
+ */
+export function sendNotFound(res: Response, what?: string): Response {
+  const message = what ? `${what} Not Found` : "Not Found";
+  return sendHttpError(res, createHttpError.NotFound(message));
 }
 
 /**

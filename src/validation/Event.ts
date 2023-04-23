@@ -3,10 +3,8 @@ import type {
   EditEventBody,
   GetEventParams,
   ListEventsQuery,
-  PaginationOptions,
   ParsedCreateEventBody,
   ParsedEditEventBody,
-  SortingOptions,
 } from "@ukdanceblue/db-app-common";
 import { EditType, parseBodyDateTime } from "@ukdanceblue/db-app-common";
 import joi from "joi";
@@ -123,9 +121,7 @@ const listEventsQueryValidator = makeValidator<ListEventsQuery>(
  * @return The parsed query
  * @throws An error if the query is invalid
  */
-export function parseListEventsQuery(
-  query: unknown
-): PaginationOptions & SortingOptions {
+export function parseListEventsQuery(query: unknown): ListEventsQuery {
   const { value: parsedQuery, warning } = listEventsQueryValidator(query);
 
   if (warning) {

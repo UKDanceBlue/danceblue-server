@@ -5,6 +5,7 @@ import type {
 } from "@ukdanceblue/db-app-common";
 import { EditType } from "@ukdanceblue/db-app-common";
 import createHttpError from "http-errors";
+import type { FindManyOptions } from "typeorm";
 
 import { appDataSource } from "../data-source.js";
 import { Event } from "../entity/Event.js";
@@ -47,15 +48,47 @@ export const EventRepository = appDataSource.getRepository(Event).extend({
  * @return The list of events
  */
 export async function listEvents(query: ListEventsQuery): Promise<Event[]> {
-  const { page, pageSize, sortBy, sortDirection } = query;
+  const { page, pageSize, sortBy, sortDirection, include, exclude, filter } =
+    query;
 
-  return EventRepository.find({
+  const options: FindManyOptions<Event> = {
     skip: page * pageSize,
     take: pageSize,
-    order: {
+  };
+
+  if (sortBy && sortDirection) {
+    options.order = {
       [sortBy]: sortDirection,
-    },
-  });
+    };
+  }
+
+  const selectMap: Record<string, boolean> = {};
+
+  if (include) {
+    for (const includeItem of include) {
+      selectMap[includeItem] = true;
+    }
+  }
+  if (exclude) {
+    for (const excludeItem of exclude) {
+      selectMap[excludeItem] = false;
+    }
+  }
+
+  if (Object.keys(selectMap).length > 0) {
+    options.select = selectMap;
+  }
+
+  if (filter) {
+    // TODO figure out where
+    // const filterOptions: Partial<Record<keyof typeof filter, string>> = {}
+    // for (const key of Object.keys(filter)) {
+    //   filterOptions[key as keyof typeof filter] = filter[key as keyof typeof filter];
+    // }
+    // options.where = filterOptions;
+  }
+
+  return EventRepository.find(options);
 }
 
 /**

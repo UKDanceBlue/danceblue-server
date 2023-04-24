@@ -1,4 +1,7 @@
-import type { BodyDateTime, EditArray } from "@ukdanceblue/db-app-common";
+import type {
+  BodyDateTimeRange,
+  EditArray,
+} from "@ukdanceblue/db-app-common";
 import { EditType, parseBodyDateTime } from "@ukdanceblue/db-app-common";
 import { Interval } from "luxon";
 
@@ -12,10 +15,9 @@ import { LuxonError } from "../lib/CustomErrors.js";
  * @return Interval
  * @throws A LuxonError if the start or end date time is invalid
  */
-export function startEndDateTimeToInterval(dateTime: {
-  start: BodyDateTime;
-  end: BodyDateTime;
-}): Interval {
+export function startEndDateTimeToInterval(
+  dateTime: BodyDateTimeRange
+): Interval {
   const start = parseBodyDateTime(dateTime.start);
   if (!start.isValid) throw new LuxonError(start);
   const end = parseBodyDateTime(dateTime.end);

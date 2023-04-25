@@ -7,6 +7,7 @@ import { Person } from "./Person.js";
 import { PointEntry } from "./PointEntry.js";
 import { Role } from "./Role.js";
 
+/** @deprecated */
 @Entity()
 export class Team extends EntityWithId implements TeamResource {
   @Index()

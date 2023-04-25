@@ -1,5 +1,5 @@
 import type { LoginFlowSessionResource } from "@ukdanceblue/db-app-common";
-import { DateTime } from "luxon";
+import type { DateTime } from "luxon";
 import { generators } from "openid-client";
 import { Column, CreateDateColumn, Entity, Index } from "typeorm";
 
@@ -8,6 +8,7 @@ import { luxonDateTimeJsDateTransformer } from "../lib/transformers.js";
 import type { EntityMethods } from "./Base.js";
 import { EntityWithId } from "./Base.js";
 
+/** @deprecated */
 @Entity()
 export class LoginFlowSession
   extends EntityWithId

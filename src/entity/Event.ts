@@ -8,6 +8,7 @@ import type { EntityMethods } from "./Base.js";
 import { EntityWithId } from "./Base.js";
 import { Image } from "./Image.js";
 
+/** @deprecated */
 @Entity()
 export class Event
   extends EntityWithId

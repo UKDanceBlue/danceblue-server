@@ -5,6 +5,7 @@ import type { EntityMethods } from "./Base.js";
 import { EntityWithId } from "./Base.js";
 import { Person } from "./Person.js";
 
+/** @deprecated */
 @Entity()
 export class Client
   extends EntityWithId

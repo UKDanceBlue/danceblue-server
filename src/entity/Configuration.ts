@@ -4,6 +4,7 @@ import { Column, Entity } from "typeorm";
 import type { EntityMethods } from "./Base.js";
 import { EntityWithId } from "./Base.js";
 
+/** @deprecated */
 @Entity()
 export class Configuration
   extends EntityWithId

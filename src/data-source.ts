@@ -1,21 +1,9 @@
 import "reflect-metadata";
-import * as dotenv from "dotenv";
-import { DataSource } from "typeorm";
+import path from "node:path";
 
-import { Client } from "./entity/Client.js";
-import { Configuration } from "./entity/Configuration.js";
-import { Event } from "./entity/Event.js";
-import { Image } from "./entity/Image.js";
-import { LoginFlowSession } from "./entity/LoginFlowSession.js";
-import { Notification } from "./entity/Notification.js";
-import { Person } from "./entity/Person.js";
-import { PointEntry } from "./entity/PointEntry.js";
-import { PointOpportunity } from "./entity/PointOpportunity.js";
-import { Team } from "./entity/Team.js";
-import { CustomNamingStrategy } from "./lib/NamingStrategy.js";
-import { CustomTypeormLogger } from "./logger.js";
+import { Sequelize, importModels } from "@sequelize/core";
 
-dotenv.config();
+import { logError, logFatal, logInfo, sqlLogger } from "./logger.js";
 
 if (
   !process.env.DB_HOST ||
@@ -27,40 +15,27 @@ if (
   throw new Error("Missing database connection information");
 }
 
-export const appDataSource = new DataSource({
-  type: "postgres",
-  schema: "danceblue",
+const models = await importModels(
+  path.join(import.meta.url, "..", "models", "*.js")
+);
+
+export const sequelizeDb = new Sequelize({
+  dialect: "postgres",
   host: process.env.DB_HOST,
   port: Number.parseInt(process.env.DB_PORT, 10),
   username: process.env.DB_UNAME,
   password: process.env.DB_PWD,
   database: process.env.DB_NAME,
-  synchronize: true,
-  logging: true,
-  logger: new CustomTypeormLogger(),
-  entities: [
-    Client,
-    Configuration,
-    Event,
-    Image,
-    Notification,
-    Person,
-    PointEntry,
-    PointOpportunity,
-    Team,
-    LoginFlowSession,
-  ],
-  migrations: [],
-  subscribers: [],
-  uuidExtension: "pgcrypto",
-  namingStrategy: new CustomNamingStrategy(),
-  useUTC: true,
-  // dropSchema: true, // DANGER!!!
+  logging: sqlLogger.info.bind(sqlLogger),
+  models,
 });
 
-process.on("exit", () => {
-  appDataSource.destroy().catch((error) => {
-    console.error("Failed to close database connection before exiting");
-    console.error(error);
-  });
-});
+await sequelizeDb.sync();
+
+try {
+  await sequelizeDb.authenticate();
+  logInfo("Connection has been established successfully.");
+} catch (error) {
+  logError("Unable to connect to the database:", error);
+  logFatal("Shutting down due to database connection failure");
+}

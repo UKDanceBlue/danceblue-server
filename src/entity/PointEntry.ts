@@ -7,6 +7,7 @@ import { EntityWithId } from "./Base.js";
 import { Person } from "./Person.js";
 import { Team } from "./Team.js";
 
+/** @deprecated */
 @Entity()
 export class PointEntry
   extends EntityWithId

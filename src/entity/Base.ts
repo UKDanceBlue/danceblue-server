@@ -1,5 +1,6 @@
 import { PrimaryGeneratedColumn } from "typeorm";
 
+/** @deprecated */
 export interface EntityMethods<T> {
   toString(): string;
   /**
@@ -11,6 +12,7 @@ export interface EntityMethods<T> {
   toJson(): T;
 }
 
+/** @deprecated */
 export abstract class EntityWithId {
   /**
    * This ID should never be exposed to the client

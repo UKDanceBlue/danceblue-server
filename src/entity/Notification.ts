@@ -4,6 +4,7 @@ import { Column, Entity, Index } from "typeorm";
 import type { EntityMethods } from "./Base.js";
 import { EntityWithId } from "./Base.js";
 
+/** @deprecated */
 @Entity()
 export class Notification
   extends EntityWithId

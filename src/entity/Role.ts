@@ -1,4 +1,5 @@
 /* eslint-disable no-fallthrough */
+
 import type { Authorization, RoleResource } from "@ukdanceblue/db-app-common";
 import { AccessLevel, CommitteeRole, DbRole } from "@ukdanceblue/db-app-common";
 import { Column } from "typeorm";
@@ -7,6 +8,7 @@ import { logError } from "../logger.js";
 
 import type { EntityMethods } from "./Base.js";
 
+/** @deprecated */
 export class Role implements RoleResource, EntityMethods<RoleResource> {
   @Column("enum", { enum: DbRole, default: DbRole.Public })
   dbRole: DbRole = DbRole.Public;

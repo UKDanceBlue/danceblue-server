@@ -11,7 +11,7 @@ import joi from "joi";
 import { Interval } from "luxon";
 
 import { LuxonError, ParsingError } from "../lib/CustomErrors.js";
-import { logInfo, logWarning } from "../logger.js";
+import { logWarning } from "../logger.js";
 
 import {
   makeFilterOptionsSchema,
@@ -105,8 +105,6 @@ const listEventsQuerySchema = joi
       ]
     )
   );
-
-logInfo("listEventsQuerySchema", listEventsQuerySchema.describe());
 
 const listEventsQueryValidator = makeValidator<ListEventsQuery>(
   listEventsQuerySchema

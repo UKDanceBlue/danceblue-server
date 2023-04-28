@@ -154,10 +154,17 @@ const databaseLogTransport = new transports.File({
 
 export const sqlLogger = createLogger({
   ...loggerOptions,
-  level: "base",
-  defaultMeta: { service: "danceblue-server-database" },
+  level: "sql",
+  levels: {
+    sql: 3,
+    info: 2,
+    warning: 1,
+    error: 0,
+  },
   transports: [databaseLogTransport],
   format: format.combine(format.simple(), format.timestamp()),
 });
+
+sqlLogger.info("SQL Logger initialized");
 
 export default logger;

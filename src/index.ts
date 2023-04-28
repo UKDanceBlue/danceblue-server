@@ -9,7 +9,11 @@ import createHttpError from "http-errors";
 import jsonwebtoken from "jsonwebtoken";
 
 import { logout } from "./actions/auth.js";
-import { defaultUserData, parseUserJwt, tokenFromRequest } from "./lib/auth.js";
+import {
+  defaultUserData,
+  parseUserJwt,
+  tokenFromRequest,
+} from "./lib/auth/index.js";
 import { errorHandler } from "./lib/errorhandler.js";
 import { notFound } from "./lib/expressHandlers.js";
 import rawLogger, { logCritical, logInfo } from "./logger.js";

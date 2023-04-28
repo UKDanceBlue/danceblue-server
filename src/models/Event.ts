@@ -8,7 +8,7 @@ import { Attribute, Table } from "@sequelize/core/decorators-legacy";
 import type { EventResource, ImageResource } from "@ukdanceblue/db-app-common";
 import type { Interval } from "luxon";
 
-import { UtcInterval } from "../lib/customdatatypes/UtcInterval.js";
+import { UtcRangeDataType } from "../lib/customdatatypes/UtcRange.js";
 import type { WithToJsonFor } from "../lib/modelTypes.js";
 
 @Table({
@@ -61,7 +61,7 @@ export class EventModel
   public declare location: string | null;
 
   @Attribute({
-    type: DataTypes.ARRAY(UtcInterval),
+    type: DataTypes.ARRAY(UtcRangeDataType),
     allowNull: false,
   })
   public declare occurrences: CreationOptional<Interval[]>;
@@ -72,7 +72,7 @@ export class EventModel
   })
   public declare images: CreationOptional<ImageResource[]>;
 
-  toJson(): EventResource {
+  toResource(): EventResource {
     return {
       eventId: this.eventId,
       title: this.title,

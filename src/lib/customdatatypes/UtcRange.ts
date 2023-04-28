@@ -12,7 +12,7 @@ import {
  *
  * Maps to a Luxon Interval, always in UTC.
  */
-export class UtcInterval extends DataTypes.ABSTRACT<Interval> {
+export class UtcRangeDataType extends DataTypes.ABSTRACT<Interval> {
   toSql() {
     return "tsrange";
   }

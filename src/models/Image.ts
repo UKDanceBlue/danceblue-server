@@ -1,14 +1,25 @@
-import type { CreationOptional } from "@sequelize/core";
+import type {
+  CreationOptional,
+  InferAttributes,
+  InferCreationAttributes,
+} from "@sequelize/core";
 import { DataTypes, Model } from "@sequelize/core";
 import { Attribute, Table } from "@sequelize/core/decorators-legacy";
 import type { ImageResource } from "@ukdanceblue/db-app-common";
 
+import { UrlDataType } from "../lib/customdatatypes/Url.js";
 import type { WithToJsonFor } from "../lib/modelTypes.js";
 
 @Table({
   tableName: "images",
 })
-export class ImageModel extends Model implements WithToJsonFor<ImageResource> {
+export class ImageModel
+  extends Model<
+    InferAttributes<ImageModel>,
+    InferCreationAttributes<ImageModel>
+  >
+  implements WithToJsonFor<ImageResource>
+{
   @Attribute({
     type: DataTypes.INTEGER,
     autoIncrementIdentity: true,
@@ -22,18 +33,11 @@ export class ImageModel extends Model implements WithToJsonFor<ImageResource> {
     allowNull: false,
     unique: true,
   })
-  public declare imageId: string;
+  public declare imageId: CreationOptional<string>;
 
   @Attribute({
-    type: DataTypes.TEXT,
+    type: UrlDataType,
     allowNull: true,
-    get() {
-      const value = this.getDataValue("url") as unknown;
-      return typeof value === "string" ? new URL(value) : null;
-    },
-    set(value: URL | null) {
-      this.setDataValue("url", value?.toString() ?? null);
-    },
   })
   public declare url: URL | null;
 
@@ -73,10 +77,10 @@ export class ImageModel extends Model implements WithToJsonFor<ImageResource> {
   })
   public declare height: number;
 
-  public toJson(): ImageResource {
+  public toResource(): ImageResource {
     return {
       imageId: this.imageId,
-      url: this.url?.toString() ?? null,
+      url: this.url,
       imageData: this.imageData,
       mimeType: this.mimeType,
       thumbHash: this.thumbHash,

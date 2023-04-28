@@ -1,16 +1,16 @@
+import type { InferCreationAttributes } from "@sequelize/core";
 import { AuthSource } from "@ukdanceblue/db-app-common";
 import dotenv from "dotenv";
 import express from "express";
 import createHttpError from "http-errors";
 import jsonwebtoken from "jsonwebtoken";
-import { Issuer, generators } from "openid-client";
+import { Issuer } from "openid-client";
 
 import { logout } from "../../../actions/auth.js";
-import type { LoginFlowSession } from "../../../entity/LoginFlowSession.js";
-import { Person } from "../../../entity/Person.js";
-import { findPersonForLogin, makeUserJwt } from "../../../lib/auth.js";
+import { findPersonForLogin } from "../../../controllers/PersonController.js";
+import { makeUserJwt } from "../../../lib/auth/index.js";
 import { notFound } from "../../../lib/expressHandlers.js";
-import { logCritical } from "../../../logger.js";
+import { LoginFlowSessionModel } from "../../../models/LoginFlowSession.js";
 
 const authApiRouter = express.Router();
 
@@ -68,99 +68,96 @@ authApiRouter.post("/oidc-callback", async (req, res, next) => {
     return next(createHttpError.BadRequest());
   }
 
-  const sessionDeleted = false;
+  let sessionDeleted = false;
 
   try {
-    // const sessionRepository = appDataSource.getRepository(LoginFlowSession);
-    // const session = await sessionRepository.findOneBy({
-    //   sessionId: flowSessionId,
-    // });
-    // if (!session?.codeVerifier) {
-    //   throw new createHttpError.InternalServerError(
-    //     `No ${session == null ? "session" : "codeVerifier"} found`
-    //   );
-    // }
-    // // Perform OIDC validation
-    // const tokenSet = await res.locals.oidcClient.callback(
-    //   new URL("/api/auth/oidc-callback", res.locals.applicationUrl).toString(),
-    //   parameters,
-    //   { code_verifier: session.codeVerifier, state: flowSessionId }
-    // );
-    // // Destroy the session
-    // await sessionRepository.delete({
-    //   sessionId: flowSessionId,
-    // });
-    // sessionDeleted = true;
-    // if (!tokenSet.access_token) {
-    //   throw new createHttpError.InternalServerError("Missing access token");
-    // }
-    // const { oid: objectId, email } = tokenSet.claims();
-    // const decodedJwt = jsonwebtoken.decode(tokenSet.access_token, {
-    //   json: true,
-    // });
-    // if (!decodedJwt) {
-    //   throw new createHttpError.InternalServerError("Error decoding JWT");
-    // }
-    // const {
-    //   given_name: firstName,
-    //   family_name: lastName,
-    //   upn: userPrincipalName,
-    // } = decodedJwt;
-    // let linkblue = null;
-    // if (
-    //   typeof userPrincipalName === "string" &&
-    //   userPrincipalName.endsWith("@uky.edu")
-    // ) {
-    //   linkblue = userPrincipalName.replace(/@uky\.edu$/, "");
-    // }
-    // if (typeof objectId !== "string") {
-    //   return next(createHttpError.InternalServerError("Missing OID"));
-    // }
-    // const personRepository = appDataSource.getRepository(Person);
-    // const [currentPerson, didCreate] = await findPersonForLogin(
-    //   personRepository,
-    //   { [AuthSource.UkyLinkblue]: objectId },
-    //   { email, linkblue }
-    // );
-    // let isPersonChanged = didCreate;
-    // if (currentPerson.authIds[AuthSource.UkyLinkblue] !== objectId) {
-    //   currentPerson.authIds[AuthSource.UkyLinkblue] = objectId;
-    //   isPersonChanged = true;
-    // }
-    // if (email && currentPerson.email !== email) {
-    //   currentPerson.email = email;
-    //   isPersonChanged = true;
-    // }
-    // if (
-    //   typeof firstName === "string" &&
-    //   currentPerson.firstName !== firstName
-    // ) {
-    //   currentPerson.firstName = firstName;
-    //   isPersonChanged = true;
-    // }
-    // if (typeof lastName === "string" && currentPerson.lastName !== lastName) {
-    //   currentPerson.lastName = lastName;
-    //   isPersonChanged = true;
-    // }
-    // if (linkblue && currentPerson.linkblue !== linkblue) {
-    //   currentPerson.linkblue = linkblue;
-    //   isPersonChanged = true;
-    // }
-    // if (isPersonChanged) {
-    //   await personRepository.save(currentPerson);
-    // }
-    // const userData = currentPerson.toUser();
-    // res.locals = {
-    //   ...res.locals,
-    //   user: userData,
-    // };
-    // const jwt = makeUserJwt(userData, AuthSource.UkyLinkblue);
-    // res.cookie("token", jwt, {
-    //   httpOnly: true,
-    //   secure: true,
-    //   sameSite: "lax",
-    // });
-    // return res.redirect(session.redirectToAfterLogin ?? "/");
+    const session = await LoginFlowSessionModel.findOne({
+      where: {
+        sessionId: flowSessionId,
+      },
+    });
+    if (!session?.codeVerifier) {
+      throw new createHttpError.InternalServerError(
+        `No ${session == null ? "session" : "codeVerifier"} found`
+      );
+    }
+    // Perform OIDC validation
+    const tokenSet = await res.locals.oidcClient.callback(
+      new URL("/api/auth/oidc-callback", res.locals.applicationUrl).toString(),
+      parameters,
+      { code_verifier: session.codeVerifier, state: flowSessionId }
+    );
+    // Destroy the session
+    await session.destroy();
+    sessionDeleted = true;
+    if (!tokenSet.access_token) {
+      throw new createHttpError.InternalServerError("Missing access token");
+    }
+    const { oid: objectId, email } = tokenSet.claims();
+    const decodedJwt = jsonwebtoken.decode(tokenSet.access_token, {
+      json: true,
+    });
+    if (!decodedJwt) {
+      throw new createHttpError.InternalServerError("Error decoding JWT");
+    }
+    const {
+      given_name: firstName,
+      family_name: lastName,
+      upn: userPrincipalName,
+    } = decodedJwt;
+    let linkblue = null;
+    if (
+      typeof userPrincipalName === "string" &&
+      userPrincipalName.endsWith("@uky.edu")
+    ) {
+      linkblue = userPrincipalName.replace(/@uky\.edu$/, "");
+    }
+    if (typeof objectId !== "string") {
+      return next(createHttpError.InternalServerError("Missing OID"));
+    }
+    const [currentPerson, didCreate] = await findPersonForLogin(
+      { [AuthSource.UkyLinkblue]: objectId },
+      { email, linkblue }
+    );
+    let isPersonChanged = didCreate;
+    if (currentPerson.authIds[AuthSource.UkyLinkblue] !== objectId) {
+      currentPerson.authIds[AuthSource.UkyLinkblue] = objectId;
+      isPersonChanged = true;
+    }
+    if (email && currentPerson.email !== email) {
+      currentPerson.email = email;
+      isPersonChanged = true;
+    }
+    if (
+      typeof firstName === "string" &&
+      currentPerson.firstName !== firstName
+    ) {
+      currentPerson.firstName = firstName;
+      isPersonChanged = true;
+    }
+    if (typeof lastName === "string" && currentPerson.lastName !== lastName) {
+      currentPerson.lastName = lastName;
+      isPersonChanged = true;
+    }
+    if (linkblue && currentPerson.linkblue !== linkblue) {
+      currentPerson.linkblue = linkblue;
+      isPersonChanged = true;
+    }
+    if (isPersonChanged) {
+      await currentPerson.save();
+    }
+    const userData = currentPerson.toUserData();
+    res.locals = {
+      ...res.locals,
+      user: userData,
+    };
+    const jwt = makeUserJwt(userData, AuthSource.UkyLinkblue);
+    res.cookie("token", jwt, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "lax",
+    });
+    return res.redirect(session.redirectToAfterLogin ?? "/");
   } catch (error) {
     if (!sessionDeleted) {
       // const sessionRepository = appDataSource.getRepository(LoginFlowSession);
@@ -178,7 +175,9 @@ authApiRouter.get("/login", async (req, res, next) => {
     }
 
     // Figure out where to redirect to after login
-    const loginFlowSessionInitializer: Partial<LoginFlowSession> = {};
+    const loginFlowSessionInitializer: Partial<
+      InferCreationAttributes<LoginFlowSessionModel>
+    > = {};
     const { host: hostHeader, referer: hostReferer } = req.headers;
     const host = hostHeader
       ? new URL(`https://${hostHeader}`).host

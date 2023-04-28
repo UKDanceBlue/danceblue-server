@@ -7,7 +7,7 @@ import dree from "dree";
 import express from "express";
 import createHttpError from "http-errors";
 
-import { isMinAuthSatisfied, simpleAuthorizations } from "../lib/auth.js";
+import { isMinAuthSatisfied, simpleAuthorizations } from "../lib/auth/index.js";
 import { logAlert, logEmergency } from "../logger.js";
 const templateRouter = express.Router();
 

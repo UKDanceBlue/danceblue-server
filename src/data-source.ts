@@ -1,9 +1,16 @@
 import "reflect-metadata";
-import path from "node:path";
 
-import { Sequelize, importModels } from "@sequelize/core";
+import type { Options as SequelizeOptions } from "@sequelize/core";
+import { Sequelize } from "@sequelize/core";
 
 import { logError, logFatal, logInfo, sqlLogger } from "./logger.js";
+import { ConfigurationModel } from "./models/Configuration.js";
+import { EventModel } from "./models/Event.js";
+import { ImageModel } from "./models/Image.js";
+import { LoginFlowSessionModel } from "./models/LoginFlowSession.js";
+import { PersonModel } from "./models/Person.js";
+import { PointEntryModel } from "./models/PointEntry.js";
+import { TeamModel } from "./models/Team.js";
 
 if (
   !process.env.DB_HOST ||
@@ -15,27 +22,94 @@ if (
   throw new Error("Missing database connection information");
 }
 
-const models = await importModels(
-  path.join(import.meta.url, "..", "models", "*.js")
-);
+Sequelize.hooks.addListeners({
+  beforeInit: (config) => {
+    sqlLogger.log("info", "Initializing Sequelize", {
+      database: config.database,
+      schema: config.schema,
+      applicationName: config.dialectOptions?.applicationName as
+        | string
+        | undefined,
+      models: config.models?.map((model) => model.name),
+    });
+  },
+  afterInit: (sequelizeInstance) => {
+    sqlLogger.log("info", "Sequelize initialized", {
+      database: sequelizeInstance.config.database,
+      schema: sequelizeInstance.config.dialectOptions.schema,
+      applicationName: sequelizeInstance.config.dialectOptions
+        .applicationName as string | undefined,
+    });
+  },
+});
 
-export const sequelizeDb = new Sequelize({
+const models = [
+  ConfigurationModel,
+  EventModel,
+  ImageModel,
+  LoginFlowSessionModel,
+  PersonModel,
+  PointEntryModel,
+  TeamModel,
+];
+
+// const models = await importModels(pathUrls);
+
+const dbOptions = {
   dialect: "postgres",
   host: process.env.DB_HOST,
   port: Number.parseInt(process.env.DB_PORT, 10),
   username: process.env.DB_UNAME,
   password: process.env.DB_PWD,
   database: process.env.DB_NAME,
-  logging: sqlLogger.info.bind(sqlLogger),
+  schema: "danceblue",
+  logging: (sql: string, timing?: number | undefined) =>
+    sqlLogger.log("sql", sql, { timing }),
+  benchmark: true, // Dev
   models,
-});
+  define: {
+    underscored: true,
+    paranoid: true,
+  },
+  dialectOptions: {
+    application_name: "db-server",
+  },
+} satisfies SequelizeOptions;
 
-await sequelizeDb.sync();
+export const sequelizeDb = new Sequelize(dbOptions);
+
+sequelizeDb.hooks.addListeners({
+  beforeConnect: (config) =>
+    void sqlLogger.log("info", "Connecting to database", {
+      host: config.host,
+      port: config.port,
+      username: config.username,
+      database: config.database,
+      schema: config.dialectOptions?.schema,
+    }),
+  afterConnect: () => void sqlLogger.log("info", "Connected to database"),
+  beforeDisconnect: () =>
+    void sqlLogger.log("info", "Disconnecting from database"),
+  afterDisconnect: () =>
+    void sqlLogger.log("info", "Database connection closed"),
+  beforeSync: (options) =>
+    void sqlLogger.log("info", "Syncing database", {
+      force: options.force,
+      alter: options.alter,
+    }),
+  afterSync: () => void sqlLogger.log("info", "Database synced"),
+});
 
 try {
   await sequelizeDb.authenticate();
-  logInfo("Connection has been established successfully.");
+  logInfo("Database connection tested successfully.");
 } catch (error) {
   logError("Unable to connect to the database:", error);
   logFatal("Shutting down due to database connection failure");
 }
+
+await sequelizeDb.sync({
+  force: true,
+  alter: true,
+  logging: dbOptions.logging,
+});

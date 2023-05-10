@@ -25,6 +25,7 @@ export class PointEntryModel
 {
   @Attribute({
     type: DataTypes.INTEGER,
+    autoIncrement: true,
     autoIncrementIdentity: true,
     primaryKey: true,
   })

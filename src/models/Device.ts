@@ -6,7 +6,7 @@ import type {
 import { DataTypes, Model } from "@sequelize/core";
 import { Attribute, BelongsTo, Table } from "@sequelize/core/decorators-legacy";
 import type { DeviceResource } from "@ukdanceblue/db-app-common";
-import type {DateTime} from "luxon";
+import type { DateTime } from "luxon";
 
 import { UtcDateTimeDataType } from "../lib/customdatatypes/UtcDateTime.js";
 import type { WithToJsonFor } from "../lib/modelTypes.js";
@@ -24,13 +24,15 @@ import { PersonModel } from "./Person.js";
   tableName: "devices",
 })
 export class DeviceModel
-extends Model<
-  InferAttributes<DeviceModel>,
-  InferCreationAttributes<DeviceModel>
->
-implements WithToJsonFor<DeviceResource> {
+  extends Model<
+    InferAttributes<DeviceModel>,
+    InferCreationAttributes<DeviceModel>
+  >
+  implements WithToJsonFor<DeviceResource>
+{
   @Attribute({
     type: DataTypes.INTEGER,
+    autoIncrement: true,
     autoIncrementIdentity: true,
     primaryKey: true,
   })
@@ -49,14 +51,13 @@ implements WithToJsonFor<DeviceResource> {
     type: DataTypes.TEXT,
     allowNull: true,
     validate: {
-      is: /^Expo(nent)?PushToken\[.{23}]$/
-    }
+      is: /^Expo(nent)?PushToken\[.{23}]$/,
+    },
   })
   public declare expoPushToken: string | null;
 
   @BelongsTo(() => PersonModel, {
     targetKey: "userId",
-    
   })
   public declare lastUser: PersonModel | null;
 
@@ -73,5 +74,5 @@ implements WithToJsonFor<DeviceResource> {
       lastUser: this.lastUser?.toResource() ?? null,
       lastLogin: this.lastLogin ?? null,
     };
-  } 
+  }
 }

@@ -71,7 +71,9 @@ export async function createEventFrom(
     createdEvent.description = body.eventDescription;
   if (body.eventAddress !== undefined)
     createdEvent.location = body.eventAddress;
-  createdEvent.occurrences = body.eventIntervals;
+  createdEvent.occurrences = body.eventOccurrences;
+  if (body.eventDuration !== undefined)
+    createdEvent.duration = body.eventDuration;
 
   createdEvent = await createdEvent.save();
 
@@ -115,7 +117,9 @@ export async function editEventFrom(
         replacementEvent.description = body.value.eventDescription;
       if (body.value.eventAddress !== undefined)
         replacementEvent.location = body.value.eventAddress;
-      replacementEvent.occurrences = body.value.eventIntervals;
+      replacementEvent.occurrences = body.value.eventOccurrences;
+      if (body.value.eventDuration !== undefined)
+        replacementEvent.duration = body.value.eventDuration;
 
       replacementEvent = await replacementEvent.save({ transaction });
 
@@ -126,7 +130,8 @@ export async function editEventFrom(
       const {
         eventAddress,
         eventDescription,
-        eventIntervals,
+        eventOccurrences,
+        eventDuration,
         eventSummary,
         eventTitle,
       } = body.value;
@@ -136,37 +141,38 @@ export async function editEventFrom(
       if (eventDescription !== undefined)
         originalEvent.description = eventDescription;
       if (eventAddress !== undefined) originalEvent.location = eventAddress;
-      if (eventIntervals !== undefined) {
-        switch (eventIntervals.type) {
+      if (eventOccurrences !== undefined) {
+        switch (eventOccurrences.type) {
           case EditType.REPLACE: {
-            originalEvent.occurrences = eventIntervals.set.sort();
+            // originalEvent.occurrences = eventIntervals.set.sort();
             break;
           }
           case EditType.MODIFY: {
-            const newEventIntervals = [];
+            const newEventOccurrences = [];
             // Loop over all the existing intervals
-            for (const interval of originalEvent.occurrences) {
+            for (const occurrence of originalEvent.occurrences) {
               // Assume we should add the interval
               let shouldAdd = true;
               // Loop over all the intervals to remove
-              for (const intervalToModify of eventIntervals.remove) {
-                // If the interval is in the list of intervals to remove, don't add it
-                if (interval.equals(intervalToModify)) {
+              for (const occurenceToModify of eventOccurrences.remove) {
+                // If the occurence is in the list of occurrences to remove, don't add it
+                if (occurrence.equals(occurenceToModify)) {
                   shouldAdd = false;
                   break;
                 }
               }
               // IF we didn't find the interval in the list of intervals to remove, add it to the new list
-              if (shouldAdd) newEventIntervals.push(interval);
+              if (shouldAdd) newEventOccurrences.push(occurrence);
             }
-            for (const interval of eventIntervals.add) {
+            for (const interval of eventOccurrences.add) {
               // Add all the intervals to add
-              newEventIntervals.push(interval);
+              newEventOccurrences.push(interval);
             }
             break;
           }
         }
       }
+      if (eventDuration !== undefined) originalEvent.duration = eventDuration;
 
       const modifiedEvent = await originalEvent.save({ transaction });
 

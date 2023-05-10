@@ -2,6 +2,7 @@ import "reflect-metadata";
 
 import type { Options as SequelizeOptions } from "@sequelize/core";
 import { Sequelize } from "@sequelize/core";
+import { Duration } from "luxon";
 
 import { logError, logFatal, logInfo, sqlLogger } from "./logger.js";
 import { ConfigurationModel } from "./models/Configuration.js";
@@ -92,12 +93,6 @@ sequelizeDb.hooks.addListeners({
     void sqlLogger.log("info", "Disconnecting from database"),
   afterDisconnect: () =>
     void sqlLogger.log("info", "Database connection closed"),
-  beforeSync: (options) =>
-    void sqlLogger.log("info", "Syncing database", {
-      force: options.force,
-      alter: options.alter,
-    }),
-  afterSync: () => void sqlLogger.log("info", "Database synced"),
 });
 
 try {
@@ -113,3 +108,20 @@ await sequelizeDb.sync({
   alter: true,
   logging: dbOptions.logging,
 });
+
+try {
+  const event = await EventModel.create({
+    id: undefined,
+    title: "Test Event",
+    duration: Duration.fromObject({
+      hours: 2,
+      days: 1,
+    }),
+  });
+
+  console.log(event.toJSON());
+
+  const gottenEvent = await EventModel.findAll({ include: [] });
+
+  console.log(gottenEvent.map((e) => e.toJSON()));
+} catch (error) {}

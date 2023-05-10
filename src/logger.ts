@@ -162,7 +162,7 @@ export const sqlLogger = createLogger({
     error: 0,
   },
   transports: [databaseLogTransport],
-  format: format.combine(format.simple(), format.timestamp()),
+  format: format.combine(format.timestamp(), format.simple()),
 });
 
 sqlLogger.info("SQL Logger initialized");

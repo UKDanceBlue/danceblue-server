@@ -4,12 +4,19 @@ import type {
   InferCreationAttributes,
 } from "@sequelize/core";
 import { DataTypes, Model } from "@sequelize/core";
-import { Attribute, Table } from "@sequelize/core/decorators-legacy";
+import {
+  Attribute,
+  BelongsToMany,
+  Table,
+} from "@sequelize/core/decorators-legacy";
 import type { EventResource, ImageResource } from "@ukdanceblue/db-app-common";
-import type { Interval } from "luxon";
+import type { DateTime, Duration } from "luxon";
 
-import { UtcRangeDataType } from "../lib/customdatatypes/UtcRange.js";
+import { DurationDataType } from "../lib/customdatatypes/Duration.js";
+import { UtcDateTimeDataType } from "../lib/customdatatypes/UtcDateTime.js";
 import type { WithToJsonFor } from "../lib/modelTypes.js";
+
+import { ImageModel } from "./Image.js";
 
 @Table({
   tableName: "events",
@@ -23,6 +30,7 @@ export class EventModel
 {
   @Attribute({
     type: DataTypes.INTEGER,
+    autoIncrement: true,
     autoIncrementIdentity: true,
     primaryKey: true,
   })
@@ -61,14 +69,20 @@ export class EventModel
   public declare location: string | null;
 
   @Attribute({
-    type: DataTypes.ARRAY(UtcRangeDataType),
+    type: DataTypes.ARRAY(UtcDateTimeDataType),
     allowNull: false,
+    defaultValue: [],
   })
-  public declare occurrences: CreationOptional<Interval[]>;
+  public declare occurrences: CreationOptional<DateTime[]>;
 
   @Attribute({
-    type: DataTypes.JSON,
-    allowNull: false,
+    type: DurationDataType,
+    allowNull: true,
+  })
+  public declare duration: Duration | null;
+
+  @BelongsToMany(() => ImageModel, {
+    through: "event_images",
   })
   public declare images: CreationOptional<ImageResource[]>;
 
@@ -80,6 +94,7 @@ export class EventModel
       description: this.description,
       location: this.location,
       occurrences: this.occurrences,
+      duration: this.duration,
       images: this.images,
     };
   }

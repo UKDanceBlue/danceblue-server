@@ -8,17 +8,18 @@ import type {
 } from "@ukdanceblue/db-app-common";
 import { EditType, parseBodyDateTime } from "@ukdanceblue/db-app-common";
 import joi from "joi";
-import { Interval } from "luxon";
+import { Duration } from "luxon";
 
 import { LuxonError, ParsingError } from "../lib/CustomErrors.js";
 import { logWarning } from "../logger.js";
 
+import { bodyDateTimeSchema } from "./BodyDateTime.js";
 import {
   makeFilterOptionsSchema,
   paginationOptionsSchema,
   sortingOptionsSchema,
 } from "./Query.js";
-import { mapEditArray, startEndDateTimeToInterval } from "./commonParsers.js";
+import { mapEditArray, startEndToDateTime } from "./commonParsers.js";
 import { intervalSchema } from "./commonSchemas.js";
 import { makeEditArrayValidator } from "./editValidation.js";
 import { makeValidator } from "./makeValidator.js";
@@ -28,7 +29,13 @@ const createEventBodySchema: joi.StrictSchemaMap<CreateEventBody> = {
   eventSummary: joi.string().optional().max(100),
   eventDescription: joi.string().optional(),
   eventAddress: joi.string().optional(),
-  eventOccurrences: joi.array().items(intervalSchema).default([]),
+  eventOccurrences: joi.array().items(bodyDateTimeSchema).default([]),
+  eventDuration: joi
+    .string()
+    .regex(
+      /^P(?!$)(\d+(?:\.\d+)?Y)?(\d+(?:\.\d+)?M)?(\d+(?:\.\d+)?W)?(\d+(?:\.\d+)?D)?(T(?=\d)(\d+(?:\.\d+)?H)?(\d+(?:\.\d+)?M)?(\d+(?:\.\d+)?S)?)?$/
+    )
+    .optional(),
   timezone: joi.string().optional(),
 };
 
@@ -58,27 +65,27 @@ export function parseCreateEventBody(body: unknown): ParsedCreateEventBody {
     throw new ParsingError("Invalid event body");
   }
 
-  const eventIntervals = eventBody.eventOccurrences.map((occurrence) => {
-    const start = parseBodyDateTime(occurrence.start, eventBody.timezone);
-    if (!start.isValid) throw new LuxonError(start);
-    const end = parseBodyDateTime(occurrence.end, eventBody.timezone);
-    if (!end.isValid) throw new LuxonError(end);
+  const eventOccurrences = eventBody.eventOccurrences.map((occurrence) => {
+    const occurence = parseBodyDateTime(occurrence, eventBody.timezone);
+    if (!occurence.isValid) throw new LuxonError(occurence);
 
-    const interval = Interval.fromDateTimes(start, end);
-    if (!interval.isValid) throw new ParsingError("Invalid interval");
-
-    return interval;
+    return occurence;
   });
 
   const parsedBody: ParsedCreateEventBody = {
     eventTitle: eventBody.eventTitle,
-    eventIntervals,
+    eventOccurrences,
   };
 
   if (eventBody.eventSummary) parsedBody.eventSummary = eventBody.eventSummary;
   if (eventBody.eventDescription)
     parsedBody.eventDescription = eventBody.eventDescription;
   if (eventBody.eventAddress) parsedBody.eventAddress = eventBody.eventAddress;
+  if (eventBody.eventDuration) {
+    const eventDuration = Duration.fromISO(eventBody.eventDuration);
+    if (!eventDuration.isValid) throw new LuxonError(eventDuration);
+    parsedBody.eventDuration = eventDuration;
+  }
 
   return parsedBody;
 }
@@ -216,10 +223,15 @@ export function parseEditEventBody(body: unknown): ParsedEditEventBody {
       if (eventBody.value.eventAddress)
         parsedBody.value.eventAddress = eventBody.value.eventAddress;
       if (eventBody.value.eventOccurrences) {
-        parsedBody.value.eventIntervals = mapEditArray(
+        parsedBody.value.eventOccurrences = mapEditArray(
           eventBody.value.eventOccurrences,
-          startEndDateTimeToInterval
+          startEndToDateTime
         );
+      }
+      if (eventBody.value.eventDuration) {
+        const eventDuration = Duration.fromISO(eventBody.value.eventDuration);
+        if (!eventDuration.isValid) throw new LuxonError(eventDuration);
+        parsedBody.value.eventDuration = eventDuration;
       }
       return parsedBody;
     }

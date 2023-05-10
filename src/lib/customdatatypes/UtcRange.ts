@@ -33,8 +33,13 @@ export class UtcRangeDataType extends DataTypes.ABSTRACT<Interval> {
     );
   }
 
-  areValuesEqual(value: Interval, originalValue: Interval): boolean {
-    return value.equals(originalValue);
+  areValuesEqual(
+    value: Interval | null,
+    originalValue: Interval | null
+  ): boolean {
+    return value == null || originalValue == null
+      ? value === originalValue
+      : value.equals(originalValue);
   }
 
   escape(value: Interval): string {
@@ -56,7 +61,8 @@ export class UtcRangeDataType extends DataTypes.ABSTRACT<Interval> {
     return this.escape(value);
   }
 
-  parseDatabaseValue(value: unknown): unknown {
+  parseDatabaseValue(value: unknown): Interval | null {
+    if (value == null) return null;
     if (typeof value !== "string") throw new Error("Not a string");
     const range = parseRange(value, (value) =>
       DateTime.fromSQL(value, { zone: "utc", locale: "en-US" })

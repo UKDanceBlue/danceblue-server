@@ -27,6 +27,7 @@ export class TeamModel
 {
   @Attribute({
     type: DataTypes.INTEGER,
+    autoIncrement: true,
     autoIncrementIdentity: true,
     primaryKey: true,
   })

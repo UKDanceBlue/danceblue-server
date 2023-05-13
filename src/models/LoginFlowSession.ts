@@ -5,7 +5,7 @@ import type {
 } from "@sequelize/core";
 import { DataTypes, Model } from "@sequelize/core";
 import { Attribute, Table } from "@sequelize/core/decorators-legacy";
-import type { LoginFlowSessionResource } from "@ukdanceblue/db-app-common";
+import { LoginFlowSessionResource } from "@ukdanceblue/db-app-common";
 import { DateTime } from "luxon";
 import { generators } from "openid-client";
 
@@ -54,11 +54,11 @@ export class LoginFlowSessionModel
   declare readonly createdAt: CreationOptional<Date>;
 
   toResource(): LoginFlowSessionResource {
-    return {
+    return new LoginFlowSessionResource({
       sessionId: this.sessionId,
       codeVerifier: this.codeVerifier,
       creationDate: DateTime.fromJSDate(this.createdAt),
       redirectToAfterLogin: this.redirectToAfterLogin,
-    };
+    });
   }
 }

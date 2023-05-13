@@ -10,8 +10,7 @@ import {
   HasMany,
   Table,
 } from "@sequelize/core/decorators-legacy";
-import type { TeamResource } from "@ukdanceblue/db-app-common";
-import { DbRole, TeamType } from "@ukdanceblue/db-app-common";
+import { DbRole, TeamResource, TeamType } from "@ukdanceblue/db-app-common";
 
 import type { WithToJsonFor } from "../lib/modelTypes.js";
 
@@ -67,7 +66,7 @@ export class TeamModel
   public declare pointEntries: PointEntryModel[];
 
   toResource(): TeamResource {
-    return {
+    return new TeamResource({
       teamId: this.teamId,
       name: this.name,
       type: this.type,
@@ -75,6 +74,6 @@ export class TeamModel
       members: this.people.map((person) => person.toResource()),
       captains: this.captains.map((captain) => captain.toResource()),
       pointEntries: this.pointEntries.map((entry) => entry.toResource()),
-    };
+    });
   }
 }

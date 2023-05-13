@@ -9,7 +9,7 @@ import {
   BelongsToMany,
   Table,
 } from "@sequelize/core/decorators-legacy";
-import type { ImageResource } from "@ukdanceblue/db-app-common";
+import { ImageResource } from "@ukdanceblue/db-app-common";
 
 import { UrlDataType } from "../lib/customdatatypes/Url.js";
 import type { WithToJsonFor } from "../lib/modelTypes.js";
@@ -91,7 +91,7 @@ export class ImageModel
   private declare owningEvents: EventModel[]; // TODO rename from owning... (I don't like the word "owning" for this)
 
   public toResource(): ImageResource {
-    return {
+    return new ImageResource({
       imageId: this.imageId,
       url: this.url,
       imageData: this.imageData,
@@ -100,6 +100,6 @@ export class ImageModel
       alt: this.alt,
       width: this.width,
       height: this.height,
-    };
+    });
   }
 }

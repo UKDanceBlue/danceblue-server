@@ -9,13 +9,13 @@ import {
   BelongsToMany,
   Table,
 } from "@sequelize/core/decorators-legacy";
-import type {
-  AuthSource,
+import type { AuthSource, UserData } from "@ukdanceblue/db-app-common";
+import {
+  CommitteeRole,
+  DbRole,
   PersonResource,
   RoleResource,
-  UserData,
 } from "@ukdanceblue/db-app-common";
-import { CommitteeRole, DbRole } from "@ukdanceblue/db-app-common";
 
 import { roleToAuthorization } from "../lib/auth/role.js";
 import type { WithToJsonFor } from "../lib/modelTypes.js";
@@ -118,15 +118,15 @@ export class PersonModel
   public declare captainOf: CreationOptional<TeamModel[]>;
 
   get role(): CreationOptional<RoleResource> {
-    return {
+    return new RoleResource({
       committee: this.committeeName,
       committeeRole: this.committeeRole,
       dbRole: this.dbRole,
-    };
+    });
   }
 
   toResource(): PersonResource {
-    return {
+    return new PersonResource({
       userId: this.userId,
       firstName: this.firstName,
       lastName: this.lastName,
@@ -137,7 +137,7 @@ export class PersonModel
       captainOf: this.captainOf.map((team) => team.toResource()),
       pointEntries: [],
       role: this.role,
-    };
+    });
   }
 
   toUserData(): UserData {

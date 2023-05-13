@@ -9,7 +9,8 @@ import {
   BelongsToMany,
   Table,
 } from "@sequelize/core/decorators-legacy";
-import type { EventResource, ImageResource } from "@ukdanceblue/db-app-common";
+import type { ImageResource } from "@ukdanceblue/db-app-common";
+import { EventResource } from "@ukdanceblue/db-app-common";
 import type { DateTime, Duration } from "luxon";
 
 import { DurationDataType } from "../lib/customdatatypes/Duration.js";
@@ -87,7 +88,7 @@ export class EventModel
   public declare images: CreationOptional<ImageResource[]>;
 
   toResource(): EventResource {
-    return {
+    return new EventResource({
       eventId: this.eventId,
       title: this.title,
       summary: this.summary,
@@ -96,6 +97,6 @@ export class EventModel
       occurrences: this.occurrences,
       duration: this.duration,
       images: this.images,
-    };
+    });
   }
 }

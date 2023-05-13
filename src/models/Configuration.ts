@@ -5,8 +5,11 @@ import type {
 } from "@sequelize/core";
 import { DataTypes, Model } from "@sequelize/core";
 import { Attribute, Table } from "@sequelize/core/decorators-legacy";
-import type { ConfigurationResource } from "@ukdanceblue/db-app-common";
-import { CommitteeRole, DbRole } from "@ukdanceblue/db-app-common";
+import {
+  CommitteeRole,
+  ConfigurationResource,
+  DbRole,
+} from "@ukdanceblue/db-app-common";
 
 import type { WithToJsonFor } from "../lib/modelTypes.js";
 
@@ -21,8 +24,8 @@ export class ConfigurationModel
   implements WithToJsonFor<ConfigurationResource>
 {
   toResource(): ConfigurationResource {
-    return {
+    return new ConfigurationResource({
       key: "",
-    };
+    });
   }
 }

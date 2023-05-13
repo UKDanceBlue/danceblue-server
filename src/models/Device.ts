@@ -5,7 +5,7 @@ import type {
 } from "@sequelize/core";
 import { DataTypes, Model } from "@sequelize/core";
 import { Attribute, BelongsTo, Table } from "@sequelize/core/decorators-legacy";
-import type { DeviceResource } from "@ukdanceblue/db-app-common";
+import {} from "@ukdanceblue/db-app-common";
 import type { DateTime } from "luxon";
 
 import { UtcDateTimeDataType } from "../lib/customdatatypes/UtcDateTime.js";
@@ -28,7 +28,7 @@ export class DeviceModel
     InferAttributes<DeviceModel>,
     InferCreationAttributes<DeviceModel>
   >
-  implements WithToJsonFor<DeviceResource>
+  implements WithToJsonFor<never>
 {
   @Attribute({
     type: DataTypes.INTEGER,
@@ -67,12 +67,13 @@ export class DeviceModel
   })
   public declare lastLogin: DateTime | null;
 
-  toResource(): DeviceResource {
-    return {
-      deviceId: this.deviceId,
-      expoPushToken: this.expoPushToken,
-      lastUser: this.lastUser?.toResource() ?? null,
-      lastLogin: this.lastLogin ?? null,
-    };
+  toResource(): never {
+    // return new DeviceResource({
+    //   deviceId: this.deviceId,
+    //   expoPushToken: this.expoPushToken,
+    //   lastUser: this.lastUser?.toResource() ?? null,
+    //   lastLogin: this.lastLogin ?? null,
+    // });
+    throw new Error("Not implemented");
   }
 }

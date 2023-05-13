@@ -124,4 +124,6 @@ try {
   const gottenEvent = await EventModel.findAll({ include: [] });
 
   console.log(gottenEvent.map((e) => e.toJSON()));
-} catch (error) {}
+} catch (error) {
+  console.error(error);
+}

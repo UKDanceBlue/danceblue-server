@@ -5,8 +5,7 @@ import type {
 } from "@sequelize/core";
 import { DataTypes, Model } from "@sequelize/core";
 import { Attribute, BelongsTo, Table } from "@sequelize/core/decorators-legacy";
-import type { PointEntryResource } from "@ukdanceblue/db-app-common";
-import { TeamType } from "@ukdanceblue/db-app-common";
+import { PointEntryResource, TeamType } from "@ukdanceblue/db-app-common";
 
 import type { WithToJsonFor } from "../lib/modelTypes.js";
 
@@ -75,13 +74,13 @@ export class PointEntryModel
   public declare teamId: number;
 
   toResource(): PointEntryResource {
-    return {
+    return new PointEntryResource({
       entryId: this.entryId,
       type: this.type,
       comment: this.comment,
       points: this.points,
       personFrom: this.personFrom?.toResource() ?? null,
       team: this.team.toResource(),
-    };
+    });
   }
 }

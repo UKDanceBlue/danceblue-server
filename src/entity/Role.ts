@@ -1,13 +1,23 @@
 /* eslint-disable no-fallthrough */
-import type { Authorization, RoleResource } from "@ukdanceblue/db-app-common";
-import { AccessLevel, CommitteeRole, DbRole } from "@ukdanceblue/db-app-common";
+import type {
+  Authorization,
+  RoleResourceInitializer,
+} from "@ukdanceblue/db-app-common";
+import {
+  AccessLevel,
+  CommitteeRole,
+  DbRole,
+  RoleResource,
+} from "@ukdanceblue/db-app-common";
 import { Column } from "typeorm";
 
 import { logError } from "../logger.js";
 
 import type { EntityMethods } from "./Base.js";
 
-export class Role implements RoleResource, EntityMethods<RoleResource> {
+export class Role
+  implements RoleResourceInitializer, EntityMethods<RoleResource>
+{
   @Column("enum", { enum: DbRole, default: DbRole.Public })
   dbRole: DbRole = DbRole.Public;
 
@@ -112,11 +122,7 @@ export class Role implements RoleResource, EntityMethods<RoleResource> {
     return auth;
   }
 
-  toJson(): RoleResource {
-    return {
-      dbRole: this.dbRole,
-      committeeRole: this.committeeRole,
-      committee: this.committee,
-    };
+  toResource(): RoleResource {
+    return new RoleResource(this);
   }
 }

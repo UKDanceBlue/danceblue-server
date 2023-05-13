@@ -13,7 +13,7 @@ export class Notification
   @Column("uuid", { generated: "uuid", unique: true })
   notificationId!: string;
 
-  toJson(): NotificationResource {
+  toResource(): NotificationResource {
     return {
       notificationId: this.notificationId,
     };

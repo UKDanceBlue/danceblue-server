@@ -37,9 +37,11 @@ export class Team extends EntityWithId implements TeamResource {
       name: this.name,
       type: this.type,
       visibility: this.visibility,
-      members: this.members.map((member) => member.toJson()),
-      captains: this.captains.map((captain) => captain.toJson()),
-      pointEntries: this.pointEntries.map((pointEntry) => pointEntry.toJson()),
+      members: this.members.map((member) => member.toResource()),
+      captains: this.captains.map((captain) => captain.toResource()),
+      pointEntries: this.pointEntries.map((pointEntry) =>
+        pointEntry.toResource()
+      ),
     };
   }
 }

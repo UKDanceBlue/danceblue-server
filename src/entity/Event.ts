@@ -39,10 +39,10 @@ export class Event
   @Column("text", { nullable: true })
   location!: string | null;
 
-  toJson(): EventResource {
+  toResource(): EventResource {
     return {
       eventId: this.eventId,
-      images: this.images.map((image) => image.toJson()),
+      images: this.images.map((image) => image.toResource()),
       occurrences: this.occurrences,
       title: this.title,
       summary: this.summary,

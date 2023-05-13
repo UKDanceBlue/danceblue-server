@@ -31,7 +31,7 @@ export class LoginFlowSession
   @Column("text", { nullable: true })
   redirectToAfterLogin!: string | null;
 
-  toJson(): LoginFlowSessionResource {
+  toResource(): LoginFlowSessionResource {
     return {
       sessionId: this.sessionId,
       codeVerifier: this.codeVerifier,

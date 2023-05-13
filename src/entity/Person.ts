@@ -72,7 +72,7 @@ export class Person
     return userData;
   }
 
-  toJson(): PersonResource {
+  toResource(): PersonResource {
     return {
       userId: this.userId,
       authIds: this.authIds,
@@ -80,10 +80,12 @@ export class Person
       lastName: this.lastName,
       email: this.email,
       linkblue: this.linkblue,
-      role: this.role.toJson(),
+      role: this.role.toResource(),
       memberOf: this.memberOf.map((team) => team.toJson()),
       captainOf: this.captainOf.map((team) => team.toJson()),
-      pointEntries: this.pointEntries.map((pointEntry) => pointEntry.toJson()),
+      pointEntries: this.pointEntries.map((pointEntry) =>
+        pointEntry.toResource()
+      ),
     };
   }
 }

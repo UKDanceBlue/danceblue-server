@@ -8,17 +8,17 @@ import type {
 } from "@ukdanceblue/db-app-common";
 import { EditType, parseBodyDateTime } from "@ukdanceblue/db-app-common";
 import joi from "joi";
-import { Interval } from "luxon";
 
 import { LuxonError, ParsingError } from "../lib/CustomErrors.js";
 import { logInfo, logWarning } from "../logger.js";
 
+import { bodyDateTimeSchema } from "./BodyDateTime.js";
 import {
   makeFilterOptionsSchema,
   paginationOptionsSchema,
   sortingOptionsSchema,
 } from "./Query.js";
-import { mapEditArray, startEndDateTimeToInterval } from "./commonParsers.js";
+import { mapEditArray } from "./commonParsers.js";
 import { intervalSchema } from "./commonSchemas.js";
 import { makeEditArrayValidator } from "./editValidation.js";
 import { makeValidator } from "./makeValidator.js";
@@ -28,7 +28,8 @@ const createEventBodySchema: joi.StrictSchemaMap<CreateEventBody> = {
   eventSummary: joi.string().optional().max(100),
   eventDescription: joi.string().optional(),
   eventAddress: joi.string().optional(),
-  eventOccurrences: joi.array().items(intervalSchema).default([]),
+  eventOccurrences: joi.array().items(bodyDateTimeSchema).default([]),
+  eventDuration: joi.string().optional(),
   timezone: joi.string().optional(),
 };
 
@@ -58,21 +59,16 @@ export function parseCreateEventBody(body: unknown): ParsedCreateEventBody {
     throw new ParsingError("Invalid event body");
   }
 
-  const eventIntervals = eventBody.eventOccurrences.map((occurrence) => {
-    const start = parseBodyDateTime(occurrence.start, eventBody.timezone);
-    if (!start.isValid) throw new LuxonError(start);
-    const end = parseBodyDateTime(occurrence.end, eventBody.timezone);
-    if (!end.isValid) throw new LuxonError(end);
+  const eventOccurrences = eventBody.eventOccurrences.map((occurrence) => {
+    const parsedOccurrence = parseBodyDateTime(occurrence, eventBody.timezone);
+    if (!parsedOccurrence.isValid) throw new LuxonError(parsedOccurrence);
 
-    const interval = Interval.fromDateTimes(start, end);
-    if (!interval.isValid) throw new ParsingError("Invalid interval");
-
-    return interval;
+    return parsedOccurrence;
   });
 
   const parsedBody: ParsedCreateEventBody = {
     eventTitle: eventBody.eventTitle,
-    eventIntervals,
+    eventOccurrences,
   };
 
   if (eventBody.eventSummary) parsedBody.eventSummary = eventBody.eventSummary;
@@ -218,9 +214,9 @@ export function parseEditEventBody(body: unknown): ParsedEditEventBody {
       if (eventBody.value.eventAddress)
         parsedBody.value.eventAddress = eventBody.value.eventAddress;
       if (eventBody.value.eventOccurrences) {
-        parsedBody.value.eventIntervals = mapEditArray(
+        parsedBody.value.eventOccurrences = mapEditArray(
           eventBody.value.eventOccurrences,
-          startEndDateTimeToInterval
+          parseBodyDateTime
         );
       }
       return parsedBody;

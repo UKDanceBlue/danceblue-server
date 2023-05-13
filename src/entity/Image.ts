@@ -47,7 +47,7 @@ export class Image
   @Column("integer")
   height!: number;
 
-  toJson(): ImageResource {
+  toResource(): ImageResource {
     return {
       imageId: this.imageId,
       url: this.url,

@@ -23,11 +23,11 @@ export class Client
   @ManyToOne(() => Person)
   lastUser!: Person;
 
-  toJson(): ClientResource {
+  toResource(): ClientResource {
     return {
       deviceId: this.deviceId,
       expoPushToken: this.expoPushToken,
-      lastUser: this.lastUser.toJson(),
+      lastUser: this.lastUser.toResource(),
     };
   }
 }

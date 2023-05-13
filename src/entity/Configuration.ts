@@ -12,7 +12,7 @@ export class Configuration
   @Column("text")
   key!: string;
 
-  toJson(): ConfigurationResource {
+  toResource(): ConfigurationResource {
     return {
       key: this.key,
     };

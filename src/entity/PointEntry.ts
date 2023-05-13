@@ -32,13 +32,13 @@ export class PointEntry
   @ManyToOne(() => Team, (team) => team.pointEntries)
   team!: Team;
 
-  toJson(): PointEntryResource {
+  toResource(): PointEntryResource {
     return {
       entryId: this.entryId,
       type: this.type,
       description: this.description,
       points: this.points,
-      personFrom: this.personFrom?.toJson() ?? null,
+      personFrom: this.personFrom?.toResource() ?? null,
       team: this.team.toJson(),
     };
   }

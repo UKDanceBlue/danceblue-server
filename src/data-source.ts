@@ -1,21 +1,17 @@
 import "reflect-metadata";
-import * as dotenv from "dotenv";
-import { DataSource } from "typeorm";
 
-import { Client } from "./entity/Client.js";
-import { Configuration } from "./entity/Configuration.js";
-import { Event } from "./entity/Event.js";
-import { Image } from "./entity/Image.js";
-import { LoginFlowSession } from "./entity/LoginFlowSession.js";
-import { Notification } from "./entity/Notification.js";
-import { Person } from "./entity/Person.js";
-import { PointEntry } from "./entity/PointEntry.js";
-import { PointOpportunity } from "./entity/PointOpportunity.js";
-import { Team } from "./entity/Team.js";
-import { CustomNamingStrategy } from "./lib/NamingStrategy.js";
-import { CustomTypeormLogger } from "./logger.js";
+import type { Options as SequelizeOptions } from "@sequelize/core";
+import { Sequelize } from "@sequelize/core";
+import { DateTime, Duration } from "luxon";
 
-dotenv.config();
+import { logError, logFatal, logInfo, sqlLogger } from "./logger.js";
+import { ConfigurationModel } from "./models/Configuration.js";
+import { EventModel } from "./models/Event.js";
+import { ImageModel } from "./models/Image.js";
+import { LoginFlowSessionModel } from "./models/LoginFlowSession.js";
+import { PersonModel } from "./models/Person.js";
+import { PointEntryModel } from "./models/PointEntry.js";
+import { TeamModel } from "./models/Team.js";
 
 if (
   !process.env.DB_HOST ||
@@ -27,40 +23,111 @@ if (
   throw new Error("Missing database connection information");
 }
 
-export const appDataSource = new DataSource({
-  type: "postgres",
-  schema: "danceblue",
-  host: process.env.DB_HOST,
-  port: Number.parseInt(process.env.DB_PORT, 10),
-  username: process.env.DB_UNAME,
-  password: process.env.DB_PWD,
-  database: process.env.DB_NAME,
-  synchronize: true,
-  logging: true,
-  logger: new CustomTypeormLogger(),
-  entities: [
-    Client,
-    Configuration,
-    Event,
-    Image,
-    Notification,
-    Person,
-    PointEntry,
-    PointOpportunity,
-    Team,
-    LoginFlowSession,
-  ],
-  migrations: [],
-  subscribers: [],
-  uuidExtension: "pgcrypto",
-  namingStrategy: new CustomNamingStrategy(),
-  useUTC: true,
-  // dropSchema: true, // DANGER!!!
+Sequelize.hooks.addListeners({
+  beforeInit: (config) => {
+    sqlLogger.log("info", "Initializing Sequelize", {
+      database: config.database,
+      schema: config.schema,
+      applicationName: config.dialectOptions?.applicationName as
+        | string
+        | undefined,
+      models: config.models?.map((model) => model.name),
+    });
+  },
+  afterInit: (sequelizeInstance) => {
+    sqlLogger.log("info", "Sequelize initialized", {
+      database: sequelizeInstance.config.database,
+      schema: sequelizeInstance.config.dialectOptions.schema,
+      applicationName: sequelizeInstance.config.dialectOptions
+        .applicationName as string | undefined,
+    });
+  },
 });
 
-process.on("exit", () => {
-  appDataSource.destroy().catch((error) => {
-    console.error("Failed to close database connection before exiting");
-    console.error(error);
-  });
+const models = [
+  ConfigurationModel,
+  EventModel,
+  ImageModel,
+  LoginFlowSessionModel,
+  PersonModel,
+  PointEntryModel,
+  TeamModel,
+];
+
+// const models = await importModels(pathUrls);
+
+const dbOptions = {
+  dialect: "postgres",
+  host: process.env.DB_HOST,
+  port: Number.parseInt(process.env.DB_PORT, 10),
+  logging: (sql: string, timing?: number | undefined) =>
+    sqlLogger.log("sql", sql, { timing }),
+  benchmark: true, // Dev
+  models,
+  define: {
+    underscored: true,
+    paranoid: true,
+    schema: "danceblue",
+  },
+  dialectOptions: {
+    application_name: "db-server",
+  },
+} satisfies SequelizeOptions;
+
+export const sequelizeDb = new Sequelize(
+  process.env.DB_NAME,
+  process.env.DB_UNAME,
+  process.env.DB_PWD,
+  dbOptions
+);
+
+sequelizeDb.hooks.addListeners({
+  beforeConnect: (config) =>
+    void sqlLogger.log("info", "Connecting to database", {
+      host: config.host,
+      port: config.port,
+      username: config.username,
+      database: config.database,
+      schema: config.dialectOptions?.schema,
+    }),
+  afterConnect: () => void sqlLogger.log("info", "Connected to database"),
+  beforeDisconnect: () =>
+    void sqlLogger.log("info", "Disconnecting from database"),
+  afterDisconnect: () =>
+    void sqlLogger.log("info", "Database connection closed"),
 });
+
+try {
+  await sequelizeDb.authenticate();
+  logInfo("Database connection tested successfully.");
+} catch (error) {
+  logError("Unable to connect to the database:", error);
+  logFatal("Shutting down due to database connection failure");
+}
+
+await sequelizeDb.createSchema("danceblue");
+
+await sequelizeDb.sync({
+  force: true,
+  alter: true,
+  logging: dbOptions.logging,
+});
+
+try {
+  const event = await EventModel.create({
+    id: undefined,
+    title: "Test Event",
+    duration: Duration.fromObject({
+      hours: 2,
+      days: 1,
+    }),
+  });
+
+  console.log(event.toJSON());
+
+  const gottenEvent = await EventModel.findAll({ include: [] });
+
+  console.log(gottenEvent.map((e) => e.toJSON()));
+} catch (error) {
+  console.error(error);
+}

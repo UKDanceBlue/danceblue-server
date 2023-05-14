@@ -1,3 +1,4 @@
+import type { FindOptions } from "@sequelize/core";
 import type {
   ListEventsQuery,
   ParsedCreateEventBody,
@@ -5,40 +6,10 @@ import type {
 } from "@ukdanceblue/db-app-common";
 import { EditType } from "@ukdanceblue/db-app-common";
 import createHttpError from "http-errors";
-import type { FindManyOptions } from "typeorm";
 
-import { appDataSource } from "../data-source.js";
-import { Event } from "../entity/Event.js";
+import { sequelizeDb } from "../data-source.js";
 import { logDebug } from "../logger.js";
-
-export const EventRepository = appDataSource.getRepository(Event).extend({
-  findByEventId(eventId: string) {
-    return this.findOneBy({ eventId });
-  },
-  deleteByEventId(eventId: string) {
-    return this.softRemove({ eventId });
-  },
-  makeEvent(
-    data: ParsedCreateEventBody,
-    id?: number,
-    eventId?: string
-  ): Promise<Event> {
-    const createdEvent = new Event();
-    if (id) createdEvent.id = id;
-    if (eventId) createdEvent.eventId = eventId;
-
-    createdEvent.title = data.eventTitle;
-    if (data.eventSummary != null) createdEvent.summary = data.eventSummary;
-    if (data.eventDescription != null)
-      createdEvent.description = data.eventDescription;
-    if (data.eventAddress != null) createdEvent.location = data.eventAddress;
-    if (data.eventIntervals.length > 0)
-      createdEvent.occurrences = data.eventIntervals;
-    // TODO: Add images
-
-    return this.save(createdEvent);
-  },
-});
+import { EventModel } from "../models/Event.js";
 
 /**
  * Lists events based on the query parameters. If no query parameters are
@@ -47,36 +18,29 @@ export const EventRepository = appDataSource.getRepository(Event).extend({
  * @param query - The query parameters
  * @return The list of events
  */
-export async function listEvents(query: ListEventsQuery): Promise<Event[]> {
+export async function listEvents(
+  query: ListEventsQuery
+): Promise<{ rows: EventModel[]; count: number }> {
   const { page, pageSize, sortBy, sortDirection, include, exclude, filter } =
     query;
 
-  const options: FindManyOptions<Event> = {
-    skip: page * pageSize,
-    take: pageSize,
+  const options: FindOptions<Event> = {
+    offset: (page - 1) * pageSize,
+    limit: pageSize,
   };
 
   if (sortBy && sortDirection) {
-    options.order = {
-      [sortBy]: sortDirection,
+    options.order = [[sortBy, sortDirection]];
+  }
+
+  const totalIncludesExclude: number =
+    (include ?? []).length + (exclude ?? []).length;
+
+  if (totalIncludesExclude > 0) {
+    options.attributes = {
+      include: include ?? [],
+      exclude: exclude ?? [],
     };
-  }
-
-  const selectMap: Record<string, boolean> = {};
-
-  if (include) {
-    for (const includeItem of include) {
-      selectMap[includeItem] = true;
-    }
-  }
-  if (exclude) {
-    for (const excludeItem of exclude) {
-      selectMap[excludeItem] = false;
-    }
-  }
-
-  if (Object.keys(selectMap).length > 0) {
-    options.select = selectMap;
   }
 
   if (filter) {
@@ -88,7 +52,7 @@ export async function listEvents(query: ListEventsQuery): Promise<Event[]> {
     // options.where = filterOptions;
   }
 
-  return EventRepository.find(options);
+  return EventModel.findAndCountAll(options);
 }
 
 /**
@@ -97,8 +61,21 @@ export async function listEvents(query: ListEventsQuery): Promise<Event[]> {
  */
 export async function createEventFrom(
   body: ParsedCreateEventBody
-): Promise<Event> {
-  const createdEvent = await EventRepository.makeEvent(body);
+): Promise<EventModel> {
+  let createdEvent = EventModel.build({
+    title: body.eventTitle,
+  });
+
+  if (body.eventSummary !== undefined) createdEvent.summary = body.eventSummary;
+  if (body.eventDescription !== undefined)
+    createdEvent.description = body.eventDescription;
+  if (body.eventAddress !== undefined)
+    createdEvent.location = body.eventAddress;
+  createdEvent.occurrences = body.eventOccurrences;
+  if (body.eventDuration !== undefined)
+    createdEvent.duration = body.eventDuration;
+
+  createdEvent = await createdEvent.save();
 
   logDebug(`Created event: ${createdEvent.eventId}`, createdEvent);
 
@@ -116,72 +93,88 @@ export async function createEventFrom(
 export async function editEventFrom(
   eventId: string,
   body: ParsedEditEventBody
-): Promise<Event> {
-  return appDataSource.transaction(async (entityManager) => {
-    const transaction = entityManager.withRepository(EventRepository);
-
-    const originalEvent = await transaction.findByEventId(eventId);
+): Promise<EventModel> {
+  return sequelizeDb.transaction<EventModel>(async (transaction) => {
+    const originalEvent = await EventModel.findOne({
+      where: { eventId },
+      transaction,
+    });
     if (originalEvent == null) {
       throw createHttpError.NotFound("Event not found");
     }
     if (body.type === EditType.REPLACE) {
-      await transaction.remove(originalEvent);
+      await originalEvent.destroy({ transaction });
 
-      const replacementEvent = await transaction.makeEvent(
-        body.value,
-        originalEvent.id,
-        originalEvent.eventId
-      );
+      let replacementEvent = EventModel.build({
+        id: originalEvent.id,
+        eventId: originalEvent.eventId,
+        title: body.value.eventTitle,
+      });
 
-      logDebug(`Created event: ${replacementEvent.eventId}`, replacementEvent);
+      if (body.value.eventSummary !== undefined)
+        replacementEvent.summary = body.value.eventSummary;
+      if (body.value.eventDescription !== undefined)
+        replacementEvent.description = body.value.eventDescription;
+      if (body.value.eventAddress !== undefined)
+        replacementEvent.location = body.value.eventAddress;
+      replacementEvent.occurrences = body.value.eventOccurrences;
+      if (body.value.eventDuration !== undefined)
+        replacementEvent.duration = body.value.eventDuration;
+
+      replacementEvent = await replacementEvent.save({ transaction });
+
+      logDebug(`Replaced event: ${replacementEvent.eventId}`);
 
       return replacementEvent;
     } else {
       const {
         eventAddress,
         eventDescription,
-        eventIntervals,
+        eventOccurrences,
+        eventDuration,
         eventSummary,
         eventTitle,
       } = body.value;
+
       if (eventTitle !== undefined) originalEvent.title = eventTitle;
       if (eventSummary !== undefined) originalEvent.summary = eventSummary;
       if (eventDescription !== undefined)
         originalEvent.description = eventDescription;
       if (eventAddress !== undefined) originalEvent.location = eventAddress;
-      if (eventIntervals !== undefined) {
-        switch (eventIntervals.type) {
+      if (eventOccurrences !== undefined) {
+        switch (eventOccurrences.type) {
           case EditType.REPLACE: {
-            originalEvent.occurrences = eventIntervals.set.sort();
+            // originalEvent.occurrences = eventIntervals.set.sort();
             break;
           }
           case EditType.MODIFY: {
-            const newEventIntervals = [];
+            const newEventOccurrences = [];
             // Loop over all the existing intervals
-            for (const interval of originalEvent.occurrences) {
+            for (const occurrence of originalEvent.occurrences) {
               // Assume we should add the interval
               let shouldAdd = true;
               // Loop over all the intervals to remove
-              for (const intervalToModify of eventIntervals.remove) {
-                // If the interval is in the list of intervals to remove, don't add it
-                if (interval.equals(intervalToModify)) {
+              for (const occurenceToModify of eventOccurrences.remove) {
+                // If the occurence is in the list of occurrences to remove, don't add it
+                if (occurrence.equals(occurenceToModify)) {
                   shouldAdd = false;
                   break;
                 }
               }
               // IF we didn't find the interval in the list of intervals to remove, add it to the new list
-              if (shouldAdd) newEventIntervals.push(interval);
+              if (shouldAdd) newEventOccurrences.push(occurrence);
             }
-            for (const interval of eventIntervals.add) {
+            for (const interval of eventOccurrences.add) {
               // Add all the intervals to add
-              newEventIntervals.push(interval);
+              newEventOccurrences.push(interval);
             }
             break;
           }
         }
       }
+      if (eventDuration !== undefined) originalEvent.duration = eventDuration;
 
-      const modifiedEvent = await transaction.save(originalEvent);
+      const modifiedEvent = await originalEvent.save({ transaction });
 
       logDebug(`Edited event: ${modifiedEvent.eventId}`, modifiedEvent);
 

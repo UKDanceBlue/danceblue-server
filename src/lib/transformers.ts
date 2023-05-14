@@ -4,11 +4,10 @@ import {
   parse as parseRange,
   serialize as serializeRange,
 } from "postgres-range";
-import type { ValueTransformer } from "typeorm";
 
 import { LuxonError } from "./CustomErrors.js";
 
-export const luxonDateTimeJsDateTransformer: ValueTransformer = {
+export const luxonDateTimeJsDateTransformer = {
   from: (value: Date): DateTime => {
     return DateTime.fromJSDate(value, { zone: "utc" });
   },
@@ -21,7 +20,7 @@ export const luxonDateTimeJsDateTransformer: ValueTransformer = {
   },
 };
 
-export const luxonDateTimeJsDateArrayTransformer: ValueTransformer = {
+export const luxonDateTimeJsDateArrayTransformer = {
   from: (value: Date[]): DateTime[] => {
     return value.map((date) => DateTime.fromJSDate(date, { zone: "utc" }));
   },
@@ -35,7 +34,7 @@ export const luxonDateTimeJsDateArrayTransformer: ValueTransformer = {
   },
 };
 
-export const luxonIntervalPgRangeTransformer: ValueTransformer = {
+export const luxonIntervalPgRangeTransformer = {
   from: (value: string) => {
     const range = parseRange(value, (value) => DateTime.fromISO(value));
     if (range.lower == null || range.upper == null)
@@ -61,7 +60,7 @@ export const luxonIntervalPgRangeTransformer: ValueTransformer = {
   },
 };
 
-export const luxonDateISOStringTransformer: ValueTransformer = {
+export const luxonDateISOStringTransformer = {
   from: (value: string) => {
     return DateTime.fromISO(value, { zone: "utc" });
   },
@@ -70,7 +69,7 @@ export const luxonDateISOStringTransformer: ValueTransformer = {
   },
 };
 
-export const luxonTimeISOStringTransformer: ValueTransformer = {
+export const luxonTimeISOStringTransformer = {
   from: (value: string) => {
     return DateTime.fromISO(value, { zone: "utc" });
   },

@@ -1,7 +1,6 @@
 import type {
   Authorization,
   JwtPayload,
-  OptionalNullOrUndefined,
   UserData,
 } from "@ukdanceblue/db-app-common";
 import {
@@ -12,9 +11,6 @@ import {
 } from "@ukdanceblue/db-app-common";
 import type { Request } from "express";
 import jsonwebtoken from "jsonwebtoken";
-import type { Repository } from "typeorm";
-
-import { Person } from "../entity/Person.js";
 
 /**
  * Compares an authorization object to a minimum authorization object
@@ -87,37 +83,6 @@ export const simpleAuthorizations: Record<AccessLevel, Authorization> = {
  * @return A default user object
  */
 export const defaultUserData = { auth: defaultAuthorization };
-
-/**
- * Searches the database for a user with the given auth IDs or user data, or creates a new user if none is found
- *
- * @param personRepository The repository to use to search for the user
- * @param authIds The auth IDs to search for
- * @param userData The user data to fall back on if no user is found with the given auth IDs
- */
-export async function findPersonForLogin(
-  personRepository: Repository<Person>,
-  authIds: Partial<Record<AuthSource, string>>,
-  userData: OptionalNullOrUndefined<Person>
-): Promise<[Person, boolean]> {
-  let currentPerson = await personRepository.findOne({ where: { authIds } });
-  let created = false;
-  if (!currentPerson && userData.linkblue) {
-    currentPerson = await personRepository.findOne({
-      where: { linkblue: userData.linkblue },
-    });
-  }
-  if (!currentPerson && userData.email) {
-    currentPerson = await personRepository.findOne({
-      where: { email: userData.email },
-    });
-  }
-  if (!currentPerson) {
-    currentPerson = new Person();
-    created = true;
-  }
-  return [currentPerson, created];
-}
 
 const jwtIssuer = "https://app.danceblue.org";
 

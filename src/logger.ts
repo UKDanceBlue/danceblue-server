@@ -1,6 +1,4 @@
-import type { LogLevel, LogMessage } from "typeorm";
-import { AbstractLogger as AbstractTypeormLogger } from "typeorm";
-import type { Logger, LoggerOptions } from "winston";
+import type { LoggerOptions } from "winston";
 import { createLogger, format, transports } from "winston";
 
 import { stopServer } from "./index.js";
@@ -154,124 +152,19 @@ const databaseLogTransport = new transports.File({
   maxFiles: 3,
 });
 
-const typeormLogLevels = {
-  "base": 9, // Actually "log"
-  "schema": 8,
-  "schema-build": 7,
-  "migration": 6,
-  "query": 5,
-  "info": 4,
-  "warn": 3,
-  "query-slow": 2,
-  "error": 1,
-  "query-error": 0,
-} satisfies LoggerOptions["levels"];
+export const sqlLogger = createLogger({
+  ...loggerOptions,
+  level: "sql",
+  levels: {
+    sql: 3,
+    info: 2,
+    warning: 1,
+    error: 0,
+  },
+  transports: [databaseLogTransport],
+  format: format.combine(format.timestamp(), format.simple()),
+});
 
-export class CustomTypeormLogger extends AbstractTypeormLogger {
-  typeormLogger: Logger;
-
-  constructor() {
-    super();
-    this.typeormLogger = createLogger({
-      ...loggerOptions,
-      level: "base",
-      levels: typeormLogLevels,
-      defaultMeta: { service: "danceblue-server-database" },
-      transports: [databaseLogTransport],
-      format: format.combine(
-        format.simple(),
-        format.timestamp(),
-        format.printf((info) => {
-          const { timestamp, level, ...args } = info;
-
-          const messageStart = `${timestamp as string} ${level}: `.padEnd(40);
-
-          let messagePrefix = "";
-          let messageContent = "[NO MESSAGE]";
-          let messageAdditionalInfo = "";
-
-          const rawMessage = args as Partial<LogMessage>;
-          if (rawMessage.prefix)
-            messagePrefix = `${String(rawMessage.prefix).trim()} `;
-          if (rawMessage.message)
-            messageContent = String(rawMessage.message).trim();
-          if (rawMessage.additionalInfo)
-            messageAdditionalInfo = ` ${JSON.stringify(
-              rawMessage.additionalInfo
-            )}`;
-
-          return (
-            messageStart +
-            messagePrefix +
-            messageContent +
-            messageAdditionalInfo
-          );
-        })
-      ),
-    });
-
-    this.typeormLogger.info({
-      prefix: "logger:",
-      message: "TypeORM logger initialized",
-    });
-
-    process.on("exit", () => {
-      this.typeormLogger.info({
-        prefix: "logger:",
-        message: "TypeORM logger closing",
-      });
-      this.typeormLogger.close();
-    });
-  }
-
-  // eslint-disable-next-line class-methods-use-this
-  protected isLogEnabledFor(): boolean {
-    return true;
-  }
-
-  /**
-   * Write log to specific output.
-   *
-   * @param level Log level
-   * @param logMessage Log message
-   */
-  protected writeLog(level: LogLevel, logMessage: LogMessage | LogMessage[]) {
-    const messages = this.prepareLogMessages(logMessage, {
-      highlightSql: false,
-    });
-
-    // File logger (all levels)
-    for (const message of messages) {
-      const messageLevel = message.type ?? level;
-      if (messageLevel === "log") {
-        this.typeormLogger.log("base", message);
-      } else {
-        this.typeormLogger.log(messageLevel, message);
-      }
-    }
-
-    if (process.env.NODE_ENV !== "production") {
-      const highlightedMessages = this.prepareLogMessages(logMessage, {
-        highlightSql: true,
-      });
-      // Main logger (only warn and error)
-      for (const message of highlightedMessages) {
-        switch (message.type ?? level) {
-          case "warn":
-          case "query-slow": {
-            logger.warn(message);
-            break;
-          }
-
-          case "error":
-          case "query-error": {
-            logger.error(message);
-            break;
-          }
-        }
-      }
-    }
-  }
-}
+sqlLogger.info("SQL Logger initialized");
 
 export default logger;

@@ -2,6 +2,7 @@ import type { Server } from "node:http";
 import { resolve } from "node:path";
 
 import type { UserData } from "@ukdanceblue/db-app-common";
+import { AccessLevel, CommitteeRole, DbRole } from "@ukdanceblue/db-app-common";
 import bodyParser from "body-parser";
 import cookieParser from "cookie-parser";
 import express from "express";
@@ -9,8 +10,11 @@ import createHttpError from "http-errors";
 import jsonwebtoken from "jsonwebtoken";
 
 import { logout } from "./actions/auth.js";
-import { appDataSource } from "./data-source.js";
-import { defaultUserData, parseUserJwt, tokenFromRequest } from "./lib/auth.js";
+import {
+  defaultUserData,
+  parseUserJwt,
+  tokenFromRequest,
+} from "./lib/auth/index.js";
 import { errorHandler } from "./lib/errorhandler.js";
 import { notFound } from "./lib/expressHandlers.js";
 import rawLogger, { logCritical, logInfo } from "./logger.js";
@@ -28,8 +32,6 @@ if (!process.env.APPLICATION_HOST) {
 }
 const FAKE_APP_URL: URL = new URL(`https://${process.env.APPLICATION_HOST}`);
 FAKE_APP_URL.port = port.toString();
-
-await appDataSource.initialize();
 
 const app = express();
 
@@ -50,6 +52,18 @@ app.use((req, res, next) => {
 });
 
 app.use((req, res, next) => {
+  if (process.env.OVERRIDE_AUTH === "THIS IS DANGEROUS") {
+    res.locals.userData = {
+      auth: {
+        accessLevel: AccessLevel.Admin,
+        dbRole: DbRole.Committee,
+        committeeRole: CommitteeRole.Chair,
+      },
+      userId: "00000000-0000-0000-0000-000000000000",
+    };
+    return next();
+  }
+
   const [token, tokenError] = tokenFromRequest(req);
   switch (tokenError) {
     case "invalid-header": {

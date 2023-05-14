@@ -9,12 +9,12 @@ import {
   sendValidationError,
 } from "../../../actions/SendCustomError.js";
 import {
-  EventRepository,
   createEventFrom,
   editEventFrom,
   listEvents,
 } from "../../../controllers/EventController.js";
 import { notFound } from "../../../lib/expressHandlers.js";
+import { EventModel } from "../../../models/Event.js";
 import {
   parseCreateEventBody,
   parseEditEventBody,
@@ -48,7 +48,7 @@ eventApiRouter.post("/", async (req, res) => {
 eventApiRouter.get("/:eventId", async (req, res) => {
   const { eventId } = parseSingleEventParams(req.params);
 
-  const event = await EventRepository.findByEventId(eventId);
+  const event = await EventModel.findOne({ where: { eventId } });
 
   if (!event) {
     return sendNotFound(res, "Event");

@@ -8,9 +8,10 @@ import type {
 } from "@ukdanceblue/db-app-common";
 import { EditType, parseBodyDateTime } from "@ukdanceblue/db-app-common";
 import joi from "joi";
+import { Duration } from "luxon";
 
 import { LuxonError, ParsingError } from "../lib/CustomErrors.js";
-import { logInfo, logWarning } from "../logger.js";
+import { logWarning } from "../logger.js";
 
 import { bodyDateTimeSchema } from "./BodyDateTime.js";
 import {
@@ -18,7 +19,7 @@ import {
   paginationOptionsSchema,
   sortingOptionsSchema,
 } from "./Query.js";
-import { mapEditArray } from "./commonParsers.js";
+import { mapEditArray, startEndToDateTime } from "./commonParsers.js";
 import { intervalSchema } from "./commonSchemas.js";
 import { makeEditArrayValidator } from "./editValidation.js";
 import { makeValidator } from "./makeValidator.js";
@@ -29,7 +30,12 @@ const createEventBodySchema: joi.StrictSchemaMap<CreateEventBody> = {
   eventDescription: joi.string().optional(),
   eventAddress: joi.string().optional(),
   eventOccurrences: joi.array().items(bodyDateTimeSchema).default([]),
-  eventDuration: joi.string().optional(),
+  eventDuration: joi
+    .string()
+    .regex(
+      /^P(?!$)(\d+(?:\.\d+)?Y)?(\d+(?:\.\d+)?M)?(\d+(?:\.\d+)?W)?(\d+(?:\.\d+)?D)?(T(?=\d)(\d+(?:\.\d+)?H)?(\d+(?:\.\d+)?M)?(\d+(?:\.\d+)?S)?)?$/
+    )
+    .optional(),
   timezone: joi.string().optional(),
 };
 
@@ -60,10 +66,10 @@ export function parseCreateEventBody(body: unknown): ParsedCreateEventBody {
   }
 
   const eventOccurrences = eventBody.eventOccurrences.map((occurrence) => {
-    const parsedOccurrence = parseBodyDateTime(occurrence, eventBody.timezone);
-    if (!parsedOccurrence.isValid) throw new LuxonError(parsedOccurrence);
+    const occurence = parseBodyDateTime(occurrence, eventBody.timezone);
+    if (!occurence.isValid) throw new LuxonError(occurence);
 
-    return parsedOccurrence;
+    return occurence;
   });
 
   const parsedBody: ParsedCreateEventBody = {
@@ -75,6 +81,11 @@ export function parseCreateEventBody(body: unknown): ParsedCreateEventBody {
   if (eventBody.eventDescription)
     parsedBody.eventDescription = eventBody.eventDescription;
   if (eventBody.eventAddress) parsedBody.eventAddress = eventBody.eventAddress;
+  if (eventBody.eventDuration) {
+    const eventDuration = Duration.fromISO(eventBody.eventDuration);
+    if (!eventDuration.isValid) throw new LuxonError(eventDuration);
+    parsedBody.eventDuration = eventDuration;
+  }
 
   return parsedBody;
 }
@@ -101,8 +112,6 @@ const listEventsQuerySchema = joi
       ]
     )
   );
-
-logInfo("listEventsQuerySchema", listEventsQuerySchema.describe());
 
 const listEventsQueryValidator = makeValidator<ListEventsQuery>(
   listEventsQuerySchema
@@ -216,8 +225,13 @@ export function parseEditEventBody(body: unknown): ParsedEditEventBody {
       if (eventBody.value.eventOccurrences) {
         parsedBody.value.eventOccurrences = mapEditArray(
           eventBody.value.eventOccurrences,
-          parseBodyDateTime
+          startEndToDateTime
         );
+      }
+      if (eventBody.value.eventDuration) {
+        const eventDuration = Duration.fromISO(eventBody.value.eventDuration);
+        if (!eventDuration.isValid) throw new LuxonError(eventDuration);
+        parsedBody.value.eventDuration = eventDuration;
       }
       return parsedBody;
     }

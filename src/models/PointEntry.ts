@@ -7,20 +7,17 @@ import { DataTypes, Model } from "@sequelize/core";
 import { Attribute, BelongsTo, Table } from "@sequelize/core/decorators-legacy";
 import { PointEntryResource, TeamType } from "@ukdanceblue/db-app-common";
 
-import type { WithToJsonFor } from "../lib/modelTypes.js";
+import type { ModelFor } from "../lib/modelTypes.js";
 
 import { PersonModel } from "./Person.js";
 import { TeamModel } from "./Team.js";
 
-@Table({
-  tableName: "point_entries",
-})
 export class PointEntryModel
   extends Model<
     InferAttributes<PointEntryModel>,
     InferCreationAttributes<PointEntryModel>
   >
-  implements WithToJsonFor<PointEntryResource>
+  implements ModelFor<PointEntryResource>
 {
   @Attribute({
     type: DataTypes.INTEGER,

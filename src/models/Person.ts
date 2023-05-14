@@ -18,19 +18,16 @@ import {
 } from "@ukdanceblue/db-app-common";
 
 import { roleToAuthorization } from "../lib/auth/role.js";
-import type { WithToJsonFor } from "../lib/modelTypes.js";
+import type { ModelFor } from "../lib/modelTypes.js";
 
 import { TeamModel } from "./Team.js";
 
-@Table({
-  tableName: "people",
-})
 export class PersonModel
   extends Model<
     InferAttributes<PersonModel>,
     InferCreationAttributes<PersonModel>
   >
-  implements WithToJsonFor<PersonResource>
+  implements ModelFor<PersonResource>
 {
   @Attribute({
     type: DataTypes.INTEGER,

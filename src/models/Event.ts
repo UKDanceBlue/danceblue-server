@@ -15,19 +15,16 @@ import type { DateTime, Duration } from "luxon";
 
 import { DurationDataType } from "../lib/customdatatypes/Duration.js";
 import { UtcDateTimeDataType } from "../lib/customdatatypes/UtcDateTime.js";
-import type { WithToJsonFor } from "../lib/modelTypes.js";
+import type { ModelFor } from "../lib/modelTypes.js";
 
 import { ImageModel } from "./Image.js";
 
-@Table({
-  tableName: "events",
-})
 export class EventModel
   extends Model<
     InferAttributes<EventModel>,
     InferCreationAttributes<EventModel>
   >
-  implements WithToJsonFor<EventResource>
+  implements ModelFor<EventResource>
 {
   @Attribute({
     type: DataTypes.INTEGER,

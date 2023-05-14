@@ -1,15 +1,31 @@
-import type { FindOptions } from "@sequelize/core";
+import { EditType } from "@ukdanceblue/db-app-common";
 import type {
+  EventResource,
   ListEventsQuery,
   ParsedCreateEventBody,
   ParsedEditEventBody,
 } from "@ukdanceblue/db-app-common";
-import { EditType } from "@ukdanceblue/db-app-common";
 import createHttpError from "http-errors";
 
 import { sequelizeDb } from "../data-source.js";
+import type { ResourceToModelKeyMapping } from "../lib/dbHelpers/common.js";
+import { makeListOptions } from "../lib/dbHelpers/list.js";
 import { logDebug } from "../logger.js";
 import { EventModel } from "../models/Event.js";
+
+const eventResourceToModelKeyMapping: ResourceToModelKeyMapping<
+  EventResource,
+  EventModel
+> = {
+  eventId: "eventId",
+  description: "description",
+  duration: "duration",
+  location: "location",
+  occurrences: "occurrences",
+  summary: "summary",
+  title: "title",
+  images: "images",
+};
 
 /**
  * Lists events based on the query parameters. If no query parameters are
@@ -21,36 +37,10 @@ import { EventModel } from "../models/Event.js";
 export async function listEvents(
   query: ListEventsQuery
 ): Promise<{ rows: EventModel[]; count: number }> {
-  const { page, pageSize, sortBy, sortDirection, include, exclude, filter } =
-    query;
-
-  const options: FindOptions<Event> = {
-    offset: (page - 1) * pageSize,
-    limit: pageSize,
-  };
-
-  if (sortBy && sortDirection) {
-    options.order = [[sortBy, sortDirection]];
-  }
-
-  const totalIncludesExclude: number =
-    (include ?? []).length + (exclude ?? []).length;
-
-  if (totalIncludesExclude > 0) {
-    options.attributes = {
-      include: include ?? [],
-      exclude: exclude ?? [],
-    };
-  }
-
-  if (filter) {
-    // TODO figure out where
-    // const filterOptions: Partial<Record<keyof typeof filter, string>> = {}
-    // for (const key of Object.keys(filter)) {
-    //   filterOptions[key as keyof typeof filter] = filter[key as keyof typeof filter];
-    // }
-    // options.where = filterOptions;
-  }
+  const options = makeListOptions<EventResource, EventModel>(
+    query,
+    eventResourceToModelKeyMapping
+  );
 
   return EventModel.findAndCountAll(options);
 }
@@ -65,6 +55,8 @@ export async function createEventFrom(
   let createdEvent = EventModel.build({
     title: body.eventTitle,
   });
+
+  // TODO: generalize this
 
   if (body.eventSummary !== undefined) createdEvent.summary = body.eventSummary;
   if (body.eventDescription !== undefined)
@@ -95,6 +87,8 @@ export async function editEventFrom(
   body: ParsedEditEventBody
 ): Promise<EventModel> {
   return sequelizeDb.transaction<EventModel>(async (transaction) => {
+    // TODO: generalize this
+
     const originalEvent = await EventModel.findOne({
       where: { eventId },
       transaction,

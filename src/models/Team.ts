@@ -12,17 +12,14 @@ import {
 } from "@sequelize/core/decorators-legacy";
 import { DbRole, TeamResource, TeamType } from "@ukdanceblue/db-app-common";
 
-import type { WithToJsonFor } from "../lib/modelTypes.js";
+import type { ModelFor } from "../lib/modelTypes.js";
 
 import type { PersonModel } from "./Person.js";
 import { PointEntryModel } from "./PointEntry.js";
 
-@Table({
-  tableName: "teams",
-})
 export class TeamModel
   extends Model<InferAttributes<TeamModel>, InferCreationAttributes<TeamModel>>
-  implements WithToJsonFor<TeamResource>
+  implements ModelFor<TeamResource>
 {
   @Attribute({
     type: DataTypes.INTEGER,

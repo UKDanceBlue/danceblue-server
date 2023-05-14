@@ -9,7 +9,7 @@ import {} from "@ukdanceblue/db-app-common";
 import type { DateTime } from "luxon";
 
 import { UtcDateTimeDataType } from "../lib/customdatatypes/UtcDateTime.js";
-import type { WithToJsonFor } from "../lib/modelTypes.js";
+import type { ModelFor } from "../lib/modelTypes.js";
 
 import { PersonModel } from "./Person.js";
 
@@ -20,15 +20,12 @@ import { PersonModel } from "./Person.js";
 //   extends Model<InferAttributes<ModelName>, InferCreationAttributes<ModelName>>
 //   implements WithToJsonFor<ResourceName> {}
 
-@Table({
-  tableName: "devices",
-})
 export class DeviceModel
   extends Model<
     InferAttributes<DeviceModel>,
     InferCreationAttributes<DeviceModel>
   >
-  implements WithToJsonFor<never>
+  implements ModelFor<never>
 {
   @Attribute({
     type: DataTypes.INTEGER,

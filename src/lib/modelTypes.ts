@@ -2,7 +2,7 @@ import { Model } from "@sequelize/core";
 import type { CreationOptional } from "@sequelize/core";
 import type { ApiResource } from "@ukdanceblue/db-app-common";
 
-export interface WithToJsonFor<Resource extends ApiResource> {
+export interface ModelFor<Resource extends ApiResource> {
   toResource(): Resource;
 }
 

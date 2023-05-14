@@ -2,7 +2,7 @@ import "reflect-metadata";
 
 import type { Options as SequelizeOptions } from "@sequelize/core";
 import { Sequelize } from "@sequelize/core";
-import { DateTime, Duration } from "luxon";
+import { Duration } from "luxon";
 
 import { logError, logFatal, logInfo, sqlLogger } from "./logger.js";
 import { ConfigurationModel } from "./models/Configuration.js";

@@ -12,19 +12,16 @@ import {
 import { ImageResource } from "@ukdanceblue/db-app-common";
 
 import { UrlDataType } from "../lib/customdatatypes/Url.js";
-import type { WithToJsonFor } from "../lib/modelTypes.js";
+import type { ModelFor } from "../lib/modelTypes.js";
 
 import { EventModel } from "./Event.js";
 
-@Table({
-  tableName: "images",
-})
 export class ImageModel
   extends Model<
     InferAttributes<ImageModel>,
     InferCreationAttributes<ImageModel>
   >
-  implements WithToJsonFor<ImageResource>
+  implements ModelFor<ImageResource>
 {
   @Attribute({
     type: DataTypes.INTEGER,

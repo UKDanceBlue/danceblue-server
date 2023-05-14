@@ -2,6 +2,7 @@ import type { Server } from "node:http";
 import { resolve } from "node:path";
 
 import type { UserData } from "@ukdanceblue/db-app-common";
+import { AccessLevel, CommitteeRole, DbRole } from "@ukdanceblue/db-app-common";
 import bodyParser from "body-parser";
 import cookieParser from "cookie-parser";
 import express from "express";
@@ -51,6 +52,18 @@ app.use((req, res, next) => {
 });
 
 app.use((req, res, next) => {
+  if (process.env.OVERRIDE_AUTH === "THIS IS DANGEROUS") {
+    res.locals.userData = {
+      auth: {
+        accessLevel: AccessLevel.Admin,
+        dbRole: DbRole.Committee,
+        committeeRole: CommitteeRole.Chair,
+      },
+      userId: "00000000-0000-0000-0000-000000000000",
+    };
+    return next();
+  }
+
   const [token, tokenError] = tokenFromRequest(req);
   switch (tokenError) {
     case "invalid-header": {

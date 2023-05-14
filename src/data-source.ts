@@ -2,7 +2,7 @@ import "reflect-metadata";
 
 import type { Options as SequelizeOptions } from "@sequelize/core";
 import { Sequelize } from "@sequelize/core";
-import { Duration } from "luxon";
+import { DateTime, Duration } from "luxon";
 
 import { logError, logFatal, logInfo, sqlLogger } from "./logger.js";
 import { ConfigurationModel } from "./models/Configuration.js";
@@ -60,10 +60,6 @@ const dbOptions = {
   dialect: "postgres",
   host: process.env.DB_HOST,
   port: Number.parseInt(process.env.DB_PORT, 10),
-  username: process.env.DB_UNAME,
-  password: process.env.DB_PWD,
-  database: process.env.DB_NAME,
-  schema: "danceblue",
   logging: (sql: string, timing?: number | undefined) =>
     sqlLogger.log("sql", sql, { timing }),
   benchmark: true, // Dev
@@ -71,13 +67,19 @@ const dbOptions = {
   define: {
     underscored: true,
     paranoid: true,
+    schema: "danceblue",
   },
   dialectOptions: {
     application_name: "db-server",
   },
 } satisfies SequelizeOptions;
 
-export const sequelizeDb = new Sequelize(dbOptions);
+export const sequelizeDb = new Sequelize(
+  process.env.DB_NAME,
+  process.env.DB_UNAME,
+  process.env.DB_PWD,
+  dbOptions
+);
 
 sequelizeDb.hooks.addListeners({
   beforeConnect: (config) =>
@@ -102,6 +104,8 @@ try {
   logError("Unable to connect to the database:", error);
   logFatal("Shutting down due to database connection failure");
 }
+
+await sequelizeDb.createSchema("danceblue");
 
 await sequelizeDb.sync({
   force: true,

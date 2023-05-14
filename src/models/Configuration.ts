@@ -13,9 +13,6 @@ import {
 
 import type { WithToJsonFor } from "../lib/modelTypes.js";
 
-@Table({
-  tableName: "",
-})
 export class ConfigurationModel
   extends Model<
     InferAttributes<ConfigurationModel>,
@@ -23,9 +20,23 @@ export class ConfigurationModel
   >
   implements WithToJsonFor<ConfigurationResource>
 {
+  @Attribute({
+    type: DataTypes.INTEGER,
+    autoIncrement: true,
+    autoIncrementIdentity: true,
+    primaryKey: true,
+  })
+  public declare id: CreationOptional<number>;
+
+  @Attribute({
+    type: DataTypes.TEXT,
+    allowNull: false,
+  })
+  public declare key: string;
+
   toResource(): ConfigurationResource {
     return new ConfigurationResource({
-      key: "",
+      key: this.key,
     });
   }
 }

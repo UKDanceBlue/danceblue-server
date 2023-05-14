@@ -10,8 +10,13 @@ export class DurationDataType extends DataTypes.ABSTRACT<Duration> {
     return value instanceof Duration;
   }
 
-  areValuesEqual(value: Duration, originalValue: Duration): boolean {
-    return value.toString() === originalValue.toString();
+  areValuesEqual(
+    value: Duration | null | undefined,
+    originalValue: Duration | null | undefined
+  ): boolean {
+    return value == null || originalValue == null
+      ? value === originalValue
+      : value.equals(originalValue);
   }
 
   escape(value: Duration): string {

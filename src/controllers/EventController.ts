@@ -25,7 +25,7 @@ export async function listEvents(
     query;
 
   const options: FindOptions<Event> = {
-    offset: page * pageSize,
+    offset: (page - 1) * pageSize,
     limit: pageSize,
   };
 

@@ -1,6 +1,8 @@
 import {
+  EventResource,
   createdResponseFrom,
   okResponseFrom,
+  paginatedResponseFrom,
 } from "@ukdanceblue/db-app-common";
 import express from "express";
 
@@ -53,7 +55,7 @@ eventApiRouter.get("/:eventId", async (req, res) => {
   if (!event) {
     return sendNotFound(res, "Event");
   } else {
-    const response = okResponseFrom({ value: event });
+    const response = okResponseFrom({ value: event.toResource().serialize() });
 
     return res.status(200).json(response);
   }
@@ -65,7 +67,14 @@ eventApiRouter.get("/", async (req, res) => {
 
   const events = await listEvents(query);
 
-  const response = okResponseFrom({ value: events });
+  const response = paginatedResponseFrom({
+    value: EventResource.serializeArray(events.rows.map((e) => e.toResource())),
+    pagination: {
+      total: events.count,
+      page: query.page,
+      pageSize: query.pageSize,
+    },
+  });
 
   return res.status(200).json(response);
 });
@@ -88,7 +97,9 @@ eventApiRouter.post("/:eventId", async (req, res) => {
     return sendValidationError(res, error);
   }
 
-  return res.status(200).json(okResponseFrom({ value: editedEvent }));
+  return res
+    .status(200)
+    .json(okResponseFrom({ value: editedEvent.toResource().serialize() }));
 });
 
 eventApiRouter.all("*", notFound);

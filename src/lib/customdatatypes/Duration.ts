@@ -33,6 +33,6 @@ export class DurationDataType extends DataTypes.ABSTRACT<Duration> {
 
   parseDatabaseValue(value: unknown): unknown {
     if (typeof value !== "string") throw new Error("Not a string");
-    return Duration;
+    return Duration.fromISO(value);
   }
 }

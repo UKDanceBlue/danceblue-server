@@ -4,11 +4,7 @@ import type {
   InferCreationAttributes,
 } from "@sequelize/core";
 import { DataTypes, Model } from "@sequelize/core";
-import {
-  Attribute,
-  BelongsToMany,
-  Table,
-} from "@sequelize/core/decorators-legacy";
+import { Attribute, BelongsToMany } from "@sequelize/core/decorators-legacy";
 import type { ImageResource } from "@ukdanceblue/db-app-common";
 import { EventResource } from "@ukdanceblue/db-app-common";
 import type { DateTime, Duration } from "luxon";

@@ -6,6 +6,7 @@ import {
 } from "@ukdanceblue/db-app-common";
 import express from "express";
 
+import { EventModel } from "../../.././models/Event.js";
 import {
   sendNotFound,
   sendValidationError,
@@ -16,7 +17,6 @@ import {
   listEvents,
 } from "../../../controllers/EventController.js";
 import { notFound } from "../../../lib/expressHandlers.js";
-import { EventModel } from "../../../models/Event.js";
 import {
   parseCreateEventBody,
   parseEditEventBody,

@@ -4,7 +4,7 @@ import type {
   InferCreationAttributes,
 } from "@sequelize/core";
 import { DataTypes, Model } from "@sequelize/core";
-import { Attribute, BelongsTo, Table } from "@sequelize/core/decorators-legacy";
+import { Attribute, BelongsTo } from "@sequelize/core/decorators-legacy";
 import {} from "@ukdanceblue/db-app-common";
 import type { DateTime } from "luxon";
 

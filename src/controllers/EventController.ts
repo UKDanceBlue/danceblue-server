@@ -1,17 +1,17 @@
 import { EditType } from "@ukdanceblue/db-app-common";
 import type {
   EventResource,
+  EventResourceInitializer,
   ListEventsQuery,
-  ParsedCreateEventBody,
   ParsedEditEventBody,
 } from "@ukdanceblue/db-app-common";
 import createHttpError from "http-errors";
 
+import { EventModel } from ".././models/Event.js";
 import { sequelizeDb } from "../data-source.js";
 import type { ResourceToModelKeyMapping } from "../lib/dbHelpers/common.js";
 import { makeListOptions } from "../lib/dbHelpers/list.js";
 import { logDebug } from "../logger.js";
-import { EventModel } from "../models/Event.js";
 
 const eventResourceToModelKeyMapping: ResourceToModelKeyMapping<
   EventResource,
@@ -50,22 +50,20 @@ export async function listEvents(
  * @return The parsed body
  */
 export async function createEventFrom(
-  body: ParsedCreateEventBody
+  body: Omit<EventResourceInitializer, "eventId">
 ): Promise<EventModel> {
   let createdEvent = EventModel.build({
-    title: body.eventTitle,
+    title: body.title,
   });
 
   // TODO: generalize this
 
-  if (body.eventSummary !== undefined) createdEvent.summary = body.eventSummary;
-  if (body.eventDescription !== undefined)
-    createdEvent.description = body.eventDescription;
-  if (body.eventAddress !== undefined)
-    createdEvent.location = body.eventAddress;
-  createdEvent.occurrences = body.eventOccurrences;
-  if (body.eventDuration !== undefined)
-    createdEvent.duration = body.eventDuration;
+  if (body.summary !== undefined) createdEvent.summary = body.summary;
+  if (body.description !== undefined)
+    createdEvent.description = body.description;
+  if (body.location !== undefined) createdEvent.location = body.location;
+  createdEvent.occurrences = body.occurrences;
+  if (body.duration !== undefined) createdEvent.duration = body.duration;
 
   createdEvent = await createdEvent.save();
 
@@ -102,18 +100,14 @@ export async function editEventFrom(
       let replacementEvent = EventModel.build({
         id: originalEvent.id,
         eventId: originalEvent.eventId,
-        title: body.value.eventTitle,
+        title: body.value.title,
       });
 
-      if (body.value.eventSummary !== undefined)
-        replacementEvent.summary = body.value.eventSummary;
-      if (body.value.eventDescription !== undefined)
-        replacementEvent.description = body.value.eventDescription;
-      if (body.value.eventAddress !== undefined)
-        replacementEvent.location = body.value.eventAddress;
-      replacementEvent.occurrences = body.value.eventOccurrences;
-      if (body.value.eventDuration !== undefined)
-        replacementEvent.duration = body.value.eventDuration;
+      replacementEvent.summary = body.value.summary ?? null;
+      replacementEvent.description = body.value.description ?? null;
+      replacementEvent.location = body.value.location ?? null;
+      replacementEvent.occurrences = body.value.occurrences;
+      replacementEvent.duration = body.value.duration ?? null;
 
       replacementEvent = await replacementEvent.save({ transaction });
 
@@ -121,24 +115,17 @@ export async function editEventFrom(
 
       return replacementEvent;
     } else {
-      const {
-        eventAddress,
-        eventDescription,
-        eventOccurrences,
-        eventDuration,
-        eventSummary,
-        eventTitle,
-      } = body.value;
+      const { location, description, occurrences, duration, summary, title } =
+        body.value;
 
-      if (eventTitle !== undefined) originalEvent.title = eventTitle;
-      if (eventSummary !== undefined) originalEvent.summary = eventSummary;
-      if (eventDescription !== undefined)
-        originalEvent.description = eventDescription;
-      if (eventAddress !== undefined) originalEvent.location = eventAddress;
-      if (eventOccurrences !== undefined) {
-        switch (eventOccurrences.type) {
+      if (title !== undefined) originalEvent.title = title;
+      if (summary !== undefined) originalEvent.summary = summary;
+      if (description !== undefined) originalEvent.description = description;
+      if (location !== undefined) originalEvent.location = location;
+      if (occurrences !== undefined) {
+        switch (occurrences.type) {
           case EditType.REPLACE: {
-            // originalEvent.occurrences = eventIntervals.set.sort();
+            // originalEvent.occurrences = intervals.set.sort();
             break;
           }
           case EditType.MODIFY: {
@@ -148,7 +135,7 @@ export async function editEventFrom(
               // Assume we should add the interval
               let shouldAdd = true;
               // Loop over all the intervals to remove
-              for (const occurenceToModify of eventOccurrences.remove) {
+              for (const occurenceToModify of occurrences.remove) {
                 // If the occurence is in the list of occurrences to remove, don't add it
                 if (occurrence.equals(occurenceToModify)) {
                   shouldAdd = false;
@@ -158,7 +145,7 @@ export async function editEventFrom(
               // IF we didn't find the interval in the list of intervals to remove, add it to the new list
               if (shouldAdd) newEventOccurrences.push(occurrence);
             }
-            for (const interval of eventOccurrences.add) {
+            for (const interval of occurrences.add) {
               // Add all the intervals to add
               newEventOccurrences.push(interval);
             }
@@ -166,7 +153,7 @@ export async function editEventFrom(
           }
         }
       }
-      if (eventDuration !== undefined) originalEvent.duration = eventDuration;
+      if (duration !== undefined) originalEvent.duration = duration;
 
       const modifiedEvent = await originalEvent.save({ transaction });
 

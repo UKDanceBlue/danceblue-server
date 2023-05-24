@@ -4,12 +4,7 @@ import type {
   InferCreationAttributes,
 } from "@sequelize/core";
 import { DataTypes, Model } from "@sequelize/core";
-import {
-  Attribute,
-  BelongsToMany,
-  HasMany,
-  Table,
-} from "@sequelize/core/decorators-legacy";
+import { Attribute, HasMany } from "@sequelize/core/decorators-legacy";
 import { DbRole, TeamResource, TeamType } from "@ukdanceblue/db-app-common";
 
 import type { ModelFor } from "../lib/modelTypes.js";

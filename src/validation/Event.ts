@@ -1,16 +1,17 @@
 import type {
   EditEventBody,
+  EventResourceInitializer,
   GetEventParams,
   ListEventsQuery,
-  ParsedCreateEventBody,
   ParsedEditEventBody,
   PlainEvent,
+  PlainImage,
 } from "@ukdanceblue/db-app-common";
 import { EditType } from "@ukdanceblue/db-app-common";
 import joi from "joi";
-import { Duration } from "luxon";
+import { DateTime, Duration } from "luxon";
 
-import { LuxonError, ParsingError } from "../lib/CustomErrors.js";
+import { ParsingError } from "../lib/CustomErrors.js";
 import { logWarning } from "../logger.js";
 
 import {
@@ -18,27 +19,34 @@ import {
   paginationOptionsSchema,
   sortingOptionsSchema,
 } from "./Query.js";
-import { mapEditArray, startEndToDateTime } from "./commonParsers.js";
+import { mapEditArray } from "./commonParsers.js";
 import { makeEditArrayValidator } from "./editValidation.js";
 import { makeValidator } from "./makeValidator.js";
 
 const createEventBodySchema: joi.StrictSchemaMap<PlainEvent> = {
-  title: joi.string().required(),
-  summary: joi.string().optional().max(100),
-  eventDescription: joi.string().optional(),
-  eventAddress: joi.string().optional(),
-  eventOccurrences: joi.array().items(bodyDateTimeSchema).default([]),
-  eventDuration: joi
+  eventId: joi
     .string()
-    .regex(
-      /^P(?!$)(\d+(?:\.\d+)?Y)?(\d+(?:\.\d+)?M)?(\d+(?:\.\d+)?W)?(\d+(?:\.\d+)?D)?(T(?=\d)(\d+(?:\.\d+)?H)?(\d+(?:\.\d+)?M)?(\d+(?:\.\d+)?S)?)?$/
+    .uuid({ version: "uuidv4" })
+    .forbidden()
+    .messages({ "any.unknown": "Event ID will be generated automatically" }),
+  images: joi
+    .alternatives(
+      joi
+        .array()
+        .items(joi.string().uuid({ version: "uuidv4" }))
+        .default([])
     )
     .optional(),
-  timezone: joi.string().optional(),
+  title: joi.string().required(),
+  summary: joi.string().optional().max(100),
+  description: joi.string().optional(),
+  location: joi.string().optional(),
+  occurrences: joi.array().items(joi.string().isoDate()).default([]),
+  duration: joi.string().isoDuration().optional(),
 };
 
-const createEventBodyValidator = makeValidator<CreateEventBody>(
-  joi.object(createEventBodySchema)
+const createEventBodyValidator = makeValidator<PlainEvent>(
+  joi.object<PlainEvent, true, PlainEvent>(createEventBodySchema)
 );
 
 /**
@@ -52,7 +60,9 @@ const createEventBodyValidator = makeValidator<CreateEventBody>(
  * @throws An error if the body is invalid
  * @throws An error if the start or end date time is invalid
  */
-export function parseCreateEventBody(body: unknown): ParsedCreateEventBody {
+export function parseCreateEventBody(
+  body: unknown
+): Omit<EventResourceInitializer, "eventId"> {
   const { value: eventBody, warning } = createEventBodyValidator(body);
 
   if (warning) {
@@ -63,27 +73,16 @@ export function parseCreateEventBody(body: unknown): ParsedCreateEventBody {
     throw new ParsingError("Invalid event body");
   }
 
-  const eventOccurrences = eventBody.eventOccurrences.map((occurrence) => {
-    const occurence = parseBodyDateTime(occurrence, eventBody.timezone);
-    if (!occurence.isValid) throw new LuxonError(occurence);
-
-    return occurence;
-  });
-
-  const parsedBody: ParsedCreateEventBody = {
-    eventTitle: eventBody.eventTitle,
-    eventOccurrences,
+  const parsedBody: Omit<EventResourceInitializer, "eventId"> = {
+    title: eventBody.title,
+    occurrences: eventBody.occurrences.map((occurrence) =>
+      DateTime.fromISO(occurrence)
+    ),
+    description: eventBody.description,
+    duration: eventBody.duration ? Duration.fromISO(eventBody.duration) : null,
+    summary: eventBody.summary ?? null,
+    images: eventBody.images as Exclude<typeof eventBody.images, PlainImage[]>,
   };
-
-  if (eventBody.eventSummary) parsedBody.eventSummary = eventBody.eventSummary;
-  if (eventBody.eventDescription)
-    parsedBody.eventDescription = eventBody.eventDescription;
-  if (eventBody.eventAddress) parsedBody.eventAddress = eventBody.eventAddress;
-  if (eventBody.eventDuration) {
-    const eventDuration = Duration.fromISO(eventBody.eventDuration);
-    if (!eventDuration.isValid) throw new LuxonError(eventDuration);
-    parsedBody.eventDuration = eventDuration;
-  }
 
   return parsedBody;
 }
@@ -106,7 +105,10 @@ const listEventsQuerySchema = joi
         ["eventSummary", joi.string()],
         ["eventDescription", joi.string()],
         ["eventAddress", joi.string()],
-        ["eventOccurrences", joi.array().items(intervalSchema).default([])],
+        [
+          "eventOccurrences",
+          joi.array().items(joi.string().isoDate()).default([]),
+        ],
       ]
     )
   );
@@ -116,7 +118,7 @@ const listEventsQueryValidator = makeValidator<ListEventsQuery>(
 );
 
 /**
- * Parses the query of a list events request. Uses Joi to validate the query
+ * Parses the query of a list s request. Uses Joi to validate the query
  * and throw an error if it is invalid. If everything is valid, it returns
  * the parsed query.
  *
@@ -128,11 +130,11 @@ export function parseListEventsQuery(query: unknown): ListEventsQuery {
   const { value: parsedQuery, warning } = listEventsQueryValidator(query);
 
   if (warning) {
-    logWarning("Error parsing list events query: %s", warning.annotate());
+    logWarning("Error parsing list s query: %s", warning.annotate());
   }
 
   if (!parsedQuery) {
-    throw new ParsingError("Invalid list events query");
+    throw new ParsingError("Invalid list s query");
   }
 
   return parsedQuery;
@@ -169,12 +171,21 @@ export function parseSingleEventParams(params: unknown): GetEventParams {
 const editEventBodySchema = joi.alternatives<EditEventBody>(
   joi.object<EditEventBody & { type: EditType.MODIFY }>({
     type: joi.number().valid(EditType.MODIFY).required(),
-    value: joi.object({
-      eventTitle: joi.string().optional(),
-      eventSummary: joi.string().allow(null).optional().max(100),
-      eventDescription: joi.string().allow(null).optional(),
-      eventAddress: joi.string().allow(null).optional(),
-      eventOccurrences: makeEditArrayValidator(intervalSchema).optional(),
+    value: joi.object<PlainEvent>({
+      eventId: joi.string().uuid({ version: "uuidv4" }).forbidden().messages({
+        "any.unknown": "Event ID cannot be modified",
+      }),
+      title: joi.string().optional(),
+      images: joi
+        .alternatives(
+          joi.array().items(joi.string().uuid({ version: "uuidv4" }))
+        )
+        .optional(),
+      summary: joi.string().allow(null).optional().max(100),
+      description: joi.string().allow(null).optional(),
+      location: joi.string().allow(null).optional(),
+      occurrences: makeEditArrayValidator(joi.string().isoDate()).optional(),
+      duration: joi.string().isoDuration().optional(),
     }),
   })
 );
@@ -206,38 +217,40 @@ export function parseEditEventBody(body: unknown): ParsedEditEventBody {
 
   switch (eventBody.type) {
     case EditType.MODIFY: {
-      const parsedBody: ParsedEditEventBody = {
+      const parsedBody: ParsedEditEventBody<EditType.MODIFY> = {
         type: EditType.MODIFY,
         value: {},
       };
 
-      // TODO find a better approach than all of these if statements
-      if (eventBody.value.title)
-        parsedBody.value.eventTitle = eventBody.value.title;
-      if (eventBody.value.eventSummary)
-        parsedBody.value.eventSummary = eventBody.value.eventSummary;
-      if (eventBody.value.eventDescription)
-        parsedBody.value.eventDescription = eventBody.value.eventDescription;
-      if (eventBody.value.eventAddress)
-        parsedBody.value.eventAddress = eventBody.value.eventAddress;
-      if (eventBody.value.eventOccurrences) {
-        parsedBody.value.eventOccurrences = mapEditArray(
-          eventBody.value.eventOccurrences,
-          startEndToDateTime
+      if (eventBody.value.title) parsedBody.value.title = eventBody.value.title;
+      if (eventBody.value.summary)
+        parsedBody.value.summary = eventBody.value.summary;
+      if (eventBody.value.description)
+        parsedBody.value.description = eventBody.value.description;
+      if (eventBody.value.location)
+        parsedBody.value.location = eventBody.value.location;
+      if (eventBody.value.occurrences)
+        parsedBody.value.occurrences = mapEditArray(
+          eventBody.value.occurrences,
+          (occurrence) => DateTime.fromISO(occurrence)
         );
-      }
-      if (eventBody.value.eventDuration) {
-        const eventDuration = Duration.fromISO(eventBody.value.eventDuration);
-        if (!eventDuration.isValid) throw new LuxonError(eventDuration);
-        parsedBody.value.eventDuration = eventDuration;
-      }
+      if (eventBody.value.duration)
+        parsedBody.value.duration = Duration.fromISO(eventBody.value.duration);
+      if (eventBody.value.images)
+        parsedBody.value.images = eventBody.value.images as Exclude<
+          typeof eventBody.value.images,
+          PlainImage[]
+        >;
+
       return parsedBody;
     }
     case EditType.REPLACE: {
-      return {
-        type: EditType.REPLACE,
-        value: parseCreateEventBody(eventBody.value),
-      };
+      throw new ParsingError("Replace edit type not implemented");
+      // const parsedBody: ParsedEditEventBody<EditType.REPLACE> = {
+      //   type: EditType.REPLACE,
+      //   value: parseCreateEventBody(eventBody.value),
+      // };
+      // return parsedBody;
     }
     default: {
       throw new ParsingError("Invalid event body");

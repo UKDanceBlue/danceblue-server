@@ -4,7 +4,7 @@ import type {
   InferCreationAttributes,
 } from "@sequelize/core";
 import { DataTypes, Model } from "@sequelize/core";
-import { Attribute, Table } from "@sequelize/core/decorators-legacy";
+import { Attribute } from "@sequelize/core/decorators-legacy";
 import { LoginFlowSessionResource } from "@ukdanceblue/db-app-common";
 import { DateTime } from "luxon";
 import { generators } from "openid-client";

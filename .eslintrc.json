@@ -16,7 +16,7 @@
   "overrides": [
     // Eslint rules
     {
-      "files": ["**/*.ts*"],
+      "files": ["**/src/**/*.ts*"],
       "plugins": ["@typescript-eslint"],
       "extends": [
         "plugin:@typescript-eslint/recommended",

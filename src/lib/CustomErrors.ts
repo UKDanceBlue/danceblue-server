@@ -1,19 +1,20 @@
 import type { ApiError, ErrorApiResponse } from "@ukdanceblue/db-app-common";
-import { errorResponseFrom } from "@ukdanceblue/db-app-common";
+import { ValidationError, errorResponseFrom } from "@ukdanceblue/db-app-common";
 import type { HttpError } from "http-errors";
 import createHttpError from "http-errors";
 import type { DateTime, Duration, Interval } from "luxon";
 
-export class LuxonError extends Error {
+export class LuxonError extends ValidationError {
   cause: Duration | Interval | DateTime;
   explanation: string | null;
+
+  readonly name: string = "LuxonError";
 
   constructor(invalidLuxonObject: Duration | Interval | DateTime) {
     if (invalidLuxonObject.isValid || !invalidLuxonObject.invalidReason) {
       throw new Error("Tried to create an error from a valid Luxon object");
     }
     super(invalidLuxonObject.invalidReason);
-    this.name = "LuxonError";
 
     this.cause = invalidLuxonObject;
     this.explanation = invalidLuxonObject.invalidExplanation;
@@ -36,12 +37,13 @@ export class LuxonError extends Error {
   }
 }
 
-export class ParsingError extends Error {
+export class ParsingError extends ValidationError {
   cause?: object;
+
+  readonly name: string = "ParsingError";
 
   constructor(message: string, cause?: object) {
     super("Error parsing body");
-    this.name = "ParsingError";
 
     this.message = message;
     if (cause) this.cause = cause;

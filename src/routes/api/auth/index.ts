@@ -6,11 +6,11 @@ import createHttpError from "http-errors";
 import jsonwebtoken from "jsonwebtoken";
 import { Issuer } from "openid-client";
 
+import { LoginFlowSessionModel } from "../../.././models/LoginFlowSession.js";
 import { logout } from "../../../actions/auth.js";
 import { findPersonForLogin } from "../../../controllers/PersonController.js";
 import { makeUserJwt } from "../../../lib/auth/index.js";
 import { notFound } from "../../../lib/expressHandlers.js";
-import { LoginFlowSessionModel } from "../../../models/LoginFlowSession.js";
 
 const authApiRouter = express.Router();
 

@@ -19,7 +19,13 @@
     "noImplicitReturns": true,
     "noUncheckedIndexedAccess": true,
     "useUnknownInCatchVariables": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "resolveJsonModule": true
   },
-  "include": ["src/**/*.ts"]
+  "include": [
+    "src/**/*.ts",
+    "models/**/*.ts",
+    "migrations/**/*.ts",
+    "seeders/**/*.ts"
+  ]
 }

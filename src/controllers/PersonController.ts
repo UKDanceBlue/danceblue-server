@@ -4,7 +4,7 @@ import type {
   PersonResource,
 } from "@ukdanceblue/db-app-common";
 
-import { PersonModel } from "../models/Person.js";
+import { PersonModel } from ".././models/Person.js";
 
 /**
  * Searches the database for a user with the given auth IDs or user data, or creates a new user if none is found

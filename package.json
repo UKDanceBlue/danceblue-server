@@ -71,6 +71,7 @@
     "prettier": "^2.8.7",
     "qs": "^6.11.1",
     "reflect-metadata": "^0.1.13",
+    "sequelize": "npm:@sequelize/core@7.0.0-alpha.23",
     "ts-jest": "^29.0.5",
     "ts-node": "^10.9.1",
     "typescript": "^5.0.3",
@@ -78,6 +79,7 @@
     "ws": "^8.13.0"
   },
   "devDependencies": {
-    "@types/pg": "^8.6.6"
+    "@types/pg": "^8.6.6",
+    "sequelize-cli": "^6.6.0"
   }
 }

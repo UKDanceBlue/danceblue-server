@@ -1,47 +1,5 @@
-import type {
-  BodyDateTime,
-  BodyDateTimeRange,
-  EditArray,
-} from "@ukdanceblue/db-app-common";
-import { EditType, parseBodyDateTime } from "@ukdanceblue/db-app-common";
-import type { DateTime } from "luxon";
-import { Interval } from "luxon";
-
-import { LuxonError } from "../lib/CustomErrors.js";
-
-/**
- * Convert a BodyDateTime to a DateTime
- *
- * @param dateTime BodyDateTime
- * @return DateTime
- */
-export function startEndToDateTime(dateTime: BodyDateTime): DateTime {
-  const parsed = parseBodyDateTime(dateTime);
-  if (!parsed.isValid) throw new LuxonError(parsed);
-
-  return parsed;
-}
-
-/**
- * Convert a BodyDateTime to a DateTime
- *
- * @param dateTime BodyDateTime
- * @param dateTime.start Start date time
- * @param dateTime.end End date time
- * @return Interval
- * @throws A LuxonError if the start or end date time is invalid
- */
-export function startEndDateTimeToInterval(
-  dateTime: BodyDateTimeRange
-): Interval {
-  const start = startEndToDateTime(dateTime.start);
-  const end = startEndToDateTime(dateTime.end);
-
-  const interval = Interval.fromDateTimes(start, end);
-  if (!interval.isValid) throw new LuxonError(interval);
-
-  return interval;
-}
+import type { EditArray } from "@ukdanceblue/db-app-common";
+import { EditType } from "@ukdanceblue/db-app-common";
 
 /**
  * Map an EditArray

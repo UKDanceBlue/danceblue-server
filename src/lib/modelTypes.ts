@@ -1,9 +1,9 @@
 import { Model } from "@sequelize/core";
 import type { CreationOptional } from "@sequelize/core";
-import type { ApiResource } from "@ukdanceblue/db-app-common";
+import type { Resource } from "@ukdanceblue/db-app-common";
 
-export interface ModelFor<Resource extends ApiResource> {
-  toResource(): Resource;
+export interface ModelFor<R extends Resource> {
+  toResource(): R;
 }
 
 export class WithTimestamps<

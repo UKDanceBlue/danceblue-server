@@ -1,32 +1,30 @@
 import type {
-  CreateEventBody,
   EditEventBody,
   GetEventParams,
   ListEventsQuery,
   ParsedCreateEventBody,
   ParsedEditEventBody,
+  PlainEvent,
 } from "@ukdanceblue/db-app-common";
-import { EditType, parseBodyDateTime } from "@ukdanceblue/db-app-common";
+import { EditType } from "@ukdanceblue/db-app-common";
 import joi from "joi";
 import { Duration } from "luxon";
 
 import { LuxonError, ParsingError } from "../lib/CustomErrors.js";
 import { logWarning } from "../logger.js";
 
-import { bodyDateTimeSchema } from "./BodyDateTime.js";
 import {
   makeFilterOptionsSchema,
   paginationOptionsSchema,
   sortingOptionsSchema,
 } from "./Query.js";
 import { mapEditArray, startEndToDateTime } from "./commonParsers.js";
-import { intervalSchema } from "./commonSchemas.js";
 import { makeEditArrayValidator } from "./editValidation.js";
 import { makeValidator } from "./makeValidator.js";
 
-const createEventBodySchema: joi.StrictSchemaMap<CreateEventBody> = {
-  eventTitle: joi.string().required(),
-  eventSummary: joi.string().optional().max(100),
+const createEventBodySchema: joi.StrictSchemaMap<PlainEvent> = {
+  title: joi.string().required(),
+  summary: joi.string().optional().max(100),
   eventDescription: joi.string().optional(),
   eventAddress: joi.string().optional(),
   eventOccurrences: joi.array().items(bodyDateTimeSchema).default([]),
@@ -214,8 +212,8 @@ export function parseEditEventBody(body: unknown): ParsedEditEventBody {
       };
 
       // TODO find a better approach than all of these if statements
-      if (eventBody.value.eventTitle)
-        parsedBody.value.eventTitle = eventBody.value.eventTitle;
+      if (eventBody.value.title)
+        parsedBody.value.eventTitle = eventBody.value.title;
       if (eventBody.value.eventSummary)
         parsedBody.value.eventSummary = eventBody.value.eventSummary;
       if (eventBody.value.eventDescription)

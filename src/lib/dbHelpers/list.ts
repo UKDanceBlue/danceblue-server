@@ -1,8 +1,8 @@
 import type { Attributes, FindOptions, Model } from "@sequelize/core";
 import type {
-  ApiResource,
   FilterOptions,
   PaginationOptions,
+  Resource,
   SortingOptions,
 } from "@ukdanceblue/db-app-common";
 
@@ -10,7 +10,7 @@ import type { ModelFor } from "../modelTypes.js";
 
 import type { ResourceToModelKeyMapping } from "./common.js";
 
-type QueryFor<T extends ApiResource> = SortingOptions &
+type QueryFor<T extends Resource> = SortingOptions &
   PaginationOptions &
   FilterOptions<T>;
 type FilterFor<T extends object> = NonNullable<FilterOptions<T>["filter"]>;
@@ -23,7 +23,7 @@ type FilterFor<T extends object> = NonNullable<FilterOptions<T>["filter"]>;
  * @return The mapped filter object
  */
 function mapFilterKeys<
-  R extends ApiResource & Record<string, unknown>,
+  R extends Resource & Record<string, unknown>,
   M extends Model & ModelFor<R>
 >(
   filter: FilterFor<R>,
@@ -48,7 +48,7 @@ function mapFilterKeys<
  * @return The Sequelize FindOptions object
  */
 export function makeListOptions<
-  R extends ApiResource,
+  R extends Resource,
   M extends Model & ModelFor<R>
 >(
   query: QueryFor<R>,

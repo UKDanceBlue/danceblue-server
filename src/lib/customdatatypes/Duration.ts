@@ -3,7 +3,7 @@ import { Duration } from "luxon";
 
 export class DurationDataType extends DataTypes.ABSTRACT<Duration> {
   toSql() {
-    return "text";
+    return "interval";
   }
 
   validate(value: unknown): value is Duration {

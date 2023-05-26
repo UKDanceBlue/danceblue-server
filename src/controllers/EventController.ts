@@ -1,11 +1,12 @@
 import { EditType } from "@ukdanceblue/db-app-common";
 import type {
+  EditEventBody,
   EventResource,
   EventResourceInitializer,
   ListEventsQuery,
-  ParsedEditEventBody,
 } from "@ukdanceblue/db-app-common";
 import createHttpError from "http-errors";
+import { DateTime, Duration } from "luxon";
 
 import { EventModel } from ".././models/Event.js";
 import { sequelizeDb } from "../data-source.js";
@@ -82,7 +83,7 @@ export async function createEventFrom(
  */
 export async function editEventFrom(
   eventId: string,
-  body: ParsedEditEventBody
+  body: EditEventBody
 ): Promise<EventModel> {
   return sequelizeDb.transaction<EventModel>(async (transaction) => {
     // TODO: generalize this
@@ -106,8 +107,12 @@ export async function editEventFrom(
       replacementEvent.summary = body.value.summary ?? null;
       replacementEvent.description = body.value.description ?? null;
       replacementEvent.location = body.value.location ?? null;
-      replacementEvent.occurrences = body.value.occurrences;
-      replacementEvent.duration = body.value.duration ?? null;
+      replacementEvent.occurrences = body.value.occurrences.map((occurrence) =>
+        DateTime.fromISO(occurrence)
+      );
+      replacementEvent.duration = body.value.duration
+        ? Duration.fromISO(body.value.duration)
+        : null;
 
       replacementEvent = await replacementEvent.save({ transaction });
 
@@ -137,7 +142,7 @@ export async function editEventFrom(
               // Loop over all the intervals to remove
               for (const occurenceToModify of occurrences.remove) {
                 // If the occurence is in the list of occurrences to remove, don't add it
-                if (occurrence.equals(occurenceToModify)) {
+                if (occurrence.equals(DateTime.fromISO(occurenceToModify))) {
                   shouldAdd = false;
                   break;
                 }
@@ -153,7 +158,8 @@ export async function editEventFrom(
           }
         }
       }
-      if (duration !== undefined) originalEvent.duration = duration;
+      if (duration !== undefined)
+        originalEvent.duration = duration ? Duration.fromISO(duration) : null;
 
       const modifiedEvent = await originalEvent.save({ transaction });
 

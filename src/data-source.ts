@@ -1,8 +1,6 @@
 import "reflect-metadata";
-import { faker } from "@faker-js/faker";
 import type { Options as SequelizeOptions } from "@sequelize/core";
 import { Sequelize } from "@sequelize/core";
-import { DateTime, Duration } from "luxon";
 
 import { logError, logFatal, logInfo, sqlLogger } from "./logger.js";
 import { ConfigurationModel } from "./models/Configuration.js";
@@ -12,6 +10,9 @@ import { LoginFlowSessionModel } from "./models/LoginFlowSession.js";
 import { PersonModel } from "./models/Person.js";
 import { PointEntryModel } from "./models/PointEntry.js";
 import { TeamModel } from "./models/Team.js";
+// Seeders
+import seedEvents from "./seeders/events.js";
+import seedPeople from "./seeders/people.js";
 
 if (
   !process.env.DB_HOST ||
@@ -113,40 +114,10 @@ await sequelizeDb.sync({
   logging: dbOptions.logging,
 });
 
-// TODO: move this to a seeder file
-try {
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  const capitalize = (s: string) => s && s[0]!.toUpperCase()! + s.slice(1)!;
-  for (let i = 0; i < 10; i++) {
-    const occurrences: DateTime[] = [];
-    for (let j = 0; j < faker.datatype.number({ min: 1, max: 3 }); j++) {
-      occurrences.push(DateTime.fromJSDate(faker.date.soon(1)));
-    }
-    const adjective = capitalize(faker.word.adjective());
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    const aOrAn = ["A", "E", "I", "O", "U"].includes(adjective[0]!)
-      ? "an"
-      : "a";
-    // eslint-disable-next-line no-await-in-loop
-    const event = await EventModel.create({
-      id: undefined,
-      title: `${capitalize(
-        faker.word.verb()
-      )} ${aOrAn} ${adjective} ${capitalize(faker.word.noun())}`,
-      duration: DateTime.fromJSDate(faker.date.soon(1)).diffNow(),
-      occurrences,
-      description: faker.lorem.paragraph(),
-      summary: faker.lorem.sentence(),
-      location: faker.address.streetAddress(),
-    });
+const enableSeeders = true;
 
-    console.log(event.toJSON());
-
-    // eslint-disable-next-line no-await-in-loop
-    const gottenEvent = await EventModel.findAll({ include: [] });
-
-    console.log(gottenEvent.map((e) => e.toJSON()));
-  }
-} catch (error) {
-  console.error(error);
+// eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+if (enableSeeders) {
+  await seedPeople();
+  await seedEvents();
 }

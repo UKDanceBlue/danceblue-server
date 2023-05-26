@@ -1,9 +1,9 @@
 import type {
+  CreateEventBody,
   EditEventBody,
   EventResourceInitializer,
   GetEventParams,
   ListEventsQuery,
-  ParsedEditEventBody,
   PlainEvent,
   PlainImage,
 } from "@ukdanceblue/db-app-common";
@@ -19,23 +19,21 @@ import {
   paginationOptionsSchema,
   sortingOptionsSchema,
 } from "./Query.js";
-import { mapEditArray } from "./commonParsers.js";
 import { makeEditArrayValidator } from "./editValidation.js";
 import { makeValidator } from "./makeValidator.js";
 
-const createEventBodySchema: joi.StrictSchemaMap<PlainEvent> = {
-  eventId: joi
-    .string()
-    .uuid({ version: "uuidv4" })
-    .forbidden()
-    .messages({ "any.unknown": "Event ID will be generated automatically" }),
+const createEventBodySchema: joi.StrictSchemaMap<CreateEventBody> = {
   images: joi
     .alternatives(
       joi
         .array()
         .items(joi.string().uuid({ version: "uuidv4" }))
-        .default([])
+        .default([]),
+      joi.array().items(joi.object()).forbidden()
     )
+    .messages({
+      "alternatives.types": "images must be an array of UUIDs",
+    })
     .optional(),
   title: joi.string().required(),
   summary: joi.string().optional().max(100),
@@ -45,8 +43,8 @@ const createEventBodySchema: joi.StrictSchemaMap<PlainEvent> = {
   duration: joi.string().isoDuration().optional(),
 };
 
-const createEventBodyValidator = makeValidator<PlainEvent>(
-  joi.object<PlainEvent, true, PlainEvent>(createEventBodySchema)
+const createEventBodyValidator = makeValidator<CreateEventBody>(
+  joi.object<CreateEventBody, true, CreateEventBody>(createEventBodySchema)
 );
 
 /**
@@ -204,7 +202,7 @@ const editEventBodyValidator =
  * @throws An error if the start or end date time is invalid
  * @return The parsed body
  */
-export function parseEditEventBody(body: unknown): ParsedEditEventBody {
+export function parseEditEventBody(body: unknown): EditEventBody {
   const { value: eventBody, warning } = editEventBodyValidator(body);
 
   if (warning) {
@@ -215,45 +213,5 @@ export function parseEditEventBody(body: unknown): ParsedEditEventBody {
     throw new ParsingError("Invalid event body");
   }
 
-  switch (eventBody.type) {
-    case EditType.MODIFY: {
-      const parsedBody: ParsedEditEventBody<EditType.MODIFY> = {
-        type: EditType.MODIFY,
-        value: {},
-      };
-
-      if (eventBody.value.title) parsedBody.value.title = eventBody.value.title;
-      if (eventBody.value.summary)
-        parsedBody.value.summary = eventBody.value.summary;
-      if (eventBody.value.description)
-        parsedBody.value.description = eventBody.value.description;
-      if (eventBody.value.location)
-        parsedBody.value.location = eventBody.value.location;
-      if (eventBody.value.occurrences)
-        parsedBody.value.occurrences = mapEditArray(
-          eventBody.value.occurrences,
-          (occurrence) => DateTime.fromISO(occurrence)
-        );
-      if (eventBody.value.duration)
-        parsedBody.value.duration = Duration.fromISO(eventBody.value.duration);
-      if (eventBody.value.images)
-        parsedBody.value.images = eventBody.value.images as Exclude<
-          typeof eventBody.value.images,
-          PlainImage[]
-        >;
-
-      return parsedBody;
-    }
-    case EditType.REPLACE: {
-      throw new ParsingError("Replace edit type not implemented");
-      // const parsedBody: ParsedEditEventBody<EditType.REPLACE> = {
-      //   type: EditType.REPLACE,
-      //   value: parseCreateEventBody(eventBody.value),
-      // };
-      // return parsedBody;
-    }
-    default: {
-      throw new ParsingError("Invalid event body");
-    }
-  }
+  return eventBody;
 }

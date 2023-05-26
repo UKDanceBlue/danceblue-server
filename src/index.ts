@@ -5,6 +5,7 @@ import type { UserData } from "@ukdanceblue/db-app-common";
 import { AccessLevel, CommitteeRole, DbRole } from "@ukdanceblue/db-app-common";
 import bodyParser from "body-parser";
 import cookieParser from "cookie-parser";
+import cors from "cors";
 import express from "express";
 import createHttpError from "http-errors";
 import jsonwebtoken from "jsonwebtoken";
@@ -36,6 +37,11 @@ FAKE_APP_URL.port = port.toString();
 const app = express();
 
 app.use(express.static("public"));
+app.use(
+  cors({
+    origin: "http://localhost:3000",
+  })
+);
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser(process.env.COOKIE_SECRET));

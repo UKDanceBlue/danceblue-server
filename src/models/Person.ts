@@ -100,7 +100,7 @@ export class PersonModel
       as: "members",
     },
   })
-  public declare memberOf: CreationOptional<TeamModel[]>;
+  public declare memberOf: CreationOptional<TeamModel[]> | undefined;
 
   @BelongsToMany(() => TeamModel, {
     through: "team_Captains",
@@ -108,7 +108,7 @@ export class PersonModel
       as: "captains",
     },
   })
-  public declare captainOf: CreationOptional<TeamModel[]>;
+  public declare captainOf: CreationOptional<TeamModel[]> | undefined;
 
   get role(): CreationOptional<RoleResource> {
     return new RoleResource({
@@ -126,8 +126,8 @@ export class PersonModel
       authIds: this.authIds,
       email: this.email,
       linkblue: this.linkblue,
-      memberOf: this.memberOf.map((team) => team.toResource()),
-      captainOf: this.captainOf.map((team) => team.toResource()),
+      memberOf: this.memberOf?.map((team) => team.toResource()) ?? [],
+      captainOf: this.captainOf?.map((team) => team.toResource()) ?? [],
       pointEntries: [],
       role: this.role,
     });
@@ -138,10 +138,10 @@ export class PersonModel
       userId: this.userId,
       auth: roleToAuthorization(this.role),
     };
-    userData.teamIds = this.memberOf.map((team) => team.teamId as string);
-    userData.captainOfTeamIds = this.captainOf.map(
-      (team) => team.teamId as string
-    );
+    userData.teamIds =
+      this.memberOf?.map((team) => team.teamId as string) ?? [];
+    userData.captainOfTeamIds =
+      this.captainOf?.map((team) => team.teamId as string) ?? [];
     return userData;
   }
 }

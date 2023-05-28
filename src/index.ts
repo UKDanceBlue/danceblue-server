@@ -36,12 +36,14 @@ FAKE_APP_URL.port = port.toString();
 
 const app = express();
 
-app.use(express.static("public"));
 app.use(
   cors({
-    origin: "http://localhost:3000",
+    origin: true,
   })
 );
+app.options("*", cors());
+
+app.use(express.static("public"));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser(process.env.COOKIE_SECRET));

@@ -55,8 +55,16 @@ export function sendValidationError(
   } else if (createHttpError.isHttpError(error)) {
     return sendHttpError(res, error, errorContent);
   } else if (error instanceof Error) {
-    return sendHttpError(res, createHttpError(error.message), errorContent);
+    return sendHttpError(
+      res,
+      createHttpError.BadRequest(error.message),
+      errorContent
+    );
   } else {
-    return sendHttpError(res, createHttpError("Unknown error"), errorContent);
+    return sendHttpError(
+      res,
+      createHttpError.BadRequest("Unknown error"),
+      errorContent
+    );
   }
 }

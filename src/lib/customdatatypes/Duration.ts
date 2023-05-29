@@ -1,4 +1,5 @@
 import { DataTypes } from "@sequelize/core";
+import type { DurationLikeObject } from "luxon";
 import { Duration } from "luxon";
 
 export class DurationDataType extends DataTypes.ABSTRACT<Duration> {
@@ -32,7 +33,22 @@ export class DurationDataType extends DataTypes.ABSTRACT<Duration> {
   }
 
   parseDatabaseValue(value: unknown): unknown {
-    if (typeof value !== "string") throw new Error("Not a string");
-    return Duration.fromISO(value);
+    try {
+      if (typeof value === "string") {
+        return Duration.fromISO(value);
+      }
+      if (typeof value === "number") {
+        return Duration.fromMillis(value);
+      }
+      if (typeof value === "object") {
+        return Duration.fromObject(value as DurationLikeObject);
+      }
+      throw new Error("Could not parse Duration from database value");
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Unknown error";
+      throw new Error(
+        `Could not parse Duration from database value: ${message}`
+      );
+    }
   }
 }

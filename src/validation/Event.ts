@@ -76,10 +76,12 @@ export function parseCreateEventBody(
     occurrences: eventBody.occurrences.map((occurrence) =>
       DateTime.fromISO(occurrence)
     ),
-    description: eventBody.description,
+    description: eventBody.description ?? null,
     duration: eventBody.duration ? Duration.fromISO(eventBody.duration) : null,
     summary: eventBody.summary ?? null,
-    images: eventBody.images as Exclude<typeof eventBody.images, PlainImage[]>,
+    images:
+      (eventBody.images as Exclude<typeof eventBody.images, PlainImage[]>) ??
+      null,
   };
 
   return parsedBody;

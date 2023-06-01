@@ -17,6 +17,7 @@ import {
   listEvents,
 } from "../../../controllers/EventController.js";
 import { notFound } from "../../../lib/expressHandlers.js";
+import { sendResponse } from "../../../lib/sendResponse.js";
 import {
   parseCreateEventBody,
   parseEditEventBody,
@@ -41,9 +42,12 @@ eventApiRouter.post("/", async (req, res) => {
     return sendValidationError(res, error);
   }
 
-  return res
-    .status(201)
-    .json(createdResponseFrom({ id: createdEvent.eventId }));
+  return sendResponse(
+    res,
+    req,
+    createdResponseFrom({ id: createdEvent.eventId }),
+    201
+  );
 });
 
 // Get an event by ID
@@ -56,8 +60,7 @@ eventApiRouter.get("/:eventId", async (req, res) => {
     return sendNotFound(res, "Event");
   } else {
     const response = okResponseFrom({ value: event.toResource().serialize() });
-
-    return res.status(200).json(response);
+    return sendResponse(res, req, response);
   }
 });
 
@@ -75,8 +78,7 @@ eventApiRouter.get("/", async (req, res) => {
       pageSize: query.pageSize,
     },
   });
-
-  return res.status(200).json(response);
+  return sendResponse(res, req, response);
 });
 
 // Edit an event
@@ -97,9 +99,11 @@ eventApiRouter.post("/:eventId", async (req, res) => {
     return sendValidationError(res, error);
   }
 
-  return res
-    .status(200)
-    .json(okResponseFrom({ value: editedEvent.toResource().serialize() }));
+  return sendResponse(
+    res,
+    req,
+    okResponseFrom({ value: editedEvent.toResource().serialize() })
+  );
 });
 
 eventApiRouter.all("*", notFound);

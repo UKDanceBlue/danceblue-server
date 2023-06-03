@@ -54,10 +54,10 @@ export class ImageModel
   public declare mimeType: string | null;
 
   @Attribute({
-    type: DataTypes.TEXT,
+    type: DataTypes.BLOB,
     allowNull: true,
   })
-  public declare thumbHash: string | null;
+  public declare thumbHash: Buffer | null;
 
   @Attribute({
     type: DataTypes.TEXT,

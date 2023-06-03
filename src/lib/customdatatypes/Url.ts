@@ -9,8 +9,10 @@ export class UrlDataType extends DataTypes.ABSTRACT<URL> {
     return value instanceof URL;
   }
 
-  areValuesEqual(value: URL, originalValue: URL): boolean {
-    return value.toString() === originalValue.toString();
+  areValuesEqual(value: unknown, originalValue: unknown): boolean {
+    return value instanceof URL && originalValue instanceof URL
+      ? value.toString() === originalValue.toString()
+      : value === originalValue;
   }
 
   escape(value: URL): string {

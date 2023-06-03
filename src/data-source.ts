@@ -12,6 +12,7 @@ import { PointEntryModel } from "./models/PointEntry.js";
 import { TeamModel } from "./models/Team.js";
 // Seeders
 import seedEvents from "./seeders/events.js";
+import seedImages from "./seeders/images.js";
 import seedPeople from "./seeders/people.js";
 
 if (
@@ -118,6 +119,7 @@ const enableSeeders = true;
 
 // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
 if (enableSeeders) {
+  await seedImages();
   await seedPeople();
   await seedEvents();
 }

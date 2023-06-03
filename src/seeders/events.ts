@@ -2,7 +2,9 @@ import { faker } from "@faker-js/faker";
 import { DateTime } from "luxon";
 import type { CreationAttributes } from "sequelize";
 
+import { sequelizeDb } from "../data-source.js";
 import { EventModel } from "../models/Event.js";
+import { ImageModel } from "../models/Image.js";
 
 const capitalize = (s: string) => s && s[0]!.toUpperCase()! + s.slice(1)!;
 
@@ -24,6 +26,14 @@ export default async function () {
     // eslint-disable-next-line no-await-in-loop
     events.push({
       id: undefined,
+      images: [
+        (
+          await ImageModel.findOne({
+            order: sequelizeDb.random(),
+            // eslint-disable-next-line unicorn/no-await-expression-member
+          })
+        )?.imageId,
+      ],
       title: `${capitalize(
         faker.word.verb()
       )} ${aOrAn} ${adjective} ${capitalize(faker.word.noun())}`,

@@ -8,7 +8,7 @@ import { Attribute, Table } from "@sequelize/core/decorators-legacy";
 import type {} from "@ukdanceblue/db-app-common";
 import { CommitteeRole, DbRole } from "@ukdanceblue/db-app-common";
 
-import type { ModelFor } from "../lib/modelTypes.js";
+import type { WithToResource } from "../lib/modelTypes.js";
 
 // @Table({
 //   tableName: "",

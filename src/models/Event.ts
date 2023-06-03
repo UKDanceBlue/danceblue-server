@@ -2,96 +2,114 @@ import type {
   CreationOptional,
   InferAttributes,
   InferCreationAttributes,
+  NonAttribute,
 } from "@sequelize/core";
 import { DataTypes, Model } from "@sequelize/core";
-import {
-  Attribute,
-  BelongsToMany,
-  Table,
-} from "@sequelize/core/decorators-legacy";
 import type { ImageResource } from "@ukdanceblue/db-app-common";
 import { EventResource } from "@ukdanceblue/db-app-common";
 import type { DateTime, Duration } from "luxon";
 
+import { sequelizeDb } from "../data-source.js";
 import { DurationDataType } from "../lib/customdatatypes/Duration.js";
 import { UtcDateTimeDataType } from "../lib/customdatatypes/UtcDateTime.js";
-import type { ModelFor } from "../lib/modelTypes.js";
+import type { WithToResource } from "../lib/modelTypes.js";
 
 import { ImageModel } from "./Image.js";
 
-@Table({
-  defaultScope: {
-    order: [["title", "ASC"]],
-  },
-})
-export class EventModel
-  extends Model<
-    InferAttributes<EventModel>,
-    InferCreationAttributes<EventModel>
-  >
-  implements ModelFor<EventResource>
-{
-  @Attribute({
-    type: DataTypes.INTEGER,
-    autoIncrement: true,
-    autoIncrementIdentity: true,
-    primaryKey: true,
-  })
+export class EventModel extends Model<
+  InferAttributes<EventModel>,
+  InferCreationAttributes<EventModel>
+> {
   public declare id: CreationOptional<number>;
 
-  @Attribute({
-    type: DataTypes.UUID,
-    defaultValue: DataTypes.UUIDV4,
-    allowNull: false,
-    unique: true,
-  })
   public declare eventId: CreationOptional<string>;
 
-  @Attribute({
-    type: DataTypes.TEXT,
-    allowNull: false,
-  })
   public declare title: string;
 
-  @Attribute({
-    type: DataTypes.TEXT,
-    allowNull: true,
-  })
   public declare summary: string | null;
 
-  @Attribute({
-    type: DataTypes.TEXT,
-    allowNull: true,
-  })
   public declare description: string | null;
 
-  @Attribute({
-    type: DataTypes.TEXT,
-    allowNull: true,
-  })
   public declare location: string | null;
 
-  @Attribute({
-    type: DataTypes.ARRAY(UtcDateTimeDataType),
-    allowNull: false,
-    defaultValue: [],
-  })
   public declare occurrences: CreationOptional<DateTime[]>;
 
-  @Attribute({
-    type: DurationDataType,
-    allowNull: true,
-  })
   public declare duration: Duration | null;
 
-  @BelongsToMany(() => ImageModel, {
-    through: "event_images",
-  })
-  public declare images: CreationOptional<ImageResource[]>;
+  public declare images: NonAttribute<ImageResource[]>;
+}
 
-  toResource(): EventResource {
+EventModel.init(
+  {
+    id: {
+      type: DataTypes.INTEGER,
+      autoIncrement: true,
+      autoIncrementIdentity: true,
+      primaryKey: true,
+    },
+    eventId: {
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4,
+      allowNull: false,
+      unique: true,
+    },
+    title: {
+      type: DataTypes.TEXT,
+      allowNull: false,
+    },
+    summary: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+    },
+    description: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+    },
+    location: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+    },
+    occurrences: {
+      type: DataTypes.ARRAY(UtcDateTimeDataType),
+      allowNull: false,
+      defaultValue: [],
+    },
+    duration: {
+      type: DurationDataType,
+      allowNull: true,
+    },
+  },
+  {
+    sequelize: sequelizeDb,
+    modelName: "Event",
+  }
+);
+
+EventModel.belongsToMany(ImageModel, {
+  through: "event_images",
+});
+
+export class EventIntermediate implements WithToResource<EventResource> {
+  public declare id: number;
+
+  public declare eventId: string;
+
+  public declare title: string;
+
+  public declare summary: string | null;
+
+  public declare description: string | null;
+
+  public declare location: string | null;
+
+  public declare occurrences: DateTime[];
+
+  public declare duration: Duration | null;
+
+  public declare images: ImageResource[];
+
+  public toResource(): EventResource {
     return new EventResource({
-      eventId: this.eventId,
       title: this.title,
       summary: this.summary,
       description: this.description,
@@ -99,6 +117,7 @@ export class EventModel
       occurrences: this.occurrences,
       duration: this.duration,
       images: this.images,
+      eventId: this.eventId,
     });
   }
 }

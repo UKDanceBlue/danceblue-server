@@ -8,7 +8,7 @@ import { Attribute, BelongsToMany } from "@sequelize/core/decorators-legacy";
 import { ImageResource } from "@ukdanceblue/db-app-common";
 
 import { UrlDataType } from "../lib/customdatatypes/Url.js";
-import type { ModelFor } from "../lib/modelTypes.js";
+import type { WithToResource } from "../lib/modelTypes.js";
 
 import { EventModel } from "./Event.js";
 
@@ -17,7 +17,7 @@ export class ImageModel
     InferAttributes<ImageModel>,
     InferCreationAttributes<ImageModel>
   >
-  implements ModelFor<ImageResource>
+  implements WithToResource<ImageResource>
 {
   @Attribute({
     type: DataTypes.INTEGER,

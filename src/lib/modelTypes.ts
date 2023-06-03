@@ -2,7 +2,7 @@ import { Model } from "@sequelize/core";
 import type { CreationOptional } from "@sequelize/core";
 import type { Resource } from "@ukdanceblue/db-app-common";
 
-export interface ModelFor<R extends Resource> {
+export interface WithToResource<R extends Resource> {
   toResource(): R;
 }
 

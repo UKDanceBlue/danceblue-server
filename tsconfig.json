@@ -6,7 +6,6 @@
     "module": "NodeNext",
     "moduleResolution": "nodenext",
     "outDir": "./dist",
-    "experimentalDecorators": true,
     "sourceMap": true,
     "allowJs": true,
     "checkJs": true,

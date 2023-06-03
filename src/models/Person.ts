@@ -14,7 +14,7 @@ import {
 } from "@ukdanceblue/db-app-common";
 
 import { roleToAuthorization } from "../lib/auth/role.js";
-import type { ModelFor } from "../lib/modelTypes.js";
+import type { WithToResource } from "../lib/modelTypes.js";
 
 import { TeamModel } from "./Team.js";
 
@@ -23,7 +23,7 @@ export class PersonModel
     InferAttributes<PersonModel>,
     InferCreationAttributes<PersonModel>
   >
-  implements ModelFor<PersonResource>
+  implements WithToResource<PersonResource>
 {
   @Attribute({
     type: DataTypes.INTEGER,

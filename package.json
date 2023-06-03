@@ -75,7 +75,6 @@
     "postgres-range": "^1.1.3",
     "prettier": "^2.8.7",
     "qs": "^6.11.1",
-    "reflect-metadata": "^0.1.13",
     "sequelize": "npm:@sequelize/core@7.0.0-alpha.23",
     "sharp": "^0.32.1",
     "thumbhash": "^0.1.1",

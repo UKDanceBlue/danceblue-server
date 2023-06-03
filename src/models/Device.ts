@@ -1,76 +1,97 @@
 import type {
+  Association,
+  BelongsToCreateAssociationMixin,
+  BelongsToGetAssociationMixin,
   CreationOptional,
+  ForeignKey,
   InferAttributes,
   InferCreationAttributes,
+  NonAttribute,
 } from "@sequelize/core";
 import { DataTypes, Model } from "@sequelize/core";
-import { Attribute, BelongsTo } from "@sequelize/core/decorators-legacy";
 import {} from "@ukdanceblue/db-app-common";
 import type { DateTime } from "luxon";
 
+import { sequelizeDb } from "../data-source.js";
 import { UtcDateTimeDataType } from "../lib/customdatatypes/UtcDateTime.js";
-import type { ModelFor } from "../lib/modelTypes.js";
+import type { WithToResource } from "../lib/modelTypes.js";
 
 import { PersonModel } from "./Person.js";
 
-// @Table({
-//   tableName: "",
-// })
-// export class ModelName
-//   extends Model<InferAttributes<ModelName>, InferCreationAttributes<ModelName>>
-//   implements WithToJsonFor<ResourceName> {}
+export class DeviceModel extends Model<
+  InferAttributes<DeviceModel>,
+  InferCreationAttributes<DeviceModel>
+> {
+  declare id: CreationOptional<number>;
 
-export class DeviceModel
-  extends Model<
-    InferAttributes<DeviceModel>,
-    InferCreationAttributes<DeviceModel>
-  >
-  implements ModelFor<never>
-{
-  @Attribute({
-    type: DataTypes.INTEGER,
-    autoIncrement: true,
-    autoIncrementIdentity: true,
-    primaryKey: true,
-  })
-  public declare id: CreationOptional<number>;
+  declare deviceId: CreationOptional<string>;
 
-  @Attribute({
-    type: DataTypes.UUID,
-    defaultValue: DataTypes.UUIDV4,
-    allowNull: false,
-    unique: true,
-    index: true,
-  })
-  public declare deviceId: CreationOptional<string>;
+  declare expoPushToken: string | null;
 
-  @Attribute({
-    type: DataTypes.TEXT,
-    allowNull: true,
-    validate: {
-      is: /^Expo(nent)?PushToken\[.{23}]$/,
+  declare createLastUser: BelongsToCreateAssociationMixin<PersonModel>;
+  declare getLastUser: BelongsToGetAssociationMixin<PersonModel>;
+  declare lastUser: NonAttribute<PersonModel | null>;
+  declare lastUserId: ForeignKey<PersonModel["id"]> | null;
+
+  declare lastLogin: DateTime | null;
+
+  declare static associations: {
+    lastUser: Association<DeviceModel, PersonModel>;
+  };
+}
+
+DeviceModel.init(
+  {
+    id: {
+      type: DataTypes.INTEGER,
+      autoIncrement: true,
+      autoIncrementIdentity: true,
+      primaryKey: true,
     },
-  })
+    deviceId: {
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4,
+      allowNull: false,
+      unique: true,
+      index: true,
+    },
+    expoPushToken: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+      validate: {
+        is: /^Expo(nent)?PushToken\[.{23}]$/,
+      },
+    },
+    lastLogin: {
+      type: UtcDateTimeDataType,
+      allowNull: true,
+    },
+  },
+  {
+    sequelize: sequelizeDb,
+    tableName: "device",
+    timestamps: true,
+    updatedAt: false,
+  }
+);
+
+DeviceModel.belongsTo(PersonModel, {
+  as: "lastUser",
+  foreignKey: "lastUserId",
+});
+
+export class DeviceIntermediate implements WithToResource<never> {
+  public declare id: number;
+
+  public declare deviceId: string;
+
   public declare expoPushToken: string | null;
 
-  @BelongsTo(() => PersonModel, {
-    targetKey: "userId",
-  })
   public declare lastUser: PersonModel | null;
 
-  @Attribute({
-    type: UtcDateTimeDataType,
-    allowNull: true,
-  })
   public declare lastLogin: DateTime | null;
 
-  toResource(): never {
-    // return new DeviceResource({
-    //   deviceId: this.deviceId,
-    //   expoPushToken: this.expoPushToken,
-    //   lastUser: this.lastUser?.toResource() ?? null,
-    //   lastLogin: this.lastLogin ?? null,
-    // });
-    throw new Error("Not implemented");
+  public toResource(): never {
+    return {} as never;
   }
 }

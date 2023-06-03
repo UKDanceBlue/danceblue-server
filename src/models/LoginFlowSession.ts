@@ -9,14 +9,14 @@ import { LoginFlowSessionResource } from "@ukdanceblue/db-app-common";
 import { DateTime } from "luxon";
 import { generators } from "openid-client";
 
-import type { ModelFor } from "../lib/modelTypes.js";
+import type { WithToResource } from "../lib/modelTypes.js";
 
 export class LoginFlowSessionModel
   extends Model<
     InferAttributes<LoginFlowSessionModel>,
     InferCreationAttributes<LoginFlowSessionModel>
   >
-  implements ModelFor<LoginFlowSessionResource>
+  implements WithToResource<LoginFlowSessionResource>
 {
   @Attribute({
     type: DataTypes.INTEGER,

@@ -7,14 +7,14 @@ import { DataTypes, Model } from "@sequelize/core";
 import { Attribute, HasMany } from "@sequelize/core/decorators-legacy";
 import { DbRole, TeamResource, TeamType } from "@ukdanceblue/db-app-common";
 
-import type { ModelFor } from "../lib/modelTypes.js";
+import type { WithToResource } from "../lib/modelTypes.js";
 
 import type { PersonModel } from "./Person.js";
 import { PointEntryModel } from "./PointEntry.js";
 
 export class TeamModel
   extends Model<InferAttributes<TeamModel>, InferCreationAttributes<TeamModel>>
-  implements ModelFor<TeamResource>
+  implements WithToResource<TeamResource>
 {
   @Attribute({
     type: DataTypes.INTEGER,

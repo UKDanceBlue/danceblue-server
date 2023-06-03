@@ -7,7 +7,7 @@ import { DataTypes, Model } from "@sequelize/core";
 import { Attribute, BelongsTo } from "@sequelize/core/decorators-legacy";
 import { PointEntryResource, TeamType } from "@ukdanceblue/db-app-common";
 
-import type { ModelFor } from "../lib/modelTypes.js";
+import type { WithToResource } from "../lib/modelTypes.js";
 
 import { PersonModel } from "./Person.js";
 import { TeamModel } from "./Team.js";
@@ -17,7 +17,7 @@ export class PointEntryModel
     InferAttributes<PointEntryModel>,
     InferCreationAttributes<PointEntryModel>
   >
-  implements ModelFor<PointEntryResource>
+  implements WithToResource<PointEntryResource>
 {
   @Attribute({
     type: DataTypes.INTEGER,

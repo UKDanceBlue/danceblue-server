@@ -6,9 +6,12 @@ import { AccessLevel, CommitteeRole, DbRole } from "@ukdanceblue/db-app-common";
 import bodyParser from "body-parser";
 import cookieParser from "cookie-parser";
 import cors from "cors";
+import dotenv from "dotenv";
 import express from "express";
 import createHttpError from "http-errors";
 import jsonwebtoken from "jsonwebtoken";
+
+import "./data-source.js";
 
 import { logout } from "./actions/auth.js";
 import {
@@ -18,9 +21,11 @@ import {
 } from "./lib/auth/index.js";
 import { errorHandler } from "./lib/errorhandler.js";
 import { notFound } from "./lib/expressHandlers.js";
-import rawLogger, { logCritical, logInfo } from "./logger.js";
+import rawLogger, { logCritical, logDebug, logInfo } from "./logger.js";
 import apiRouter from "./routes/api/index.js";
 import templateRouter from "./routes/template.js";
+
+dotenv.config();
 
 if (!process.env.APPLICATION_PORT) {
   logCritical("Missing APPLICATION_PORT environment variable");
@@ -189,3 +194,22 @@ process.on("SIGINT", () => {
 httpServer = app.listen(port, () => {
   logInfo(`DB Server listening on port ${port}`);
 });
+
+const enableSeeders = true;
+
+// eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+if (enableSeeders) {
+  const seederPaths = [
+    "./seeders/events.js",
+    "./seeders/images.js",
+    "./seeders/people.js",
+  ];
+  logDebug("Seeding database");
+  await Promise.all(
+    seederPaths.map(async (path) => {
+      const seeder = (await import(path)) as { default: () => Promise<void> };
+      await seeder.default();
+    })
+  );
+  logDebug("Database seeded");
+}

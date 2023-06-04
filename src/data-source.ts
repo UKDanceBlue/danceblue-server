@@ -1,19 +1,10 @@
-import "reflect-metadata";
 import type { Options as SequelizeOptions } from "@sequelize/core";
 import { Sequelize } from "@sequelize/core";
+import dotenv from "dotenv";
 
-import { logError, logFatal, logInfo, sqlLogger } from "./logger.js";
-import { ConfigurationModel } from "./models/Configuration.js";
-import { EventModel } from "./models/Event.js";
-import { ImageModel } from "./models/Image.js";
-import { LoginFlowSessionModel } from "./models/LoginFlowSession.js";
-import { PersonModel } from "./models/Person.js";
-import { PointEntryModel } from "./models/PointEntry.js";
-import { TeamModel } from "./models/Team.js";
-// Seeders
-import seedEvents from "./seeders/events.js";
-import seedImages from "./seeders/images.js";
-import seedPeople from "./seeders/people.js";
+import { logDebug, logError, logFatal, logInfo, sqlLogger } from "./logger.js";
+
+dotenv.config();
 
 if (
   !process.env.DB_HOST ||
@@ -46,16 +37,6 @@ Sequelize.hooks.addListeners({
   },
 });
 
-const models = [
-  ConfigurationModel,
-  EventModel,
-  ImageModel,
-  LoginFlowSessionModel,
-  PersonModel,
-  PointEntryModel,
-  TeamModel,
-];
-
 // const models = await importModels(pathUrls);
 
 const dbOptions = {
@@ -65,7 +46,6 @@ const dbOptions = {
   logging: (sql: string, timing?: number | undefined) =>
     sqlLogger.log("sql", sql, { timing }),
   benchmark: true, // Dev
-  models,
   define: {
     underscored: true,
     paranoid: true,
@@ -114,12 +94,3 @@ await sequelizeDb.sync({
   alter: true,
   logging: dbOptions.logging,
 });
-
-const enableSeeders = true;
-
-// eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-if (enableSeeders) {
-  await seedImages();
-  await seedPeople();
-  await seedEvents();
-}

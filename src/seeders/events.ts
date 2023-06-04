@@ -1,3 +1,4 @@
+/* eslint-disable no-await-in-loop */
 import { faker } from "@faker-js/faker";
 import { DateTime } from "luxon";
 import type { CreationAttributes } from "sequelize";
@@ -23,17 +24,8 @@ export default async function () {
     const aOrAn = ["A", "E", "I", "O", "U"].includes(adjective[0]!)
       ? "an"
       : "a";
-    // eslint-disable-next-line no-await-in-loop
     events.push({
       id: undefined,
-      images: [
-        (
-          await ImageModel.findOne({
-            order: sequelizeDb.random(),
-            // eslint-disable-next-line unicorn/no-await-expression-member
-          })
-        )?.imageId,
-      ],
       title: `${capitalize(
         faker.word.verb()
       )} ${aOrAn} ${adjective} ${capitalize(faker.word.noun())}`,
@@ -45,4 +37,17 @@ export default async function () {
     });
   }
   await Promise.all(events.map((event) => EventModel.create(event)));
+
+  // Now add 15 random images to random events
+  const fifteenImages = await ImageModel.findAll({
+    limit: 15,
+    order: sequelizeDb.random(),
+  });
+
+  for (const image of fifteenImages) {
+    const event = await EventModel.findOne({ order: sequelizeDb.random() });
+    if (event) {
+      await event.addImage(image);
+    }
+  }
 }

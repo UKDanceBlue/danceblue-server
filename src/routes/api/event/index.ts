@@ -6,7 +6,7 @@ import {
 } from "@ukdanceblue/db-app-common";
 import express from "express";
 
-import { EventModel } from "../../.././models/Event.js";
+import { EventIntermediate, EventModel } from "../../.././models/Event.js";
 import {
   sendNotFound,
   sendValidationError,
@@ -45,7 +45,7 @@ eventApiRouter.post("/", async (req, res) => {
   return sendResponse(
     res,
     req,
-    createdResponseFrom({ id: createdEvent.eventId }),
+    createdResponseFrom({ id: createdEvent.uuid }),
     201
   );
 });
@@ -54,12 +54,14 @@ eventApiRouter.post("/", async (req, res) => {
 eventApiRouter.get("/:eventId", async (req, res) => {
   const { eventId } = parseSingleEventParams(req.params);
 
-  const event = await EventModel.findOne({ where: { eventId } });
+  const event = await EventModel.findOne({ where: { uuid: eventId } });
 
   if (!event) {
     return sendNotFound(res, "Event");
   } else {
-    const response = okResponseFrom({ value: event.toResource().serialize() });
+    const response = okResponseFrom({
+      value: new EventIntermediate(event).toResource().serialize(),
+    });
     return sendResponse(res, req, response);
   }
 });
@@ -71,7 +73,9 @@ eventApiRouter.get("/", async (req, res) => {
   const events = await listEvents(query);
 
   const response = paginatedResponseFrom({
-    value: EventResource.serializeArray(events.rows.map((e) => e.toResource())),
+    value: EventResource.serializeArray(
+      events.rows.map((e) => new EventIntermediate(e).toResource())
+    ),
     pagination: {
       total: events.count,
       page: query.page,
@@ -102,7 +106,9 @@ eventApiRouter.post("/:eventId", async (req, res) => {
   return sendResponse(
     res,
     req,
-    okResponseFrom({ value: editedEvent.toResource().serialize() })
+    okResponseFrom({
+      value: new EventIntermediate(editedEvent).toResource().serialize(),
+    })
   );
 });
 

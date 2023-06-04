@@ -68,7 +68,7 @@ export async function createEventFrom(
 
   createdEvent = await createdEvent.save();
 
-  logDebug(`Created event: ${createdEvent.eventId}`, createdEvent);
+  logDebug(`Created event: ${createdEvent.uuid}`, createdEvent);
 
   return createdEvent;
 }
@@ -89,7 +89,7 @@ export async function editEventFrom(
     // TODO: generalize this
 
     const originalEvent = await EventModel.findOne({
-      where: { eventId },
+      where: { uuid: eventId },
       transaction,
     });
     if (originalEvent == null) {
@@ -100,7 +100,7 @@ export async function editEventFrom(
 
       let replacementEvent = EventModel.build({
         id: originalEvent.id,
-        eventId: originalEvent.eventId,
+        uuid: originalEvent.uuid,
         title: body.value.title,
       });
 
@@ -116,7 +116,7 @@ export async function editEventFrom(
 
       replacementEvent = await replacementEvent.save({ transaction });
 
-      logDebug(`Replaced event: ${replacementEvent.eventId}`);
+      logDebug(`Replaced event: ${replacementEvent.uuid}`);
 
       return replacementEvent;
     } else {
@@ -163,7 +163,7 @@ export async function editEventFrom(
 
       const modifiedEvent = await originalEvent.save({ transaction });
 
-      logDebug(`Edited event: ${modifiedEvent.eventId}`, modifiedEvent);
+      logDebug(`Edited event: ${modifiedEvent.uuid}`, modifiedEvent);
 
       return modifiedEvent;
     }

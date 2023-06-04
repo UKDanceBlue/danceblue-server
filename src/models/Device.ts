@@ -23,8 +23,11 @@ export class DeviceModel extends Model<
   InferCreationAttributes<DeviceModel>
 > {
   declare id: CreationOptional<number>;
+  declare uuid: CreationOptional<string>;
 
-  declare deviceId: CreationOptional<string>;
+  declare readonly createdAt: CreationOptional<Date>;
+  declare readonly updatedAt: CreationOptional<Date>;
+  declare readonly deletedAt: CreationOptional<Date | null>;
 
   declare expoPushToken: string | null;
 
@@ -48,13 +51,16 @@ DeviceModel.init(
       autoIncrementIdentity: true,
       primaryKey: true,
     },
-    deviceId: {
+    uuid: {
       type: DataTypes.UUID,
       defaultValue: DataTypes.UUIDV4,
       allowNull: false,
       unique: true,
       index: true,
     },
+    createdAt: DataTypes.DATE,
+    updatedAt: DataTypes.DATE,
+    deletedAt: DataTypes.DATE,
     expoPushToken: {
       type: DataTypes.TEXT,
       allowNull: true,
@@ -69,9 +75,7 @@ DeviceModel.init(
   },
   {
     sequelize: sequelizeDb,
-    tableName: "device",
-    timestamps: true,
-    updatedAt: false,
+    paranoid: false,
   }
 );
 
@@ -81,15 +85,22 @@ DeviceModel.belongsTo(PersonModel, {
 });
 
 export class DeviceIntermediate implements WithToResource<never> {
-  public declare id: number;
+  public id: number;
+  public uuid: string;
 
-  public declare deviceId: string;
+  public expoPushToken: string | null;
 
-  public declare expoPushToken: string | null;
+  public lastUser: PersonModel | null;
 
-  public declare lastUser: PersonModel | null;
+  public lastLogin: DateTime | null;
 
-  public declare lastLogin: DateTime | null;
+  constructor(device: DeviceModel) {
+    this.id = device.id;
+    this.uuid = device.uuid;
+    this.expoPushToken = device.expoPushToken;
+    this.lastUser = device.lastUser;
+    this.lastLogin = device.lastLogin;
+  }
 
   public toResource(): never {
     return {} as never;

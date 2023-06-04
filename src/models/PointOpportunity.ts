@@ -4,7 +4,6 @@ import type {
   InferCreationAttributes,
 } from "@sequelize/core";
 import { DataTypes, Model } from "@sequelize/core";
-import { Attribute, Table } from "@sequelize/core/decorators-legacy";
 import type {} from "@ukdanceblue/db-app-common";
 import { CommitteeRole, DbRole } from "@ukdanceblue/db-app-common";
 

@@ -14,4 +14,5 @@ export class WithTimestamps<
 > extends Model<TModelAttributes, TCreationAttributes> {
   declare readonly createdAt: CreationOptional<Date>;
   declare readonly updatedAt: CreationOptional<Date>;
+  declare readonly deletedAt: CreationOptional<Date | null>;
 }

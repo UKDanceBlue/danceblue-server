@@ -1,6 +1,8 @@
 import { DataTypes } from "@sequelize/core";
 import { DateTime } from "luxon";
 
+type RawDate = Date | string | number;
+
 /**
  * Sequelize data type for a PostgreSQL timestamptz.
  *
@@ -45,11 +47,11 @@ export class UtcDateTimeDataType extends DataTypes.ABSTRACT<DateTime> {
     return usageContext.sequelize.queryGenerator.escape(stringified);
   }
 
-  toBindableValue(value: DateTime): Date {
+  toBindableValue(value: DateTime): RawDate {
     return value.toJSDate();
   }
 
-  parseDatabaseValue(value: unknown): DateTime | null {
+  parseDatabaseValue(value: RawDate | null | undefined): DateTime | null {
     if (value == null) {
       return null;
     }
@@ -57,6 +59,8 @@ export class UtcDateTimeDataType extends DataTypes.ABSTRACT<DateTime> {
       return DateTime.fromJSDate(value, { zone: "utc" });
     } else if (typeof value === "string") {
       return DateTime.fromSQL(value, { zone: "utc", locale: "en-US" });
+    } else if (typeof value === "number") {
+      return DateTime.fromMillis(value, { zone: "utc" });
     } else {
       throw new TypeError("Could not parse DateTime from database value");
     }

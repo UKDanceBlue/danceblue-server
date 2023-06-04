@@ -11,6 +11,7 @@ import { logout } from "../../../actions/auth.js";
 import { findPersonForLogin } from "../../../controllers/PersonController.js";
 import { makeUserJwt } from "../../../lib/auth/index.js";
 import { notFound } from "../../../lib/expressHandlers.js";
+import { PersonIntermediate } from "../../../models/Person.js";
 
 const authApiRouter = express.Router();
 
@@ -73,7 +74,7 @@ authApiRouter.post("/oidc-callback", async (req, res, next) => {
   try {
     const session = await LoginFlowSessionModel.findOne({
       where: {
-        sessionId: flowSessionId,
+        uuid: flowSessionId,
       },
     });
     if (!session?.codeVerifier) {
@@ -146,7 +147,7 @@ authApiRouter.post("/oidc-callback", async (req, res, next) => {
     if (isPersonChanged) {
       await currentPerson.save();
     }
-    const userData = currentPerson.toUserData();
+    const userData = new PersonIntermediate(currentPerson).toUserData();
     res.locals = {
       ...res.locals,
       user: userData,

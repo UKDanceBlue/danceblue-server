@@ -1,82 +1,189 @@
 import type {
+  BelongsToCreateAssociationMixin,
+  BelongsToGetAssociationMixin,
+  BelongsToSetAssociationMixin,
   CreationOptional,
   InferAttributes,
   InferCreationAttributes,
+  NonAttribute,
 } from "@sequelize/core";
 import { DataTypes, Model } from "@sequelize/core";
-import { Attribute, BelongsTo } from "@sequelize/core/decorators-legacy";
 import { PointEntryResource, TeamType } from "@ukdanceblue/db-app-common";
 
+import { sequelizeDb } from "../data-source.js";
 import type { WithToResource } from "../lib/modelTypes.js";
 
-import { PersonModel } from "./Person.js";
-import { TeamModel } from "./Team.js";
+import { PersonIntermediate, PersonModel } from "./Person.js";
+import { TeamIntermediate, TeamModel } from "./Team.js";
 
-export class PointEntryModel
-  extends Model<
-    InferAttributes<PointEntryModel>,
-    InferCreationAttributes<PointEntryModel>
-  >
-  implements WithToResource<PointEntryResource>
-{
-  @Attribute({
-    type: DataTypes.INTEGER,
-    autoIncrement: true,
-    autoIncrementIdentity: true,
-    primaryKey: true,
-  })
+export class PointEntryModel extends Model<
+  InferAttributes<PointEntryModel>,
+  InferCreationAttributes<PointEntryModel>
+> {
   public declare id: CreationOptional<number>;
+  public declare uuid: CreationOptional<string>;
 
-  @Attribute({
-    type: DataTypes.UUID,
-    defaultValue: DataTypes.UUIDV4,
-    allowNull: false,
-  })
-  public declare entryId: CreationOptional<string>;
+  declare readonly createdAt: CreationOptional<Date>;
+  declare readonly updatedAt: CreationOptional<Date>;
+  declare readonly deletedAt: CreationOptional<Date | null>;
 
-  @Attribute({
-    type: DataTypes.ENUM(Object.values(TeamType)),
-    allowNull: false,
-  })
   public declare type: TeamType;
 
-  @Attribute({
-    type: DataTypes.TEXT,
-    allowNull: false,
-  })
   public declare comment: string;
 
-  @Attribute({
-    type: DataTypes.INTEGER,
-    allowNull: false,
-  })
   public declare points: number;
 
-  @BelongsTo(() => PersonModel, {
-    foreignKey: {
-      name: "personFromId",
-      allowNull: true,
-    },
-  })
-  public declare personFrom: PersonModel | null;
-  public declare personFromId: number | null;
+  public declare personFrom: NonAttribute<PersonModel | null>;
+  public declare getPersonFrom: BelongsToGetAssociationMixin<PersonModel>;
+  public declare setPersonFrom: BelongsToSetAssociationMixin<
+    PersonModel,
+    PersonModel["id"]
+  >;
+  public declare createPersonFrom: BelongsToCreateAssociationMixin<PersonModel>;
+  public declare readonly personFromId: CreationOptional<number>;
 
-  @BelongsTo(() => TeamModel, {
-    foreignKey: {
-      name: "teamId",
+  public declare team: NonAttribute<TeamModel>;
+  public declare getTeam: BelongsToGetAssociationMixin<TeamModel>;
+  public declare setTeam: BelongsToSetAssociationMixin<
+    TeamModel,
+    TeamModel["id"]
+  >;
+  public declare createTeam: BelongsToCreateAssociationMixin<TeamModel>;
+  public declare readonly teamId: CreationOptional<number>;
+}
+
+PointEntryModel.init(
+  {
+    id: {
+      type: DataTypes.INTEGER,
+      autoIncrement: true,
+      autoIncrementIdentity: true,
+      primaryKey: true,
+    },
+    uuid: {
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4,
       allowNull: false,
     },
-  })
-  public declare team: TeamModel;
-  public declare teamId: number;
+    createdAt: DataTypes.DATE,
+    updatedAt: DataTypes.DATE,
+    deletedAt: DataTypes.DATE,
+    type: {
+      type: DataTypes.ENUM(Object.values(TeamType)),
+      allowNull: false,
+    },
+    comment: {
+      type: DataTypes.TEXT,
+      allowNull: false,
+    },
+    points: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+    },
+    personFromId: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+    },
+    teamId: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+    },
+  },
+  {
+    sequelize: sequelizeDb,
+    paranoid: true,
+  }
+);
 
-  toResource(): PointEntryResource {
+PersonModel.hasMany(PointEntryModel, {
+  foreignKey: {
+    name: "personFromId",
+    allowNull: true,
+  },
+});
+PointEntryModel.belongsTo(PersonModel, {
+  foreignKey: {
+    name: "personFromId",
+    allowNull: true,
+  },
+});
+
+TeamModel.hasMany(PointEntryModel, {
+  foreignKey: {
+    name: "teamId",
+    allowNull: false,
+  },
+});
+PointEntryModel.belongsTo(TeamModel, {
+  foreignKey: {
+    name: "teamId",
+    allowNull: false,
+  },
+});
+
+export class PointEntryIntermediate
+  implements WithToResource<PointEntryResource>
+{
+  public id?: number;
+  public uuid?: string;
+  public createdAt?: Date;
+  public updatedAt?: Date;
+  public deletedAt?: Date | null;
+  public type?: TeamType;
+  public comment?: string;
+  public points?: number;
+  public personFromId?: number;
+  public teamId?: number;
+  public personFrom?: PersonIntermediate | null;
+  public team?: TeamIntermediate;
+
+  constructor(model: PointEntryModel) {
+    this.id = model.id;
+    this.uuid = model.uuid;
+    this.createdAt = model.createdAt;
+    this.updatedAt = model.updatedAt;
+    this.deletedAt = model.deletedAt;
+    this.type = model.type;
+    this.comment = model.comment;
+    this.points = model.points;
+    this.personFromId = model.personFromId;
+    this.teamId = model.teamId;
+    this.personFrom =
+      model.personFrom === null
+        ? null
+        : new PersonIntermediate(model.personFrom);
+    this.team = new TeamIntermediate(model.team);
+  }
+
+  public isComplete(): this is Required<PointEntryIntermediate> {
+    return (
+      this.id !== undefined &&
+      this.uuid !== undefined &&
+      this.createdAt !== undefined &&
+      this.updatedAt !== undefined &&
+      this.deletedAt !== undefined &&
+      this.type !== undefined &&
+      this.comment !== undefined &&
+      this.points !== undefined &&
+      this.personFromId !== undefined &&
+      this.teamId !== undefined &&
+      this.personFrom !== undefined &&
+      this.team !== undefined
+    );
+  }
+
+  public toResource(): PointEntryResource {
+    if (!this.isComplete()) {
+      throw new Error("PointEntryIntermediate is not complete");
+    }
+
     return new PointEntryResource({
-      entryId: this.entryId,
+      entryId: this.uuid,
       type: this.type,
       comment: this.comment,
       points: this.points,
-      personFrom: this.personFrom?.toResource() ?? null,
+      personFrom:
+        this.personFrom === null ? null : this.personFrom.toResource(),
       team: this.team.toResource(),
     });
   }

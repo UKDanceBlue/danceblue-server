@@ -15,9 +15,6 @@ export class ConfigurationModel extends Model<
 > {
   public declare id: CreationOptional<number>;
 
-  declare createdAt: CreationOptional<Date>;
-  declare updatedAt: CreationOptional<Date>;
-
   public declare key: string;
 }
 
@@ -33,13 +30,11 @@ ConfigurationModel.init(
       type: DataTypes.TEXT,
       allowNull: false,
     },
-    createdAt: DataTypes.DATE,
-    updatedAt: DataTypes.DATE,
   },
   {
     sequelize: sequelizeDb,
-    tableName: "configuration",
     timestamps: false,
+    paranoid: false,
   }
 );
 

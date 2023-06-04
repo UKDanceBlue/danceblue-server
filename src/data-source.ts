@@ -2,9 +2,9 @@ import type { Options as SequelizeOptions } from "@sequelize/core";
 import { Sequelize } from "@sequelize/core";
 import dotenv from "dotenv";
 
-import { logDebug, logError, logFatal, logInfo, sqlLogger } from "./logger.js";
-
 dotenv.config();
+
+import { logError, logFatal, logInfo, sqlLogger } from "./logger.js";
 
 if (
   !process.env.DB_HOST ||
@@ -88,9 +88,3 @@ try {
 }
 
 await sequelizeDb.createSchema("danceblue");
-
-await sequelizeDb.sync({
-  force: true,
-  alter: true,
-  logging: dbOptions.logging,
-});

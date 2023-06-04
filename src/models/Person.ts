@@ -114,6 +114,11 @@ PersonModel.init(
   },
   {
     sequelize: sequelizeDb,
+    name: {
+      singular: "person",
+      plural: "people",
+    },
+    modelName: "Person",
   }
 );
 

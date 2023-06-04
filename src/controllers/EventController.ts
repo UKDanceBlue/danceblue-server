@@ -18,14 +18,14 @@ const eventResourceToModelKeyMapping: ResourceToModelKeyMapping<
   EventResource,
   EventModel
 > = {
-  eventId: "eventId",
+  eventId: "uuid",
   description: "description",
   duration: "duration",
   location: "location",
   occurrences: "occurrences",
   summary: "summary",
   title: "title",
-  images: "images",
+  // images: "images",
 };
 
 /**

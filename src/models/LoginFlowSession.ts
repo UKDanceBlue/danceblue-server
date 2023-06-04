@@ -67,5 +67,10 @@ LoginFlowSessionModel.init(
   {
     sequelize: sequelizeDb,
     paranoid: false,
+    name: {
+      singular: "loginFlowSession",
+      plural: "loginFlowSessions",
+    },
+    modelName: "LoginFlowSession",
   }
 );

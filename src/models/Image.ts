@@ -4,13 +4,13 @@ import type {
   InferCreationAttributes,
 } from "@sequelize/core";
 import { DataTypes, Model } from "@sequelize/core";
-import { ImageResource, arrayToBase64String } from "@ukdanceblue/db-app-common";
+import { ImageResource } from "@ukdanceblue/db-app-common";
 
 import { sequelizeDb } from "../data-source.js";
 import { UrlDataType } from "../lib/customdatatypes/Url.js";
 import type { WithToResource } from "../lib/modelTypes.js";
 
-import { EventModel } from "./Event.js";
+import type { EventModel } from "./Event.js";
 
 export class ImageModel extends Model<
   InferAttributes<ImageModel>,
@@ -89,12 +89,13 @@ ImageModel.init(
   },
   {
     sequelize: sequelizeDb,
+    name: {
+      singular: "image",
+      plural: "images",
+    },
+    modelName: "Image",
   }
 );
-
-ImageModel.belongsToMany(EventModel, {
-  through: "event_images",
-});
 
 export class ImageIntermediate implements WithToResource<ImageResource> {
   public id?: number;
@@ -139,8 +140,7 @@ export class ImageIntermediate implements WithToResource<ImageResource> {
         imageId: this.uuid,
         url: this.url,
         mimeType: this.mimeType,
-        thumbHash:
-          this.thumbHash === null ? null : arrayToBase64String(this.thumbHash),
+        thumbHash: this.thumbHash === null ? null : this.thumbHash,
         alt: this.alt,
         width: this.width,
         height: this.height,

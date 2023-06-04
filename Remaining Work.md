@@ -30,11 +30,13 @@ the validation should be done in the model or the resource. We will only use
 resources on the server as a means for serializing for the client, and maybe for
 create requests.
 
-## Build a mini-framework for seeding the database
+## Build a mini-framework for seeding/migrating the database
 
 I don't really like how sequlize-cli handles seeding the database, especially
-due to it's lack of typescript support. Migration files are fine, but I think we
-can do better for seeding, especially since there is some extra logic that needs
-to be done for seeding. I think we can build a mini-framework for seeding that
-will make it easier to write seed files and also make it easier to maintain them
-in the long run.
+due to it's lack of typescript support. I think we can build a mini-framework
+for seeding and migrating that will make it easier to write seed files and also
+make it easier to maintain them in the long run.
+
+https://github.com/sequelize/umzug
+
+OR, if sequelize-cli updates to v7 in time, maybe we can use that.

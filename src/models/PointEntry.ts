@@ -13,8 +13,10 @@ import { PointEntryResource, TeamType } from "@ukdanceblue/db-app-common";
 import { sequelizeDb } from "../data-source.js";
 import type { WithToResource } from "../lib/modelTypes.js";
 
-import { PersonIntermediate, PersonModel } from "./Person.js";
-import { TeamIntermediate, TeamModel } from "./Team.js";
+import type { PersonModel } from "./Person.js";
+import { PersonIntermediate } from "./Person.js";
+import type { TeamModel } from "./Team.js";
+import { TeamIntermediate } from "./Team.js";
 
 export class PointEntryModel extends Model<
   InferAttributes<PointEntryModel>,
@@ -92,34 +94,13 @@ PointEntryModel.init(
   {
     sequelize: sequelizeDb,
     paranoid: true,
+    name: {
+      plural: "pointEntries",
+      singular: "pointEntry",
+    },
+    modelName: "PointEntry",
   }
 );
-
-PersonModel.hasMany(PointEntryModel, {
-  foreignKey: {
-    name: "personFromId",
-    allowNull: true,
-  },
-});
-PointEntryModel.belongsTo(PersonModel, {
-  foreignKey: {
-    name: "personFromId",
-    allowNull: true,
-  },
-});
-
-TeamModel.hasMany(PointEntryModel, {
-  foreignKey: {
-    name: "teamId",
-    allowNull: false,
-  },
-});
-PointEntryModel.belongsTo(TeamModel, {
-  foreignKey: {
-    name: "teamId",
-    allowNull: false,
-  },
-});
 
 export class PointEntryIntermediate
   implements WithToResource<PointEntryResource>

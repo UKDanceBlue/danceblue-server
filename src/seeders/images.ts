@@ -1,6 +1,6 @@
 import { faker } from "@faker-js/faker";
+import type { CreationAttributes } from "@sequelize/core";
 import fetch from "node-fetch";
-import type { CreationAttributes } from "sequelize";
 
 import { generateThumbHash } from "../lib/thumbHash.js";
 import { ImageModel } from "../models/Image.js";
@@ -14,13 +14,11 @@ export default async function () {
   for (let i = 0; i < 30; i++) {
     promises.push(
       (async () => {
-        const aspectRatio = faker.datatype.number({ min: 0.5, max: 2 });
-        const size = faker.datatype.number({ min: 100, max: 500 });
-        const width = aspectRatio > 1 ? size : Math.round(size * aspectRatio);
-        const height = aspectRatio < 1 ? size : Math.round(size / aspectRatio);
+        const width = faker.datatype.number({ min: 100, max: 700 });
+        const height = faker.datatype.number({ min: 100, max: 700 });
         const jpegOrWebp = faker.datatype.boolean(); // true = jpeg, false = webp
         const mimeType = `image/${jpegOrWebp ? "jpeg" : "webp"}`;
-        const imageUrl = `https://picsum.photos/${width}/${height}.${
+        const imageUrl = `https://picsum.photos/seed/${faker.word.noun()}/${width}/${height}.${
           jpegOrWebp ? "jpg" : "webp"
         }`;
         // eslint-disable-next-line no-await-in-loop

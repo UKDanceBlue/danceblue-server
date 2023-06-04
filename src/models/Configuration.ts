@@ -35,6 +35,11 @@ ConfigurationModel.init(
     sequelize: sequelizeDb,
     timestamps: false,
     paranoid: false,
+    name: {
+      singular: "configuration",
+      plural: "configurations",
+    },
+    modelName: "Configuration",
   }
 );
 

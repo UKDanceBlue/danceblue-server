@@ -16,7 +16,7 @@ const fileLogTransport = new transports.File({
 
 const loggerOptions = {
   level: "debug",
-  format: format.combine(format.splat(), format.timestamp(), format.json()),
+  format: format.combine(format.splat(), format.json()),
   transports: [
     fileErrorLogTransport,
     fileLogTransport,
@@ -25,10 +25,7 @@ const loggerOptions = {
   exitOnError: false,
 } satisfies LoggerOptions;
 
-const logger = createLogger({
-  ...loggerOptions,
-  defaultMeta: { service: "danceblue-server" },
-});
+const logger = createLogger(loggerOptions);
 
 const consoleTransport = new transports.Console({
   format: format.combine(format.splat(), format.simple(), format.colorize()),

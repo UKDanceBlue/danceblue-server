@@ -24,7 +24,7 @@ import { DurationDataType } from "../lib/customdatatypes/Duration.js";
 import { UtcDateTimeDataType } from "../lib/customdatatypes/UtcDateTime.js";
 import type { WithToResource } from "../lib/modelTypes.js";
 
-import { ImageModel } from "./Image.js";
+import type { ImageModel } from "./Image.js";
 
 export class EventModel extends Model<
   InferAttributes<EventModel>,
@@ -128,12 +128,13 @@ EventModel.init(
   },
   {
     sequelize: sequelizeDb,
+    name: {
+      singular: "event",
+      plural: "events",
+    },
+    modelName: "Event",
   }
 );
-
-EventModel.belongsToMany(ImageModel, {
-  through: "event_images",
-});
 
 export class EventIntermediate implements WithToResource<EventResource> {
   public id?: number;

@@ -1,7 +1,7 @@
 /* eslint-disable no-await-in-loop */
 import { faker } from "@faker-js/faker";
+import type { CreationAttributes } from "@sequelize/core";
 import { DateTime } from "luxon";
-import type { CreationAttributes } from "sequelize";
 
 import { sequelizeDb } from "../data-source.js";
 import { EventModel } from "../models/Event.js";

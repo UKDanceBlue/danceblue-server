@@ -1,5 +1,5 @@
 import { faker } from "@faker-js/faker";
-import type { CreationAttributes } from "sequelize";
+import type { CreationAttributes } from "@sequelize/core";
 
 import { PersonModel } from "../models/Person.js";
 

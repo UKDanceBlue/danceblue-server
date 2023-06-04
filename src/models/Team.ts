@@ -10,7 +10,8 @@ import { DbRole, TeamResource, TeamType } from "@ukdanceblue/db-app-common";
 import { sequelizeDb } from "../data-source.js";
 import type { WithToResource } from "../lib/modelTypes.js";
 
-import { PointEntryIntermediate, PointEntryModel } from "./PointEntry.js";
+import type { PointEntryModel } from "./PointEntry.js";
+import { PointEntryIntermediate } from "./PointEntry.js";
 
 export class TeamModel extends Model<
   InferAttributes<TeamModel>,
@@ -70,14 +71,13 @@ TeamModel.init(
   },
   {
     sequelize: sequelizeDb,
+    name: {
+      singular: "team",
+      plural: "teams",
+    },
+    modelName: "Team",
   }
 );
-
-TeamModel.hasMany(PointEntryModel, {
-  sourceKey: "id",
-  foreignKey: "teamId",
-  as: "pointEntries",
-});
 
 export class TeamIntermediate implements WithToResource<TeamResource> {
   public id?: number;

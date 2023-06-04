@@ -76,6 +76,11 @@ DeviceModel.init(
   {
     sequelize: sequelizeDb,
     paranoid: false,
+    name: {
+      singular: "device",
+      plural: "devices",
+    },
+    modelName: "Device",
   }
 );
 

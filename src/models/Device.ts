@@ -9,14 +9,15 @@ import type {
   NonAttribute,
 } from "@sequelize/core";
 import { DataTypes, Model } from "@sequelize/core";
-import {} from "@ukdanceblue/db-app-common";
+import { DeviceResource } from "@ukdanceblue/db-app-common";
 import type { DateTime } from "luxon";
 
 import { sequelizeDb } from "../data-source.js";
 import { UtcDateTimeDataType } from "../lib/customdatatypes/UtcDateTime.js";
-import type { WithToResource } from "../lib/modelTypes.js";
+import { IntermediateClass } from "../lib/modelTypes.js";
 
 import { PersonModel } from "./Person.js";
+import type { CoreProperty } from "./intermediate.js";
 
 export class DeviceModel extends Model<
   InferAttributes<DeviceModel>,
@@ -89,25 +90,41 @@ DeviceModel.belongsTo(PersonModel, {
   foreignKey: "lastUserId",
 });
 
-export class DeviceIntermediate implements WithToResource<never> {
-  public id: number;
-  public uuid: string;
+export class DeviceIntermediate extends IntermediateClass<
+  DeviceResource,
+  DeviceIntermediate
+> {
+  public id?: CoreProperty<number>;
+  public uuid?: CoreProperty<string>;
 
-  public expoPushToken: string | null;
+  public expoPushToken?: string | null;
 
-  public lastUser: PersonModel | null;
+  public lastUser?: string | null;
 
-  public lastLogin: DateTime | null;
+  public lastLogin?: DateTime | null;
 
   constructor(device: DeviceModel) {
+    super(["id", "uuid"], []);
     this.id = device.id;
     this.uuid = device.uuid;
     this.expoPushToken = device.expoPushToken;
-    this.lastUser = device.lastUser;
+    this.lastUser =
+      typeof device.lastUser === "string" ? device.lastUser : null;
     this.lastLogin = device.lastLogin;
   }
 
-  public toResource(): never {
-    return {} as never;
+  public toResource(): DeviceResource {
+    if (this.hasImportantProperties()) {
+      return new DeviceResource({
+        deviceId: this.uuid,
+        expoPushToken: this.expoPushToken ?? null,
+        lastUser: this.lastUser ?? null,
+        lastLogin: this.lastLogin ?? null,
+      });
+    } else {
+      throw new Error(
+        "Cannot convert incomplete DeviceIntermediate to DeviceResource"
+      );
+    }
   }
 }

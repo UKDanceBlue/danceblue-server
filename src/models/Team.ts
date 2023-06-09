@@ -5,13 +5,15 @@ import type {
   NonAttribute,
 } from "@sequelize/core";
 import { DataTypes, Model } from "@sequelize/core";
+import type { PointEntryResource } from "@ukdanceblue/db-app-common";
 import { DbRole, TeamResource, TeamType } from "@ukdanceblue/db-app-common";
 
 import { sequelizeDb } from "../data-source.js";
-import type { WithToResource } from "../lib/modelTypes.js";
+import { IntermediateClass } from "../lib/modelTypes.js";
 
 import type { PointEntryModel } from "./PointEntry.js";
 import { PointEntryIntermediate } from "./PointEntry.js";
+import type { CoreProperty, ImportantProperty } from "./intermediate.js";
 
 export class TeamModel extends Model<
   InferAttributes<TeamModel>,
@@ -79,23 +81,21 @@ TeamModel.init(
   }
 );
 
-export class TeamIntermediate implements WithToResource<TeamResource> {
-  public id?: number;
-  public uuid?: string;
-  public createdAt?: Date;
-  public updatedAt?: Date;
-  public deletedAt?: Date | null;
-  public name?: string;
-  public type?: TeamType;
-  public visibility?: DbRole;
-  public pointEntries?: PointEntryIntermediate[];
+export class TeamIntermediate extends IntermediateClass<
+  TeamResource,
+  TeamIntermediate
+> {
+  public id?: CoreProperty<number>;
+  public uuid?: CoreProperty<string>;
+  public name?: ImportantProperty<string>;
+  public type?: ImportantProperty<TeamType>;
+  public visibility?: ImportantProperty<DbRole>;
+  public pointEntries?: ImportantProperty<PointEntryIntermediate[] | string[]>;
 
   constructor(team: TeamModel) {
+    super(["id", "uuid"], ["name", "type", "visibility", "pointEntries"]);
     this.id = team.id;
     this.uuid = team.uuid;
-    this.createdAt = team.createdAt;
-    this.updatedAt = team.updatedAt;
-    this.deletedAt = team.deletedAt;
     this.name = team.name;
     this.type = team.type;
     this.visibility = team.visibility;
@@ -104,23 +104,22 @@ export class TeamIntermediate implements WithToResource<TeamResource> {
     );
   }
 
-  public isComplete(): this is Required<TeamIntermediate> {
-    return (
-      this.id !== undefined &&
-      this.uuid !== undefined &&
-      this.createdAt !== undefined &&
-      this.updatedAt !== undefined &&
-      this.deletedAt !== undefined &&
-      this.name !== undefined &&
-      this.type !== undefined &&
-      this.visibility !== undefined &&
-      this.pointEntries !== undefined
-    );
-  }
-
   public toResource(): TeamResource {
-    if (!this.isComplete()) {
+    if (!this.hasImportantProperties()) {
       throw new Error("TeamIntermediate is not complete");
+    }
+
+    let pointEntries: string[] | PointEntryResource[];
+    if (typeof this.pointEntries[0] === "string") {
+      pointEntries = [] as string[];
+      for (const pe of this.pointEntries) {
+        pointEntries.push(pe as string);
+      }
+    } else {
+      pointEntries = [] as PointEntryResource[];
+      for (const pe of this.pointEntries) {
+        pointEntries.push((pe as PointEntryIntermediate).toResource());
+      }
     }
 
     return new TeamResource({
@@ -128,7 +127,7 @@ export class TeamIntermediate implements WithToResource<TeamResource> {
       name: this.name,
       type: this.type,
       visibility: this.visibility,
-      pointEntries: this.pointEntries.map((pe) => pe.toResource()),
+      pointEntries,
       members: [],
       captains: [],
     });

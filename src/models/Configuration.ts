@@ -7,7 +7,7 @@ import { DataTypes, Model } from "@sequelize/core";
 import { ConfigurationResource } from "@ukdanceblue/db-app-common";
 
 import { sequelizeDb } from "../data-source.js";
-import type { WithToResource } from "../lib/modelTypes.js";
+import { IntermediateClass } from "../lib/modelTypes.js";
 
 export class ConfigurationModel extends Model<
   InferAttributes<ConfigurationModel>,
@@ -43,9 +43,10 @@ ConfigurationModel.init(
   }
 );
 
-export class ConfigurationIntermediate
-  implements WithToResource<ConfigurationResource>
-{
+export class ConfigurationIntermediate extends IntermediateClass<
+  ConfigurationResource,
+  ConfigurationIntermediate
+> {
   public declare id: number;
   public declare key: string;
 

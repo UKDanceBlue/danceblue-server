@@ -7,7 +7,7 @@ import { DataTypes, Model } from "@sequelize/core";
 import type {} from "@ukdanceblue/db-app-common";
 import { CommitteeRole, DbRole } from "@ukdanceblue/db-app-common";
 
-import type { WithToResource } from "../lib/modelTypes.js";
+import type { IntermediateClass } from "../lib/modelTypes.js";
 
 // @Table({
 //   tableName: "",

@@ -22,9 +22,10 @@ import type { DateTime, Duration } from "luxon";
 import { sequelizeDb } from "../data-source.js";
 import { DurationDataType } from "../lib/customdatatypes/Duration.js";
 import { UtcDateTimeDataType } from "../lib/customdatatypes/UtcDateTime.js";
-import type { WithToResource } from "../lib/modelTypes.js";
+import { IntermediateClass } from "../lib/modelTypes.js";
 
 import type { ImageModel } from "./Image.js";
+import type { CoreProperty, ImportantProperty } from "./intermediate.js";
 
 export class EventModel extends Model<
   InferAttributes<EventModel>,
@@ -136,61 +137,42 @@ EventModel.init(
   }
 );
 
-export class EventIntermediate implements WithToResource<EventResource> {
-  public id?: number;
-  public uuid?: string;
-  public createdAt?: Date;
-  public updatedAt?: Date;
-  public deletedAt?: Date | null;
-  public title?: string;
+export class EventIntermediate extends IntermediateClass<
+  EventResource,
+  EventIntermediate
+> {
+  public id?: CoreProperty<number>;
+  public uuid?: CoreProperty<string>;
+  public title?: ImportantProperty<string>;
   public summary?: string | null;
   public description?: string | null;
   public location?: string | null;
-  public occurrences?: DateTime[];
+  public occurrences?: ImportantProperty<DateTime[]>;
   public duration?: Duration | null;
-  public images?: ImageResource[];
+  public images?: ImageResource[] | string[];
 
   constructor(model: Partial<EventModel>) {
+    super(["id", "uuid"], ["title", "occurrences"]);
     if (model.id !== undefined) this.id = model.id;
     if (model.uuid !== undefined) this.uuid = model.uuid;
-    if (model.createdAt !== undefined) this.createdAt = model.createdAt;
-    if (model.updatedAt !== undefined) this.updatedAt = model.updatedAt;
-    if (model.deletedAt !== undefined) this.deletedAt = model.deletedAt;
     if (model.title !== undefined) this.title = model.title;
     if (model.summary !== undefined) this.summary = model.summary;
     if (model.description !== undefined) this.description = model.description;
   }
 
-  public isComplete(): this is Required<EventIntermediate> {
-    return (
-      this.id !== undefined &&
-      this.uuid !== undefined &&
-      this.createdAt !== undefined &&
-      this.updatedAt !== undefined &&
-      this.deletedAt !== undefined &&
-      this.title !== undefined &&
-      this.summary !== undefined &&
-      this.description !== undefined &&
-      this.location !== undefined &&
-      this.occurrences !== undefined &&
-      this.duration !== undefined &&
-      this.images !== undefined
-    );
-  }
-
   public toResource(): EventResource {
-    if (!this.isComplete()) {
+    if (!this.hasImportantProperties()) {
       throw new Error("Cannot convert incomplete Event to Resource");
     }
 
     return new EventResource({
       title: this.title,
-      summary: this.summary,
-      description: this.description,
-      location: this.location,
+      summary: this.summary ?? null,
+      description: this.description ?? null,
+      location: this.location ?? null,
       occurrences: this.occurrences,
-      duration: this.duration,
-      images: this.images,
+      duration: this.duration ?? null,
+      images: this.images ?? null,
       eventId: this.uuid,
     });
   }

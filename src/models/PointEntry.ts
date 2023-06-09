@@ -11,12 +11,13 @@ import { DataTypes, Model } from "@sequelize/core";
 import { PointEntryResource, TeamType } from "@ukdanceblue/db-app-common";
 
 import { sequelizeDb } from "../data-source.js";
-import type { WithToResource } from "../lib/modelTypes.js";
+import { IntermediateClass } from "../lib/modelTypes.js";
 
 import type { PersonModel } from "./Person.js";
 import { PersonIntermediate } from "./Person.js";
 import type { TeamModel } from "./Team.js";
 import { TeamIntermediate } from "./Team.js";
+import type { CoreProperty, ImportantProperty } from "./intermediate.js";
 
 export class PointEntryModel extends Model<
   InferAttributes<PointEntryModel>,
@@ -76,7 +77,6 @@ PointEntryModel.init(
     },
     comment: {
       type: DataTypes.TEXT,
-      allowNull: false,
     },
     points: {
       type: DataTypes.INTEGER,
@@ -102,28 +102,24 @@ PointEntryModel.init(
   }
 );
 
-export class PointEntryIntermediate
-  implements WithToResource<PointEntryResource>
-{
-  public id?: number;
-  public uuid?: string;
-  public createdAt?: Date;
-  public updatedAt?: Date;
-  public deletedAt?: Date | null;
-  public type?: TeamType;
-  public comment?: string;
-  public points?: number;
-  public personFromId?: number;
-  public teamId?: number;
+export class PointEntryIntermediate extends IntermediateClass<
+  PointEntryResource,
+  PointEntryIntermediate
+> {
+  public id?: CoreProperty<number>;
+  public uuid?: CoreProperty<string>;
+  public type?: ImportantProperty<TeamType>;
+  public comment?: string | null;
+  public points?: ImportantProperty<number>;
+  public personFromId?: number | null;
+  public teamId?: ImportantProperty<number>;
   public personFrom?: PersonIntermediate | null;
-  public team?: TeamIntermediate;
+  public team?: ImportantProperty<TeamIntermediate>;
 
   constructor(model: PointEntryModel) {
+    super(["id", "uuid"], ["type", "team", "points", "teamId"]);
     this.id = model.id;
     this.uuid = model.uuid;
-    this.createdAt = model.createdAt;
-    this.updatedAt = model.updatedAt;
-    this.deletedAt = model.deletedAt;
     this.type = model.type;
     this.comment = model.comment;
     this.points = model.points;
@@ -136,13 +132,10 @@ export class PointEntryIntermediate
     this.team = new TeamIntermediate(model.team);
   }
 
-  public isComplete(): this is Required<PointEntryIntermediate> {
+  public hasNonOptionalProperties(): this is Required<PointEntryIntermediate> {
     return (
       this.id !== undefined &&
       this.uuid !== undefined &&
-      this.createdAt !== undefined &&
-      this.updatedAt !== undefined &&
-      this.deletedAt !== undefined &&
       this.type !== undefined &&
       this.comment !== undefined &&
       this.points !== undefined &&
@@ -154,7 +147,7 @@ export class PointEntryIntermediate
   }
 
   public toResource(): PointEntryResource {
-    if (!this.isComplete()) {
+    if (!this.hasNonOptionalProperties()) {
       throw new Error("PointEntryIntermediate is not complete");
     }
 

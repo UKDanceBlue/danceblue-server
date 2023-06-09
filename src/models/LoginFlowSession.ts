@@ -9,15 +9,14 @@ import { DateTime } from "luxon";
 import { generators } from "openid-client";
 
 import { sequelizeDb } from "../data-source.js";
-import type { WithToResource } from "../lib/modelTypes.js";
+import { IntermediateClass } from "../lib/modelTypes.js";
 
-export class LoginFlowSessionModel
-  extends Model<
-    InferAttributes<LoginFlowSessionModel>,
-    InferCreationAttributes<LoginFlowSessionModel>
-  >
-  implements WithToResource<LoginFlowSessionResource>
-{
+import type { CoreProperty, ImportantProperty } from "./intermediate.js";
+
+export class LoginFlowSessionModel extends Model<
+  InferAttributes<LoginFlowSessionModel>,
+  InferCreationAttributes<LoginFlowSessionModel>
+> {
   public declare id: CreationOptional<number>;
 
   public declare uuid: CreationOptional<string>;
@@ -74,3 +73,36 @@ LoginFlowSessionModel.init(
     modelName: "LoginFlowSession",
   }
 );
+
+export class LoginFlowSessionIntermediate extends IntermediateClass<
+  LoginFlowSessionResource,
+  LoginFlowSessionIntermediate
+> {
+  public id?: CoreProperty<number>;
+  public uuid?: CoreProperty<string>;
+  public createdAt?: ImportantProperty<Date>;
+  public codeVerifier?: ImportantProperty<string>;
+  public redirectToAfterLogin?: ImportantProperty<string>;
+
+  constructor() {
+    super(
+      ["id", "uuid"],
+      ["createdAt", "codeVerifier", "redirectToAfterLogin"]
+    );
+  }
+
+  toResource(): LoginFlowSessionResource {
+    if (!this.hasImportantProperties()) {
+      throw new Error(
+        "Cannot convert LoginFlowSessionIntermediate to LoginFlowSessionResource: missing properties"
+      );
+    }
+
+    return new LoginFlowSessionResource({
+      sessionId: this.uuid,
+      creationDate: DateTime.fromJSDate(this.createdAt),
+      codeVerifier: this.codeVerifier,
+      redirectToAfterLogin: this.redirectToAfterLogin,
+    });
+  }
+}

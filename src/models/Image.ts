@@ -8,9 +8,10 @@ import { ImageResource } from "@ukdanceblue/db-app-common";
 
 import { sequelizeDb } from "../data-source.js";
 import { UrlDataType } from "../lib/customdatatypes/Url.js";
-import type { WithToResource } from "../lib/modelTypes.js";
+import { IntermediateClass } from "../lib/modelTypes.js";
 
 import type { EventModel } from "./Event.js";
+import type { CoreProperty, ImportantProperty } from "./intermediate.js";
 
 export class ImageModel extends Model<
   InferAttributes<ImageModel>,
@@ -27,7 +28,7 @@ export class ImageModel extends Model<
 
   public declare imageData: Buffer | null;
 
-  public declare mimeType: string | null;
+  public declare mimeType: string;
 
   public declare thumbHash: Buffer | null;
 
@@ -97,18 +98,22 @@ ImageModel.init(
   }
 );
 
-export class ImageIntermediate implements WithToResource<ImageResource> {
-  public id?: number;
-  public uuid?: string;
+export class ImageIntermediate extends IntermediateClass<
+  ImageResource,
+  ImageIntermediate
+> {
+  public id?: CoreProperty<number>;
+  public uuid?: CoreProperty<string>;
   public url?: URL | null;
-  public imageData?: Buffer | null;
-  public mimeType?: string | null;
+  public imageData?: Buffer;
+  public mimeType?: ImportantProperty<string>;
   public thumbHash?: Buffer | null;
   public alt?: string | null;
-  public width?: number;
-  public height?: number;
+  public width?: ImportantProperty<number>;
+  public height?: ImportantProperty<number>;
 
   constructor(model: Partial<ImageModel>) {
+    super(["id", "uuid"], ["mimeType", "width", "height"]);
     if (model.id) this.id = model.id;
     if (model.uuid) this.uuid = model.uuid;
     if (model.url) this.url = model.url;
@@ -120,28 +125,14 @@ export class ImageIntermediate implements WithToResource<ImageResource> {
     if (model.height) this.height = model.height;
   }
 
-  public isComplete(): this is Required<ImageIntermediate> {
-    return (
-      this.id !== undefined &&
-      this.uuid !== undefined &&
-      this.url !== undefined &&
-      this.imageData !== undefined &&
-      this.mimeType !== undefined &&
-      this.thumbHash !== undefined &&
-      this.alt !== undefined &&
-      this.width !== undefined &&
-      this.height !== undefined
-    );
-  }
-
   public toResource(): ImageResource {
-    if (this.isComplete()) {
+    if (this.hasImportantProperties()) {
       return new ImageResource({
         imageId: this.uuid,
-        url: this.url,
+        url: this.url ?? null,
         mimeType: this.mimeType,
-        thumbHash: this.thumbHash === null ? null : this.thumbHash,
-        alt: this.alt,
+        thumbHash: this.thumbHash ?? null,
+        alt: this.alt ?? null,
         width: this.width,
         height: this.height,
       });

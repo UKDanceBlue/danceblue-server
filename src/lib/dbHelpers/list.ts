@@ -6,7 +6,7 @@ import type {
   SortingOptions,
 } from "@ukdanceblue/db-app-common";
 
-import type { WithToResource } from "../modelTypes.js";
+import type { IntermediateClass } from "../modelTypes.js";
 
 import type { ResourceToModelKeyMapping } from "./common.js";
 
@@ -24,7 +24,7 @@ type FilterFor<T extends object> = NonNullable<FilterOptions<T>["filter"]>;
  */
 function mapFilterKeys<
   R extends Resource & Record<string, unknown>,
-  M extends Model & WithToResource<R>
+  M extends Model & IntermediateClass<R>
 >(
   filter: FilterFor<R>,
   keyMapping: ResourceToModelKeyMapping<R, M>
@@ -49,7 +49,7 @@ function mapFilterKeys<
  */
 export function makeListOptions<
   R extends Resource,
-  M extends Model & WithToResource<R>
+  M extends Model & IntermediateClass<R>
 >(
   query: QueryFor<R>,
   keyMapping: ResourceToModelKeyMapping<R, M>

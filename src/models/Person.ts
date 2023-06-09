@@ -19,10 +19,11 @@ import {
 
 import { sequelizeDb } from "../data-source.js";
 import { roleToAuthorization } from "../lib/auth/role.js";
-import type { WithToResource } from "../lib/modelTypes.js";
+import { IntermediateClass } from "../lib/modelTypes.js";
 
 import type { TeamModel } from "./Team.js";
 import { TeamIntermediate } from "./Team.js";
+import type { CoreProperty, ImportantProperty } from "./intermediate.js";
 
 export class PersonModel extends Model<
   InferAttributes<PersonModel>,
@@ -122,21 +123,28 @@ PersonModel.init(
   }
 );
 
-export class PersonIntermediate implements WithToResource<PersonResource> {
-  public id?: number;
-  public uuid?: string;
+export class PersonIntermediate extends IntermediateClass<
+  PersonResource,
+  PersonIntermediate
+> {
+  public id?: CoreProperty<number>;
+  public uuid?: CoreProperty<string>;
   public firstName?: string | null;
   public lastName?: string | null;
-  public email?: string;
+  public email?: ImportantProperty<string>;
   public linkblue?: string | null;
-  public authIds?: Partial<Record<AuthSource, string>>;
-  public dbRole?: DbRole;
+  public authIds?: ImportantProperty<Partial<Record<AuthSource, string>>>;
+  public dbRole?: ImportantProperty<DbRole>;
   public committeeRole?: CommitteeRole | null;
   public committeeName?: string | null;
-  public memberOf?: TeamIntermediate[];
-  public captainOf?: TeamIntermediate[];
+  public memberOf?: ImportantProperty<TeamIntermediate[]>;
+  public captainOf?: ImportantProperty<TeamIntermediate[]>;
 
   constructor(init: Partial<PersonModel>) {
+    super(
+      ["id", "uuid"],
+      ["authIds", "captainOf", "dbRole", "email", "memberOf"]
+    );
     if (init.id !== undefined) this.id = init.id;
     if (init.uuid !== undefined) this.uuid = init.uuid;
     if (init.firstName !== undefined) this.firstName = init.firstName;
@@ -155,21 +163,6 @@ export class PersonIntermediate implements WithToResource<PersonResource> {
       this.captainOf = init.captainOf.map((t) => new TeamIntermediate(t));
   }
 
-  isComplete(): this is Required<PersonIntermediate> {
-    return (
-      this.firstName !== undefined &&
-      this.lastName !== undefined &&
-      this.email !== undefined &&
-      this.linkblue !== undefined &&
-      this.authIds !== undefined &&
-      this.dbRole !== undefined &&
-      this.committeeRole !== undefined &&
-      this.committeeName !== undefined &&
-      this.memberOf !== undefined &&
-      this.captainOf !== undefined
-    );
-  }
-
   get role(): NonAttribute<RoleResource> {
     if (this.dbRole === undefined) {
       throw new Error("PersonIntermediate was not initialized with DB role");
@@ -186,17 +179,17 @@ export class PersonIntermediate implements WithToResource<PersonResource> {
   }
 
   toResource(): PersonResource {
-    if (!this.isComplete()) {
+    if (!this.hasImportantProperties()) {
       throw new Error("PersonIntermediate is not complete");
     }
 
     return new PersonResource({
-      userId: this.uuid,
-      firstName: this.firstName,
-      lastName: this.lastName,
+      personId: this.uuid,
+      firstName: this.firstName ?? null,
+      lastName: this.lastName ?? null,
       authIds: this.authIds,
       email: this.email,
-      linkblue: this.linkblue,
+      linkblue: this.linkblue ?? null,
       memberOf: this.memberOf.map((team) => team.toResource()),
       captainOf: this.captainOf.map((team) => team.toResource()),
       pointEntries: [],

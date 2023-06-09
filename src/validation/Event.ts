@@ -1,13 +1,10 @@
 import type {
   CreateEventBody,
-  EditEventBody,
   EventResourceInitializer,
   GetEventParams,
   ListEventsQuery,
-  PlainEvent,
   PlainImage,
 } from "@ukdanceblue/db-app-common";
-import { EditType } from "@ukdanceblue/db-app-common";
 import joi from "joi";
 import { DateTime, Duration } from "luxon";
 
@@ -19,7 +16,6 @@ import {
   paginationOptionsSchema,
   sortingOptionsSchema,
 } from "./Query.js";
-import { makeEditArrayValidator } from "./editValidation.js";
 import { makeValidator } from "./makeValidator.js";
 
 const createEventBodySchema: joi.StrictSchemaMap<CreateEventBody> = {
@@ -166,54 +162,4 @@ export function parseSingleEventParams(params: unknown): GetEventParams {
   }
 
   return parsedParams;
-}
-
-const editEventBodySchema = joi.alternatives<EditEventBody>(
-  joi.object<EditEventBody & { type: EditType.MODIFY }>({
-    type: joi.number().valid(EditType.MODIFY).required(),
-    value: joi.object<PlainEvent>({
-      eventId: joi.string().uuid({ version: "uuidv4" }).forbidden().messages({
-        "any.unknown": "Event ID cannot be modified",
-      }),
-      title: joi.string().optional(),
-      images: joi
-        .alternatives(
-          joi.array().items(joi.string().uuid({ version: "uuidv4" }))
-        )
-        .optional(),
-      summary: joi.string().allow(null).optional().max(100),
-      description: joi.string().allow(null).optional(),
-      location: joi.string().allow(null).optional(),
-      occurrences: makeEditArrayValidator(joi.string().isoDate()).optional(),
-      duration: joi.string().isoDuration().optional(),
-    }),
-  })
-);
-
-const editEventBodyValidator =
-  makeValidator<EditEventBody>(editEventBodySchema);
-
-/**
- * Parses the body of an edit event request. Uses Joi to validate the body
- * and throw an error if it is invalid. Then it converts the start and end
- * date times to a Luxon Interval. If either is invalid, it will throw an
- * error. If everything is valid, it returns the parsed body.
- *
- * @param body The body of the request
- * @throws An error if the body is invalid
- * @throws An error if the start or end date time is invalid
- * @return The parsed body
- */
-export function parseEditEventBody(body: unknown): EditEventBody {
-  const { value: eventBody, warning } = editEventBodyValidator(body);
-
-  if (warning) {
-    logWarning("Error parsing edit event body: %s", warning.annotate());
-  }
-
-  if (!eventBody) {
-    throw new ParsingError("Invalid event body");
-  }
-
-  return eventBody;
 }

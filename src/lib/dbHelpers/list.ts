@@ -6,7 +6,7 @@ import type {
   SortingOptions,
 } from "@ukdanceblue/db-app-common";
 
-import type { WithToResource } from "../modelTypes.js";
+import type { IntermediateOf } from "../modelTypes.js";
 
 import type { ResourceToModelKeyMapping } from "./common.js";
 
@@ -23,14 +23,15 @@ type FilterFor<T extends object> = NonNullable<FilterOptions<T>["filter"]>;
  * @return The mapped filter object
  */
 function mapFilterKeys<
-  R extends Resource & Record<string, unknown>,
-  M extends Model & WithToResource<R>
+  R extends Resource,
+  M extends Model,
+  I extends IntermediateOf<R, M>
 >(
   filter: FilterFor<R>,
-  keyMapping: ResourceToModelKeyMapping<R, M>
+  keyMapping: ResourceToModelKeyMapping<R, M, I>
 ): FilterFor<Attributes<M>> {
   const mappedFilter: FilterFor<Attributes<M>> = {};
-  for (const key of Object.keys(filter)) {
+  for (const key of Object.keys(filter) as (keyof typeof filter)[]) {
     const mappedKey = keyMapping[key];
     if (mappedKey) {
       mappedFilter[mappedKey] = filter[key];
@@ -49,10 +50,11 @@ function mapFilterKeys<
  */
 export function makeListOptions<
   R extends Resource,
-  M extends Model & WithToResource<R>
+  M extends Model,
+  I extends IntermediateOf<R, M>
 >(
   query: QueryFor<R>,
-  keyMapping: ResourceToModelKeyMapping<R, M>
+  keyMapping: ResourceToModelKeyMapping<R, M, I>
 ): FindOptions<Attributes<M>> {
   const options: FindOptions<Attributes<M>> = {
     offset: (query.page - 1) * query.pageSize,
@@ -80,7 +82,7 @@ export function makeListOptions<
   }
 
   const filter: FilterOptions<Attributes<M>>["filter"] = query.filter
-    ? mapFilterKeys(query.filter, keyMapping)
+    ? mapFilterKeys<R, M, I>(query.filter, keyMapping)
     : undefined;
 
   const totalIncludesExclude: number = includes.length + excludes.length;

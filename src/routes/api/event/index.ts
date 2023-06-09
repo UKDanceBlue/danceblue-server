@@ -13,14 +13,12 @@ import {
 } from "../../../actions/SendCustomError.js";
 import {
   createEventFrom,
-  editEventFrom,
   listEvents,
 } from "../../../controllers/EventController.js";
 import { notFound } from "../../../lib/expressHandlers.js";
 import { sendResponse } from "../../../lib/sendResponse.js";
 import {
   parseCreateEventBody,
-  parseEditEventBody,
   parseListEventsQuery,
   parseSingleEventParams,
 } from "../../../validation/Event.js";
@@ -83,33 +81,6 @@ eventApiRouter.get("/", async (req, res) => {
     },
   });
   return sendResponse(res, req, response);
-});
-
-// Edit an event
-eventApiRouter.post("/:eventId", async (req, res) => {
-  const { eventId } = parseSingleEventParams(req.params);
-
-  let editEvent;
-  try {
-    editEvent = parseEditEventBody(req.body);
-  } catch (error) {
-    return sendValidationError(res, error);
-  }
-
-  let editedEvent;
-  try {
-    editedEvent = await editEventFrom(eventId, editEvent);
-  } catch (error) {
-    return sendValidationError(res, error);
-  }
-
-  return sendResponse(
-    res,
-    req,
-    okResponseFrom({
-      value: new EventIntermediate(editedEvent).toResource().serialize(),
-    })
-  );
 });
 
 eventApiRouter.all("*", notFound);

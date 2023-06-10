@@ -158,6 +158,10 @@ export class EventIntermediate extends IntermediateClass<
     if (model.title !== undefined) this.title = model.title;
     if (model.summary !== undefined) this.summary = model.summary;
     if (model.description !== undefined) this.description = model.description;
+    if (model.location !== undefined) this.location = model.location;
+    if (model.occurrences !== undefined) this.occurrences = model.occurrences;
+    if (model.duration !== undefined) this.duration = model.duration;
+    if (model.images !== undefined) this.images = model.images;
   }
 
   public toResource(): EventResource {

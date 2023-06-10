@@ -16,7 +16,11 @@ const fileLogTransport = new transports.File({
 
 const loggerOptions = {
   level: "debug",
-  format: format.combine(format.splat(), format.json()),
+  format: format.combine(
+    format.splat(),
+    format.colorize({ level: true, message: false }),
+    format.json()
+  ),
   transports: [
     fileErrorLogTransport,
     fileLogTransport,

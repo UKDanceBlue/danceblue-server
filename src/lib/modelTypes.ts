@@ -3,6 +3,7 @@ import type { CreationOptional } from "@sequelize/core";
 import type { Resource } from "@ukdanceblue/db-app-common";
 import type { RequiredKeys } from "utility-types";
 
+import { logDebug } from "../logger.js";
 import type {
   CoreRequired,
   ImportantRequired,
@@ -58,6 +59,11 @@ export abstract class IntermediateClass<
         undefined
       ) {
         isOk = false;
+        logDebug(
+          `Missing core property ${String(propertyName)} on ${
+            this.constructor.name
+          }`
+        );
         break;
       }
     }
@@ -74,6 +80,9 @@ export abstract class IntermediateClass<
         undefined
       ) {
         isOk = false;
+        logDebug(
+          `Missing important property ${propertyName} on ${this.constructor.name}`
+        );
         break;
       }
     }

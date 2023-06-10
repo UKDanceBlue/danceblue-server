@@ -1,87 +1,20 @@
-import {
-  EventResource,
-  createdResponseFrom,
-  okResponseFrom,
-  paginatedResponseFrom,
-} from "@ukdanceblue/db-app-common";
 import express from "express";
 
-import { EventIntermediate, EventModel } from "../../.././models/Event.js";
-import {
-  sendNotFound,
-  sendValidationError,
-} from "../../../actions/SendCustomError.js";
-import {
-  createEventFrom,
-  listEvents,
-} from "../../../controllers/EventController.js";
 import { notFound } from "../../../lib/expressHandlers.js";
-import { sendResponse } from "../../../lib/sendResponse.js";
-import {
-  parseCreateEventBody,
-  parseListEventsQuery,
-  parseSingleEventParams,
-} from "../../../validation/Event.js";
+
+import { createEvent } from "./createEvent.js";
+import { getEvent } from "./getEvent.js";
+import { listEvents } from "./listEvents.js";
 const eventApiRouter = express.Router();
 
 // Create a new event
-eventApiRouter.post("/", async (req, res) => {
-  let createEvent;
-  try {
-    createEvent = parseCreateEventBody(req.body);
-  } catch (error) {
-    return sendValidationError(res, error);
-  }
-
-  let createdEvent;
-  try {
-    createdEvent = await createEventFrom(createEvent);
-  } catch (error) {
-    return sendValidationError(res, error);
-  }
-
-  return sendResponse(
-    res,
-    req,
-    createdResponseFrom({ id: createdEvent.uuid }),
-    201
-  );
-});
+eventApiRouter.post("/", createEvent);
 
 // Get an event by ID
-eventApiRouter.get("/:eventId", async (req, res) => {
-  const { eventId } = parseSingleEventParams(req.params);
-
-  const event = await EventModel.findOne({ where: { uuid: eventId } });
-
-  if (!event) {
-    return sendNotFound(res, "Event");
-  } else {
-    const response = okResponseFrom({
-      value: new EventIntermediate(event).toResource().serialize(),
-    });
-    return sendResponse(res, req, response);
-  }
-});
+eventApiRouter.get("/:eventId", getEvent);
 
 // List all events
-eventApiRouter.get("/", async (req, res) => {
-  const query = parseListEventsQuery(req.query);
-
-  const events = await listEvents(query);
-
-  const response = paginatedResponseFrom({
-    value: EventResource.serializeArray(
-      events.rows.map((e) => new EventIntermediate(e).toResource())
-    ),
-    pagination: {
-      total: events.count,
-      page: query.page,
-      pageSize: query.pageSize,
-    },
-  });
-  return sendResponse(res, req, response);
-});
+eventApiRouter.get("/", listEvents);
 
 eventApiRouter.all("*", notFound);
 

@@ -5,5 +5,6 @@ import type { IntermediateClass } from "../modelTypes.js";
 
 export type ResourceToModelKeyMapping<
   R extends Resource,
-  M extends Model & IntermediateClass<R>
-> = Partial<Record<keyof R, keyof Attributes<M> & string>>;
+  M extends Model,
+  I extends IntermediateClass<R, I>
+> = Partial<Record<keyof R, Extract<keyof M, string>>>;

@@ -23,8 +23,9 @@ type FilterFor<T extends object> = NonNullable<FilterOptions<T>["filter"]>;
  * @return The mapped filter object
  */
 function mapFilterKeys<
-  R extends Resource & Record<string, unknown>,
-  M extends Model & IntermediateClass<R>
+  R extends Resource,
+  M extends Model,
+  I extends IntermediateClass<R, I>
 >(
   filter: FilterFor<R>,
   keyMapping: ResourceToModelKeyMapping<R, M, I>
@@ -49,7 +50,8 @@ function mapFilterKeys<
  */
 export function makeListOptions<
   R extends Resource,
-  M extends Model & IntermediateClass<R>
+  M extends Model,
+  I extends IntermediateClass<R, I>
 >(
   query: QueryFor<R>,
   keyMapping: ResourceToModelKeyMapping<R, M, I>

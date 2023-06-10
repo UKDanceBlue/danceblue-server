@@ -3,7 +3,6 @@ import type { Request, Response } from "express";
 import express from "express";
 
 import { logout } from "../../../actions/auth.js";
-import { notFound } from "../../../lib/expressHandlers.js";
 
 import { authMiddleware } from "./authMiddleware.js";
 import { login } from "./login.js";
@@ -34,7 +33,5 @@ authApiRouter.post("/oidc-callback", oidcCallback);
 
 // eslint-disable-next-line @typescript-eslint/require-await
 authApiRouter.get("/login", login);
-
-authApiRouter.all("*", notFound);
 
 export default authApiRouter;

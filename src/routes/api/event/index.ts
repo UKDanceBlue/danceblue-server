@@ -1,7 +1,5 @@
 import express from "express";
 
-import { notFound } from "../../../lib/expressHandlers.js";
-
 import { createEvent } from "./createEvent.js";
 import { getEvent } from "./getEvent.js";
 import { listEvents } from "./listEvents.js";
@@ -15,7 +13,5 @@ eventApiRouter.get("/:eventId", getEvent);
 
 // List all events
 eventApiRouter.get("/", listEvents);
-
-eventApiRouter.all("*", notFound);
 
 export default eventApiRouter;

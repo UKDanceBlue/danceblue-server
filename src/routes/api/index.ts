@@ -20,8 +20,8 @@ apiRouter.use((req, res, next) => {
 });
 
 // No authentication required
-apiRouter.use("/coniguration", configurationApiRouter);
-apiRouter.use("/auth", authApiRouter);
+apiRouter.use("/coniguration", configurationApiRouter.all("*", notFound));
+apiRouter.use("/auth", authApiRouter.all("*", notFound));
 
 // Authentication required
 apiRouter.use((req, res, next) => {
@@ -35,9 +35,9 @@ apiRouter.use((req, res, next) => {
   }
 });
 
-apiRouter.use("/event", eventApiRouter);
-apiRouter.use("/spirit", spiritApiRouter);
-apiRouter.use("/morale", moraleApiRouter);
+apiRouter.use("/event", eventApiRouter.all("*", notFound));
+apiRouter.use("/spirit", spiritApiRouter.all("*", notFound));
+apiRouter.use("/morale", moraleApiRouter.all("*", notFound));
 
 // Authorization required (team member)
 apiRouter.use((req, res, next) => {
@@ -50,7 +50,7 @@ apiRouter.use((req, res, next) => {
   }
 });
 
-apiRouter.use("/user", userApiRouter);
+apiRouter.use("/user", userApiRouter.all("*", notFound));
 
 // Authorization required (committee)
 apiRouter.use((req, res, next) => {
@@ -64,7 +64,7 @@ apiRouter.use((req, res, next) => {
   }
 });
 
-apiRouter.use("/admin", adminApiRouter);
+apiRouter.use("/admin", adminApiRouter.all("*", notFound));
 
 apiRouter.all("*", notFound);
 

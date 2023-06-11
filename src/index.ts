@@ -1,5 +1,6 @@
 import type { Server } from "node:http";
 import { resolve } from "node:path";
+import { argv } from "node:process";
 
 import type { UserData } from "@ukdanceblue/db-app-common";
 import { AccessLevel, CommitteeRole, DbRole } from "@ukdanceblue/db-app-common";
@@ -27,7 +28,8 @@ import seedDatabase from "./seeders/index.js";
 
 dotenv.config();
 
-await seedDatabase();
+// Seed the database if passed the --seed flag
+if (argv.includes("--seed-db")) await seedDatabase();
 
 if (!process.env.APPLICATION_PORT) {
   logCritical("Missing APPLICATION_PORT environment variable");

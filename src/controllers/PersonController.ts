@@ -9,7 +9,6 @@ import { PersonModel } from ".././models/Person.js";
 /**
  * Searches the database for a user with the given auth IDs or user data, or creates a new user if none is found
  *
- * @param personRepository The repository to use to search for the user
  * @param authIds The auth IDs to search for
  * @param userData The user data to fall back on if no user is found with the given auth IDs
  */

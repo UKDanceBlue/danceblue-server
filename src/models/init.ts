@@ -1,3 +1,5 @@
+import { argv } from "node:process";
+
 import type { SyncOptions } from "@sequelize/core";
 
 import { sequelizeDb } from "../data-source.js";
@@ -28,8 +30,8 @@ logDebug("Initialized model relations");
 logDebug("Syncing models");
 
 const syncOptions: SyncOptions = {
-  force: true,
-  alter: true,
+  // Force if passed --reset-db flag
+  force: argv.includes("--reset-db"),
   logging: (sql: string, timing?: number | undefined) =>
     sqlLogger.log("sql", sql, { timing }),
 };

@@ -8,3 +8,11 @@ ImageModel.belongsToMany(EventModel, {
 EventModel.belongsToMany(ImageModel, {
   through: "event_images",
 });
+
+EventModel.addScope("withImages", {
+  include: [
+    {
+      model: ImageModel,
+    },
+  ],
+});

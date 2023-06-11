@@ -11,6 +11,8 @@
     "build": "tsc",
     "build-public": "tsc -p ./tsconfig.public.json",
     "start": "node .",
+    "start-seed": "node . --seed-db --reset-db",
+    "start-reset": "node . --reset-db",
     "watch": "nodemon -w ./dist ./dist/index.js --",
     "lint": "eslint . --ext .ts",
     "test": "jest",

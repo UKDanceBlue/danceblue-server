@@ -4,18 +4,24 @@ import type { Request, Response } from "express";
 import { EventIntermediate, EventModel } from "../../.././models/Event.js";
 import { sendNotFound } from "../../../actions/SendCustomError.js";
 import { sendResponse } from "../../../lib/sendResponse.js";
+import { logDebug } from "../../../logger.js";
 import { parseSingleEventParams } from "../../../validation/Event.js";
 
 export const getEvent = async (req: Request, res: Response) => {
   const { eventId } = parseSingleEventParams(req.params);
 
-  const event = await EventModel.findOne({ where: { uuid: eventId } });
+  const event = await EventModel.withScope("withImages").findOne({
+    where: { uuid: eventId },
+  });
 
   if (!event) {
     return sendNotFound(res, "Event");
   } else {
+    const resource = new EventIntermediate(event).toResource();
+    const serializedResource = resource.serialize();
+    logDebug("Serialized resource:", serializedResource);
     const response = okResponseFrom({
-      value: new EventIntermediate(event).toResource().serialize(),
+      value: serializedResource,
     });
     return sendResponse(res, req, response);
   }

@@ -1,4 +1,5 @@
 import type { LoggerOptions } from "winston";
+import type winston from "winston";
 import { createLogger, format, transports } from "winston";
 
 import { stopServer } from "./index.js";
@@ -14,8 +15,31 @@ const fileLogTransport = new transports.File({
   maxFiles: 3,
 });
 
+const syslogLevels = {
+  emerg: 0,
+  alert: 1,
+  crit: 2,
+  error: 3,
+  warning: 4,
+  notice: 5,
+  info: 6,
+  debug: 7,
+} satisfies winston.config.AbstractConfigSetLevels;
+
+const syslogColors = {
+  emerg: "red",
+  alert: "yellow",
+  crit: "red",
+  error: "red",
+  warning: "red",
+  notice: "yellow",
+  info: "green",
+  debug: "blue",
+} satisfies winston.config.AbstractConfigSetColors;
+
 const loggerOptions = {
   level: "debug",
+  levels: syslogLevels,
   format: format.combine(
     format.splat(),
     format.colorize({ level: true, message: false }),
@@ -32,7 +56,13 @@ const loggerOptions = {
 const logger = createLogger(loggerOptions);
 
 const consoleTransport = new transports.Console({
-  format: format.combine(format.splat(), format.simple(), format.colorize()),
+  format: format.combine(
+    format.splat(),
+    format.simple(),
+    format.colorize({
+      colors: syslogColors,
+    })
+  ),
 });
 
 // If we're not in production then log to the `console` with the format:
@@ -43,14 +73,33 @@ if (process.env.NODE_ENV !== "production") {
 
 logger.info("Logger initialized");
 
+function logMessage(
+  logLevel: string,
+  content: unknown,
+  data?: unknown | (() => unknown)
+) {
+  if (logger.isLevelEnabled(logLevel)) {
+    if (typeof data === "function") {
+      logger.log(logLevel, String(content), data());
+    } else {
+      logger.log(logLevel, String(content), data);
+    }
+  }
+}
+
 /**
  * Log a debug message to the logger
  *
  * Use this log level for granular debug info such
  * as the contents of a variable or the result of
  * a function call.
+ *
+ * @param content The content to log (will be coerced to a string)
+ * @param data Any additional data to log
+ * @return void
  */
-export const logDebug = logger.debug;
+export const logDebug = (content: unknown, data?: unknown) =>
+  logMessage("debug", content, data);
 
 /**
  * Log an info message to the logger
@@ -58,65 +107,73 @@ export const logDebug = logger.debug;
  * Use this log level for general, but not usually
  * useful information such as the successful completion
  * of an operation.
- */
-export const logInfo = logger.info;
-
-/**
- * Log a notice message to the logger
  *
- * Use this log level for unimportant, but potentially
- * useful information such as an unexpected, but handled
- * input or application state.
+ * @param content The content to log (will be coerced to a string)
+ * @param data Any additional data to log
+ * @return void
  */
-export const logNotice = logger.notice;
+export const logInfo = (content: unknown, data?: unknown) =>
+  logMessage("info", content, data);
 
 /**
  * Log a warning message to the logger
  *
- * Use this log level for important, but not dangerous
- * information such as an unexpected, but handled error.
+ * Use this log level for a failure that is
+ * not a SERIOUS problem and probably does not
+ * require immediate attention.
  *
- * The server should still provide a useful response to
- * the user at this log level, probably the one they were
- * expecting.
- *
- * This is the first level of log that should probably
- * never happen in a bug-free application.
+ * @param content The content to log (will be coerced to a string)
+ * @param data Any additional data to log
+ * @return void
  */
-export const logWarning = logger.warning;
+export const logWarning = (content: unknown, data?: unknown) =>
+  logMessage("warning", content, data);
 
 /**
  * Log an error message to the logger
  *
- * Use this log level for a failure that is not
- * immediately dangerous, to the application.
+ * Use this log level for a failure that is
+ * a SERIOUS problem and probably means
+ * that the server is in an unrecoverable state.
  *
- * The server should still provide a useful response to
- * the user at this log level, but probably not the one
- * they were expecting (i.e. unexplained 500 error)
+ * @param content The content to log (will be coerced to a string)
+ * @param data Any additional data to log
+ * @return void
  */
-export const logError = logger.error;
+export const logError = (content: unknown, data?: unknown) =>
+  logMessage("error", content, data);
 
 /**
  * Log a critical message to the logger
  *
  * Use this log level for a failure that is
- * a serious problem, but not immediately fatal
- * to the application and is not likely to
- * immediately recur.
+ * a SERIOUS problem and probably means
+ * that the server is in an unrecoverable state
+ * when you want to stop anything else from
+ * going wrong.
  *
- * The server's behavior is undefined at this point.
+ * @param content The content to log (will be coerced to a string)
+ * @param data Any additional data to log
+ * @return void
  */
-export const logCritical = logger.crit;
+export const logCritical = (content: unknown, data?: unknown) =>
+  logMessage("crit", content, data);
 
 /**
  * Log an alert message to the logger
  *
  * Use this log level for a failure that is
- * a SIGNIFICANT problem that needs an immediate
- * response.
+ * a SERIOUS problem and probably means
+ * that the server is in an unrecoverable state
+ * when you want to stop anything else from
+ * going wrong.
+ *
+ * @param content The content to log (will be coerced to a string)
+ * @param data Any additional data to log
+ * @return void
  */
-export const logAlert = logger.alert;
+export const logAlert = (content: unknown, data?: unknown) =>
+  logMessage("alert", content, data);
 
 /**
  * Log an emergency message to the logger
@@ -124,8 +181,13 @@ export const logAlert = logger.alert;
  * Use this log level for a failure that is
  * a SERIOUS problem and probably means
  * that the server is in an unrecoverable state
+ *
+ * @param content The content to log (will be coerced to a string)
+ * @param data Any additional data to log
+ * @return void
  */
-export const logEmergency = logger.emerg;
+export const logEmergency = (content: unknown, data?: unknown) =>
+  logMessage("emerg", content, data);
 
 /**
  * Log a fatal message to the logger

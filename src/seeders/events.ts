@@ -15,9 +15,9 @@ const capitalize = (s: string) => s && s[0]!.toUpperCase()! + s.slice(1)!;
 export default async function () {
   const events: CreationAttributes<EventModel>[] = [];
   for (let i = 0; i < 10; i++) {
-    const occurrences: DateTime[] = [];
+    const occurrences: Date[] = [];
     for (let j = 0; j < faker.datatype.number({ min: 1, max: 3 }); j++) {
-      occurrences.push(DateTime.fromJSDate(faker.date.soon(1)));
+      occurrences.push(faker.date.soon(1));
     }
     const adjective = capitalize(faker.word.adjective());
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion

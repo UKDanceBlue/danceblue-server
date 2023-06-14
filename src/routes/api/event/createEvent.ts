@@ -28,7 +28,9 @@ export const createEvent = async (req: Request, res: Response) => {
       createdEvent.description = createEvent.description;
     if (createEvent.location !== undefined)
       createdEvent.location = createEvent.location;
-    createdEvent.occurrences = createEvent.occurrences;
+    createdEvent.occurrences = createEvent.occurrences.map((dateTime) =>
+      dateTime.toJSDate()
+    );
     if (createEvent.duration !== undefined)
       createdEvent.duration = createEvent.duration;
 

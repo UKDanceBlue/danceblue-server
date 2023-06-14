@@ -10,10 +10,9 @@ import type {
 } from "@sequelize/core";
 import { DataTypes, Model } from "@sequelize/core";
 import { DeviceResource } from "@ukdanceblue/db-app-common";
-import type { DateTime } from "luxon";
+import { DateTime } from "luxon";
 
 import { sequelizeDb } from "../data-source.js";
-import { UtcDateTimeDataType } from "../lib/customdatatypes/UtcDateTime.js";
 import { IntermediateClass } from "../lib/modelTypes.js";
 
 import { PersonModel } from "./Person.js";
@@ -37,7 +36,7 @@ export class DeviceModel extends Model<
   declare lastUser: NonAttribute<PersonModel | null>;
   declare lastUserId: ForeignKey<PersonModel["id"]> | null;
 
-  declare lastLogin: DateTime | null;
+  declare lastLogin: Date | null;
 
   declare static associations: {
     lastUser: Association<DeviceModel, PersonModel>;
@@ -70,7 +69,7 @@ DeviceModel.init(
       },
     },
     lastLogin: {
-      type: UtcDateTimeDataType,
+      type: DataTypes.DATE,
       allowNull: true,
     },
   },
@@ -101,7 +100,7 @@ export class DeviceIntermediate extends IntermediateClass<
 
   public lastUser?: string | null;
 
-  public lastLogin?: DateTime | null;
+  public lastLogin?: Date | null;
 
   constructor(device: DeviceModel) {
     super(["id", "uuid"], []);
@@ -119,7 +118,8 @@ export class DeviceIntermediate extends IntermediateClass<
         deviceId: this.uuid,
         expoPushToken: this.expoPushToken ?? null,
         lastUser: this.lastUser ?? null,
-        lastLogin: this.lastLogin ?? null,
+        lastLogin:
+          this.lastLogin == null ? null : DateTime.fromJSDate(this.lastLogin),
       });
     } else {
       throw new Error(

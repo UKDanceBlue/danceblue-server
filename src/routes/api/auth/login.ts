@@ -8,6 +8,7 @@ export const login = async (
   req: Request,
   res: Response,
   next: NextFunction
+  // eslint-disable-next-line @typescript-eslint/require-await
 ) => {
   try {
     if (!res.locals.oidcClient) {

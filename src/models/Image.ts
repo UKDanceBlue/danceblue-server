@@ -7,7 +7,6 @@ import { DataTypes, Model } from "@sequelize/core";
 import { ImageResource } from "@ukdanceblue/db-app-common";
 
 import { sequelizeDb } from "../data-source.js";
-import { UrlDataType } from "../lib/customdatatypes/Url.js";
 import { IntermediateClass } from "../lib/modelTypes.js";
 
 import type { EventModel } from "./Event.js";
@@ -60,7 +59,16 @@ ImageModel.init(
     updatedAt: DataTypes.DATE,
     deletedAt: DataTypes.DATE,
     url: {
-      type: UrlDataType,
+      type: DataTypes.TEXT,
+      get(): URL | null {
+        const url = this.getDataValue("url") as string | null;
+        if (url != null) return new URL(url);
+        return url;
+      },
+      set(value: URL | null) {
+        if (value != null) this.setDataValue("url", value.toString() as never);
+        else this.setDataValue("url", null);
+      },
       allowNull: true,
     },
     imageData: {

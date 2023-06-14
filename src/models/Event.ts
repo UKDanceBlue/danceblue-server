@@ -17,11 +17,11 @@ import type {
 import { DataTypes, Model } from "@sequelize/core";
 import type { ImageResource } from "@ukdanceblue/db-app-common";
 import { EventResource } from "@ukdanceblue/db-app-common";
-import type { DateTime, Duration } from "luxon";
+import type { Duration } from "luxon";
+import { DateTime } from "luxon";
 
 import { sequelizeDb } from "../data-source.js";
 import { DurationDataType } from "../lib/customdatatypes/Duration.js";
-import { UtcDateTimeDataType } from "../lib/customdatatypes/UtcDateTime.js";
 import { IntermediateClass } from "../lib/modelTypes.js";
 
 import type { ImageModel } from "./Image.js";
@@ -46,7 +46,7 @@ export class EventModel extends Model<
 
   public declare location: string | null;
 
-  public declare occurrences: CreationOptional<DateTime[]>;
+  public declare occurrences: CreationOptional<Date[]>;
 
   public declare duration: Duration | null;
 
@@ -117,8 +117,9 @@ EventModel.init(
       type: DataTypes.TEXT,
       allowNull: true,
     },
+    // TODO: move occurrences to own table
     occurrences: {
-      type: DataTypes.ARRAY(UtcDateTimeDataType),
+      type: DataTypes.ARRAY(DataTypes.DATE),
       allowNull: false,
       defaultValue: [],
     },
@@ -147,7 +148,7 @@ export class EventIntermediate extends IntermediateClass<
   public summary?: string | null;
   public description?: string | null;
   public location?: string | null;
-  public occurrences?: ImportantProperty<DateTime[]>;
+  public occurrences?: ImportantProperty<Date[]>;
   public duration?: Duration | null;
   public images?: ImageResource[] | string[];
 
@@ -174,7 +175,7 @@ export class EventIntermediate extends IntermediateClass<
       summary: this.summary ?? null,
       description: this.description ?? null,
       location: this.location ?? null,
-      occurrences: this.occurrences,
+      occurrences: this.occurrences.map((date) => DateTime.fromJSDate(date)),
       duration: this.duration ?? null,
       images: this.images ?? null,
       eventId: this.uuid,

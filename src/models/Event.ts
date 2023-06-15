@@ -10,6 +10,16 @@ import type {
   BelongsToManyRemoveAssociationsMixin,
   BelongsToManySetAssociationsMixin,
   CreationOptional,
+  HasManyAddAssociationMixin,
+  HasManyAddAssociationsMixin,
+  HasManyCountAssociationsMixin,
+  HasManyCreateAssociationMixin,
+  HasManyGetAssociationsMixin,
+  HasManyHasAssociationMixin,
+  HasManyHasAssociationsMixin,
+  HasManyRemoveAssociationMixin,
+  HasManyRemoveAssociationsMixin,
+  HasManySetAssociationsMixin,
   InferAttributes,
   InferCreationAttributes,
   NonAttribute,
@@ -18,13 +28,15 @@ import { DataTypes, Model } from "@sequelize/core";
 import type { ImageResource } from "@ukdanceblue/db-app-common";
 import { EventResource } from "@ukdanceblue/db-app-common";
 import type { Duration } from "luxon";
-import { DateTime } from "luxon";
 
 import { sequelizeDb } from "../data-source.js";
 import { DurationDataType } from "../lib/customdatatypes/Duration.js";
 import { IntermediateClass } from "../lib/modelTypes.js";
 
+import type { EventOccurrenceModel } from "./EventOccurrence.js";
+import { EventOccurrenceIntermediate } from "./EventOccurrence.js";
 import type { ImageModel } from "./Image.js";
+import { ImageIntermediate } from "./Image.js";
 import type { CoreProperty, ImportantProperty } from "./intermediate.js";
 
 export class EventModel extends Model<
@@ -46,11 +58,42 @@ export class EventModel extends Model<
 
   public declare location: string | null;
 
-  public declare occurrences: CreationOptional<Date[]>;
+  public declare occurrences?: NonAttribute<EventOccurrenceModel[]>;
+  public declare getOccurrences: HasManyGetAssociationsMixin<EventOccurrenceModel>;
+  public declare createOccurrence: HasManyCreateAssociationMixin<EventOccurrenceModel>;
+  public declare countOccurrences: HasManyCountAssociationsMixin<EventOccurrenceModel>;
+  public declare addOccurrence: HasManyAddAssociationMixin<
+    EventOccurrenceModel,
+    EventOccurrenceModel["id"]
+  >;
+  public declare addOccurrences: HasManyAddAssociationsMixin<
+    EventOccurrenceModel,
+    EventOccurrenceModel["id"]
+  >;
+  public declare removeOccurrence: HasManyRemoveAssociationMixin<
+    EventOccurrenceModel,
+    EventOccurrenceModel["id"]
+  >;
+  public declare setOccurrences: HasManySetAssociationsMixin<
+    EventOccurrenceModel,
+    EventOccurrenceModel["id"]
+  >;
+  public declare removeOccurrences: HasManyRemoveAssociationsMixin<
+    EventOccurrenceModel,
+    EventOccurrenceModel["id"]
+  >;
+  public declare hasOccurrence: HasManyHasAssociationMixin<
+    EventOccurrenceModel,
+    EventOccurrenceModel["id"]
+  >;
+  public declare hasOccurrences: HasManyHasAssociationsMixin<
+    EventOccurrenceModel,
+    EventOccurrenceModel["id"]
+  >;
 
   public declare duration: Duration | null;
 
-  public declare images: NonAttribute<ImageResource[]>;
+  public declare images?: NonAttribute<ImageModel[]>;
   public declare createImage: BelongsToManyCreateAssociationMixin<ImageModel>;
   public declare getImages: BelongsToManyGetAssociationsMixin<ImageModel>;
   public declare setImages: BelongsToManySetAssociationsMixin<
@@ -117,12 +160,6 @@ EventModel.init(
       type: DataTypes.TEXT,
       allowNull: true,
     },
-    // TODO: move occurrences to own table
-    occurrences: {
-      type: DataTypes.ARRAY(DataTypes.DATE),
-      allowNull: false,
-      defaultValue: [],
-    },
     duration: {
       type: DurationDataType,
       allowNull: true,
@@ -148,9 +185,9 @@ export class EventIntermediate extends IntermediateClass<
   public summary?: string | null;
   public description?: string | null;
   public location?: string | null;
-  public occurrences?: ImportantProperty<Date[]>;
+  public occurrences?: ImportantProperty<EventOccurrenceIntermediate[]>;
   public duration?: Duration | null;
-  public images?: ImageResource[] | string[];
+  public images?: ImageIntermediate[] | string[];
 
   constructor(model: Partial<EventModel>) {
     super(["id", "uuid"], ["title", "occurrences"]);
@@ -160,9 +197,13 @@ export class EventIntermediate extends IntermediateClass<
     if (model.summary !== undefined) this.summary = model.summary;
     if (model.description !== undefined) this.description = model.description;
     if (model.location !== undefined) this.location = model.location;
-    if (model.occurrences !== undefined) this.occurrences = model.occurrences;
+    if (model.occurrences !== undefined)
+      this.occurrences = model.occurrences.map(
+        (occurrence) => new EventOccurrenceIntermediate(occurrence)
+      );
     if (model.duration !== undefined) this.duration = model.duration;
-    if (model.images !== undefined) this.images = model.images;
+    if (model.images !== undefined)
+      this.images = model.images.map((image) => new ImageIntermediate(image));
   }
 
   public toResource(): EventResource {
@@ -170,14 +211,30 @@ export class EventIntermediate extends IntermediateClass<
       throw new Error("Cannot convert incomplete Event to Resource");
     }
 
+    let images: string[] | null = null;
+    if (this.images != null) {
+      images = [];
+      if (typeof images[0] === "string") {
+        for (const image of this.images as string[]) {
+          images.push(image);
+        }
+      } else {
+        for (const image of this.images as ImageIntermediate[]) {
+          images.push(image.toResource().imageId);
+        }
+      }
+    }
+
     return new EventResource({
       title: this.title,
       summary: this.summary ?? null,
       description: this.description ?? null,
       location: this.location ?? null,
-      occurrences: this.occurrences.map((date) => DateTime.fromJSDate(date)),
+      occurrences: this.occurrences.map((occurrence) =>
+        occurrence.toResource()
+      ),
       duration: this.duration ?? null,
-      images: this.images ?? null,
+      images,
       eventId: this.uuid,
     });
   }

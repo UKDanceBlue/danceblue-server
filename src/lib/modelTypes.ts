@@ -1,6 +1,5 @@
 import { Model } from "@sequelize/core";
 import type { CreationOptional } from "@sequelize/core";
-import type { Resource } from "@ukdanceblue/db-app-common";
 import type { RequiredKeys } from "utility-types";
 
 import { logDebug } from "../logger.js";
@@ -10,7 +9,7 @@ import type {
 } from "../models/intermediate.js";
 
 export abstract class IntermediateClass<
-  R extends Resource | never,
+  R extends object,
   SubClass extends object & IntermediateClass<R, SubClass>
 > {
   abstract toResource(): R;
